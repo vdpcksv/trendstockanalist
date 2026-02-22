@@ -12,7 +12,7 @@ import time
 import FinanceDataReader as fdr
 
 # ==========================================
-# 1. 네이버 금융 데이터 크롤링 헬퍼 함수
+# 1. Npay 증권 데이터 크롤링 헬퍼 함수
 # ==========================================
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
@@ -20,7 +20,7 @@ headers = {
 
 @st.cache_data(ttl=600) # 10분 캐싱
 def get_kospi_investor_trend():
-    """네이버 금융 - KOSPI 투자매매 동향 크롤링 (최근 15일치 추이)"""
+    """Npay 증권 - KOSPI 투자매매 동향 크롤링 (최근 15일치 추이)"""
     today_str = datetime.now().strftime('%Y%m%d')
     url = f"https://finance.naver.com/sise/investorDealTrendDay.naver?bizdate={today_str}&mktType=KOSPI&page=1"
     res = requests.get(url, headers=headers)
@@ -38,7 +38,7 @@ def get_kospi_investor_trend():
     
     for row in rows:
         cols = row.find_all('td')
-        # 해결: 네이버 금융 일별매매동향 실제 컬럼 수는 11개임
+        # 해결: Npay 증권 일별매매동향 실제 컬럼 수는 11개임
         if len(cols) == 11 and cols[0].text.strip().replace('.', '').isdigit():
             date_str = cols[0].text.strip()
             
@@ -76,7 +76,7 @@ def get_kospi_investor_trend():
 
 @st.cache_data(ttl=3600)
 def get_theme_list():
-    """네이버 주요 테마 최근 등락률 상위 크롤링"""
+    """Npay 증권 주요 테마 최근 등락률 상위 크롤링"""
     url = "https://finance.naver.com/sise/theme.naver"
     res = requests.get(url, headers=headers)
     res.encoding = 'euc-kr'
@@ -206,24 +206,25 @@ with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/3256/3256424.png", width=100) 
     st.title("Trend-Lotto Invest")
     st.markdown("---")
-    st.write("초개인화된 스마트 트렌드 추적 & 자금 흐름 분석 플랫폼 (Naver 연동)")
+    st.write("초개인화된 스마트 트렌드 추적 & 자금 흐름 분석 플랫폼 (Npay 증권 연동)")
     
     st.markdown("### 주요 기능")
-    st.info("💡 **자금 흐름 (Money Flow)**\n네이버 금융 KOSPI 15일 누적 수급 추적")
-    st.success("🗓️ **계절성 (Seasonality)**\n장기 시점 주요 테마 상승/하락 섹터 분석")
+    st.info("💡 **자금 흐름 (Money Flow)**\nNpay 증권 KOSPI 15일 누적 수급 추적")
+    st.success("🗓️ **계절성 (Seasonality)**\n장기 시점 주요 종목 상승/하락 백테스팅")
     st.warning("🎯 **초개인화 시나리오**\n실시간 테마별 대장주 현황 및 인사이트 제공")
+    st.error("📊 **트레이딩 리뷰 (Trading)**\nMA5 밴드(±5%) 및 RSI 기술적 타점 분석")
 
 st.title("📈 Trend-Lotto Invest Prototype (Real Data)")
-st.markdown("네이버 금융(Naver Finance)의 실시간 지표를 크롤링하여 트렌드를 추적합니다.")
+st.markdown("Npay 증권(네이버페이 증권)의 실시간 지표 크롤링 및 체계적인 백테스팅 지표를 제공합니다.")
 
-tab1, tab2, tab3 = st.tabs(["💰 실시간 자금 흐름", "🗓️ 계절성 트렌드(Mock+Real)", "🎯 테마별 맞춤형 시나리오"])
+tab1, tab2, tab3, tab4 = st.tabs(["💰 실시간 자금 흐름", "🗓️ 계절성 트렌드(Real)", "🎯 테마별 맞춤형 시나리오", "📊 매매 복기 및 투자 타점"])
 
 # --- Tab 1: 자금 흐름 (Money Flow) ---
 with tab1:
     st.header("KOSPI 기관 및 외국인 수급 동향")
-    st.markdown("네이버 금융 [투자자별 매매동향] 메뉴에서 최근 영업일 기준 데이터를 집계했습니다.")
+    st.markdown("Npay 증권 [투자자별 매매동향] 메뉴에서 최근 영업일 기준 데이터를 집계했습니다.")
     
-    with st.spinner("네이버 금융 수급 데이터를 불러오는 중..."):
+    with st.spinner("Npay 증권 수급 데이터를 불러오는 중..."):
         df_flow = get_kospi_investor_trend()
     
     if not df_flow.empty:
@@ -256,14 +257,27 @@ with tab1:
             else:
                 st.warning("현재 기관과 외국인 모두 양매도를 기록 중입니다. 수급 보수적 접근이 필요합니다.")
     else:
-        st.error("데이터를 수집하지 못했습니다. 네이버 금융 서버 또는 구조 변경을 확인하세요.")
+        st.error("데이터를 수집하지 못했습니다. Npay 증권 서버 또는 구조 변경을 확인하세요.")
 
 
-# --- Tab 2: 계절성 트렌드 (Seasonality) ---
+# # --- Tab 2: 계절성 트렌드 (Seasonality) ---
 with tab2:
     st.header("섹터 대표주 10년 치 계절성 트렌드 (Real Data)")
     st.markdown("FinanceDataReader를 활용하여 주요 대표 종목의 최근 **10년간 월별 상승 확률(승률)**을 백테스팅한 실제 데이터입니다.")
-    
+    #도움말
+    with st.expander("💡 이 차트의 수치들은 어떻게 읽는 건가요? (클릭해서 펼쳐보기)", expanded=True):
+        st.info("""
+        **'승률(Win Rate)'이란 무엇인가요?**
+        * 지난 10년 동안 해당 섹터의 대표 주식(대장주)을 **특정 달(예: 1월) 첫 거래일에 사서 마지막 거래일에 팔았을 때, 주가가 올라서 수익이 났던 횟수의 비율**입니다.
+        * 예) 삼성전자의 1월 승률이 60%라면, 지난 10번의 1월 중에서 6번은 주가가 상승 마감했다는 뜻입니다.
+
+        **색상은 어떤 의미인가요?**
+        * 🟩 **초록색이 진할수록**: 역사적으로 그 달에 주가가 올랐던 적이 많았다는 뜻입니다. (비중 확대 및 매수 타이밍 고려)
+        * 🟥 **빨간색이 진할수록**: 역사적으로 그 달에는 주가가 하락했던 적이 많았다는 뜻입니다. (보수적 접근 및 리스크 관리 필요)
+        * 🟨 **노란색/연두색**: 승률이 50% 내외로, 방향성이 뚜렷하지 않은 달입니다.
+        """)
+    st.markdown("---")
+
     with st.spinner("최근 10년 치 주가 데이터를 분석 중입니다... (최초 1회 로딩 시 약 5~10초 소요)"):
         season_data = get_seasonality_data()
         
@@ -318,9 +332,9 @@ with tab2:
 # --- Tab 3: 초개인화 (Personalization) ---
 with tab3:
     st.header("당일 주도 테마 맞춤형 시나리오")
-    st.markdown("네이버 금융의 실시간 테마 시세를 분석하여, 오늘 시장을 주도하는 테마와 편입 종목들을 안내합니다.")
+    st.markdown("Npay 증권의 실시간 테마 시세를 분석하여, 오늘 시장을 주도하는 테마와 편입 종목들을 안내합니다.")
     
-    with st.spinner("네이버 금융 테마 리스트를 수집 중입니다..."):
+    with st.spinner("Npay 증권 테마 리스트를 수집 중입니다..."):
         df_themes = get_theme_list()
         
     if not df_themes.empty:
@@ -341,7 +355,7 @@ with tab3:
         col_s1, col_s2 = st.columns([2, 1])
         with col_s1:
             st.markdown(f"#### '{user_interest}' 테마 핵심 편입 종목 현황")
-            st.write("네이버 금융 기준 해당 테마에 편입된 주요 5개 종목의 실시간 시세입니다.")
+            st.write("Npay 증권 기준 해당 테마에 편입된 주요 5개 종목의 실시간 시세입니다.")
             
             with st.spinner("종목 데이터를 수집 중입니다..."):
                 df_stocks = get_theme_top_stocks(selected_row['링크'])
@@ -390,5 +404,113 @@ with tab3:
     else:
         st.error("테마 리스트 수집에 실패했습니다.")
 
+
+# --- Tab 4: 매매 복기 및 기술적 분석 (Trading Review) ---
+with tab4:
+    st.header("매매 복기 및 기술적 분석 (MA5 & RSI)")
+    st.markdown("종목 코드를 입력하여 최근 주가의 시계열 차트를 렌더링하고, **RSI 지수 및 [5일선 ±5% 기법]** 시그널을 확인하세요.")
+    
+    col_t1, col_t2 = st.columns([1, 3])
+    with col_t1:
+        ticker = st.text_input("📈 종목 코드 입력 (예: 005930)", value="005930")
+        period_days = st.slider("조회 기간 (일)", min_value=30, max_value=365, value=180, step=30)
+        
+    with col_t2:
+        if ticker:
+            with st.spinner("주가 데이터를 로드 중입니다..."):
+                try:
+                    end_dt = datetime.now()
+                    start_dt = end_dt - timedelta(days=period_days)
+                    df_trade = fdr.DataReader(ticker, start_dt, end_dt)
+                    
+                    if not df_trade.empty:
+                        # 1. 지표 계산 (MA5, RSI 14일)
+                        df_trade['MA5'] = df_trade['Close'].rolling(window=5).mean()
+                        
+                        delta = df_trade['Close'].diff()
+                        gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
+                        loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
+                        rs = gain / loss
+                        df_trade['RSI'] = 100 - (100 / (1 + rs))
+                        
+                        # 최신 값 추출
+                        last_close = df_trade['Close'].iloc[-1]
+                        last_ma5 = df_trade['MA5'].iloc[-1]
+                        last_rsi = df_trade['RSI'].iloc[-1]
+                        
+                        last_date_str = df_trade.index[-1].strftime('%Y-%m-%d')
+                        
+                        # 2. Plotly 형태의 캔들차트 + 5일선 그리기
+                        fig_candle = go.Figure()
+                        # 캔들
+                        fig_candle.add_trace(go.Candlestick(
+                            x=df_trade.index, open=df_trade['Open'],
+                            high=df_trade['High'], low=df_trade['Low'], close=df_trade['Close'],
+                            name='Price'
+                        ))
+                        # 5일 이동평균선
+                        fig_candle.add_trace(go.Scatter(
+                            x=df_trade.index, y=df_trade['MA5'],
+                            mode='lines', name='MA5 (5일선)',
+                            line=dict(color='orange', width=2)
+                        ))
+                        # 가이드 밴드 (±5%)
+                        fig_candle.add_trace(go.Scatter(
+                            x=df_trade.index, y=df_trade['MA5'] * 1.05,
+                            mode='lines', name='+5% Upper Band',
+                            line=dict(color='red', width=1, dash='dot')
+                        ))
+                        fig_candle.add_trace(go.Scatter(
+                            x=df_trade.index, y=df_trade['MA5'] * 0.95,
+                            mode='lines', name='-5% Lower Band',
+                            line=dict(color='blue', width=1, dash='dot')
+                        ))
+                        
+                        fig_candle.update_layout(
+                            title=f"종목코드 [{ticker}] 최근 {period_days}일 캔들 차트 (MA5 및 밴드)",
+                            xaxis_title='Date', yaxis_title='Price',
+                            xaxis_rangeslider_visible=False,
+                            template="plotly_white", margin=dict(l=40, r=40, t=40, b=40)
+                        )
+                        st.plotly_chart(fig_candle, use_container_width=True)
+                        
+                        # 3. 전략적 인사이트 표출
+                        st.markdown("---")
+                        st.subheader(f"💡 현재가 ({last_date_str} 기준) 기술적 진단")
+                        
+                        st.write(f"- **현재 종가**: {last_close:,.0f} 원")
+                        st.write(f"- **MA5 (5일선)**: {last_ma5:,.0f} 원")
+                        st.write(f"- **현재 RSI (14일)**: {last_rsi:.1f}")
+                        
+                        # MA5 밴드 로직 판별 (+- 5%)
+                        upper_band = last_ma5 * 1.05
+                        lower_band = last_ma5 * 0.95
+                        
+                        col_s1, col_s2 = st.columns(2)
+                        
+                        with col_s1:
+                            st.markdown("#### 📌 이동평균선(MA5) ±5% 진단")
+                            if last_close > upper_band:
+                                st.warning("🟡 **단기 과열 상태 (MA5 대비 +5% 초과)**\n\n주가가 5일선 대비 크게 이격되어 있어 단기 차익 실현 메모가 나올 가능성이 큽니다. 분할 매도를 고려해 보는 것이 좋습니다.")
+                            elif last_close < lower_band:
+                                st.error("🔴 **매도/손절 고려 구간 (MA5 대비 -5% 이탈)**\n\n5일선 대비 5% 이상 하락하여 추세 이탈 조짐이 보입니다. 보유 중이라면 리스크 관리를 최우선으로 해야 합니다.")
+                            else:
+                                st.success("🟢 **보유 및 비중 확대 구간 (MA5 ±5% 이내 횡보/지지)**\n\n현재 급격한 하락 없이 5일선을 중심으로 건전하게 수렴하고 있는 긍정적인 구간입니다.")
+                                
+                        with col_s2:
+                            st.markdown("#### 📏 RSI (상대강도지수) 진단")
+                            if pd.isna(last_rsi):
+                                st.write("데이터가 부족하여 계산되지 않았습니다.")
+                            elif last_rsi >= 70:
+                                st.warning("🟥 **과매수 (Overbought) 구간!**\n\n현재 매수세가 과열되어 조정(하락)이 임박했을 확률이 높습니다.")
+                            elif last_rsi <= 30:
+                                st.success("🟩 **과매도 (Oversold) 구간!**\n\n심리적으로 과도하게 하락하여 단기 기술적 반등 위치로 매수를 고려해 볼 만합니다.")
+                            else:
+                                st.info("🟨 **중립 (Neutral) 구간**\n\n과매수/과매도 어느 쪽에도 치우치지 않은 상태입니다. MA5 추세선 진단을 우선적으로 고려하세요.")
+
+                except Exception as e:
+                    st.error(f"데이터를 불러오거나 계산하는 도중 오류가 발생했습니다: {str(e)}")
+
+
 st.markdown("---")
-st.caption("© 2026 Trend-Lotto Invest (Naver Finance Scraped Data) | *본 정보는 크롤링 기반 데이터로 오차가 있을 수 있으며 실제 투자 결과에 대한 책임은 지지 않습니다.*")
+st.caption("© 2026 Trend-Lotto Invest | *본 정보는 크롤링 기반 데이터 및 기술적 지표로 오차가 있을 수 있으며 실제 투자 결과에 대한 책임은 지지 않습니다.*")

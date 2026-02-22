@@ -8,6 +8,8 @@ from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 import re
 import random
+import time
+import FinanceDataReader as fdr
 
 # ==========================================
 # 1. 네이버 금융 데이터 크롤링 헬퍼 함수
@@ -141,6 +143,54 @@ def get_theme_top_stocks(theme_url):
     return pd.DataFrame(stocks)
 
 
+@st.cache_data(ttl=86400) # 과거 데이터라 하루에 한 번만 갱신(캐싱)
+def get_seasonality_data():
+    """대표 섹터 종목들의 최근 10년 월별 승률(상승 마감 확률) 계산"""
+    # 대표 섹터 및 대장주 종목코드
+    symbols = {
+        '반도체(삼성전자)': '005930',
+        '바이오(삼성바이오)': '207940',
+        '2차전지(LG엔솔)': '373220', # 상장일이 짧을 수 있음
+        '자동차(현대차)': '005380',
+        '인터넷(NAVER)': '035420'
+    }
+    
+    end_date = datetime.now()
+    start_date = end_date - timedelta(days=365 * 10) # 10년 전
+    
+    heatmap_dict = {}
+    
+    for name, ticker in symbols.items():
+        try:
+            # 1. 10년 치 주가 데이터 가져오기
+            df = fdr.DataReader(ticker, start_date, end_date)
+            if df.empty: continue
+            
+            # 2. 월말 종가 기준으로 수익률 계산
+            df_monthly = df['Close'].resample('ME').last() # pandas 최신 버전 반영 ('M' -> 'ME')
+            returns = df_monthly.pct_change() * 100
+            
+            # 3. 데이터프레임 변환 후 '월' 추출
+            df_ret = returns.reset_index()
+            df_ret.columns = ['Date', 'Return']
+            df_ret['Month'] = df_ret['Date'].dt.month
+            
+            # 4. 월별 승률 계산 (수익률이 0보다 큰 달의 비율)
+            win_rates = []
+            for m in range(1, 13):
+                month_data = df_ret[df_ret['Month'] == m]['Return'].dropna()
+                if len(month_data) == 0:
+                    win_rates.append(0)
+                else:
+                    win_rate = (month_data > 0).sum() / len(month_data) * 100
+                    win_rates.append(round(win_rate, 1))
+                    
+            heatmap_dict[name] = win_rates
+        except Exception as e:
+            pass
+            
+    return heatmap_dict
+
 # ==========================================
 # 2. UI 구성 (Streamlit)
 # ==========================================
@@ -211,36 +261,58 @@ with tab1:
 
 # --- Tab 2: 계절성 트렌드 (Seasonality) ---
 with tab2:
-    st.header("섹터별 시기상승 패턴 (Seasonality)")
-    st.markdown("※ *종목별 5년 치 일별 시세 파싱은 속도/서버 과부하 이슈로 현재 베타에서는 프로토타입 데이터를 표출합니다.*")
+    st.header("섹터 대표주 10년 치 계절성 트렌드 (Real Data)")
+    st.markdown("FinanceDataReader를 활용하여 주요 대표 종목의 최근 **10년간 월별 상승 확률(승률)**을 백테스팅한 실제 데이터입니다.")
     
-    col1, col2 = st.columns([1, 2])
-    
-    sectors = ['반도체', '바이오', '2차전지', '소프트웨어', '로봇', '금융']
-    win_rates = [68, 55, 62, 71, 48, 59]
-    df_season = pd.DataFrame({'Sector': sectors, 'Win Rate (%)': win_rates})
-    
-    with col1:
-        st.write("#### 1분기 역사적 승률 Top")
-        fig_radar = px.line_polar(df_season, r='Win Rate (%)', theta='Sector', line_close=True,
-                                  color_discrete_sequence=['#8b5cf6'])
-        fig_radar.update_traces(fill='toself')
-        st.plotly_chart(fig_radar, use_container_width=True)
+    with st.spinner("최근 10년 치 주가 데이터를 분석 중입니다... (최초 1회 로딩 시 약 5~10초 소요)"):
+        season_data = get_seasonality_data()
         
-    with col2:
-        st.write("#### 주요 이벤트 캘린더 (Event Driven)")
-        st.info("**2월**: MWC (모바일 월드 콩그레스) 개최 ➔ 통신장비, AI소프트웨어 섹터 수급 유입 기대")
-        st.success("**3월**: 감사보고서 제출 시즌 ➔ 재무 건전성 상위 기업 및 고배당 기업 선호 현상")
-        st.warning("**4월**: 1분기 실적 발표 (어닝시즌) ➔ 반도체 수출 지표 견조함에 따른 상승 기대")
+    if season_data:
+        # 1. 데이터프레임화 (가로: 1~12월, 세로: 섹터명)
+        df_hm = pd.DataFrame(season_data).T 
+        df_hm.columns = [f"{i}월" for i in range(1, 13)]
         
-        st.write("")
-        st.markdown("###### 예상 상승 확률 매트릭스")
-        heatmap_data = np.random.randint(40, 90, size=(5, 12))
-        months = [f"{i}월" for i in range(1, 13)]
-        sectors_hm = ['반도체', '제약바이오', '자동차', '엔터', '게임']
-        fig_hm = px.imshow(heatmap_data, labels=dict(x="월", y="섹터", color="승률(%)"),
-                           x=months, y=sectors_hm, color_continuous_scale="Viridis", text_auto=True)
+        # 2. 히트맵 그리기
+        st.markdown("#### 📊 월별/섹터별 평균 승률 히트맵")
+        fig_hm = px.imshow(df_hm, 
+                           labels=dict(x="월", y="대표 섹터", color="승률(%)"),
+                           x=df_hm.columns, 
+                           y=df_hm.index, 
+                           color_continuous_scale="RdYlGn", # 직관적인 빨강-노랑-초록 색상
+                           text_auto=True,
+                           aspect="auto")
         st.plotly_chart(fig_hm, use_container_width=True)
+        
+        # 3. 현재 달 기준 분석 레이더 차트
+        st.markdown("---")
+        col1, col2 = st.columns([1, 2])
+        
+        with col1:
+            current_month = datetime.now().month
+            st.write(f"#### 현재({current_month}월) 역사적 승률 Top")
+            
+            current_month_col = f"{current_month}월"
+            if current_month_col in df_hm.columns:
+                df_radar = df_hm[[current_month_col]].reset_index()
+                df_radar.columns = ['Sector', 'Win Rate (%)']
+                
+                fig_radar = px.line_polar(df_radar, r='Win Rate (%)', theta='Sector', line_close=True,
+                                          color_discrete_sequence=['#8b5cf6'])
+                fig_radar.update_traces(fill='toself')
+                st.plotly_chart(fig_radar, use_container_width=True)
+            
+        with col2:
+            st.write("#### 💡 AI 계절성 인사이트")
+            if current_month_col in df_hm.columns:
+                best_sector = df_radar.loc[df_radar['Win Rate (%)'].idxmax()]
+                st.success(f"과거 10년 데이터를 분석한 결과, **{current_month}월에는 '{best_sector['Sector']}'** 섹터가 상승할 확률이 **{best_sector['Win Rate (%)']}%**로 가장 높았습니다.")
+            
+            st.info("**이벤트 드리븐 (Event Driven) 주요 체크 포인트**")
+            st.write("✔️ **2~3월**: 감사보고서 제출 및 배당락 이후 가치주 재평가 기간")
+            st.write("✔️ **4월**: 1분기 실적 발표(어닝시즌)로 인한 실적주 차별화 장세")
+            st.write("✔️ **11~12월**: 연말 배당 및 소비 시즌 (유통/배당주 강세)")
+    else:
+        st.error("계절성 데이터를 불러오는 데 실패했습니다.")
 
 
 # --- Tab 3: 초개인화 (Personalization) ---

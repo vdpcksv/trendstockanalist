@@ -104,6 +104,8 @@ def check_indicators_and_alert():
 
             # 최신 값 추출
             last_close = close_prices.iloc[-1]
+            last_high = df['High'].iloc[-1]
+            last_low = df['Low'].iloc[-1]
             last_rsi = df['RSI'].iloc[-1]
             last_bb_ub = df['BB_UB'].iloc[-1]
             last_bb_lb = df['BB_LB'].iloc[-1]
@@ -118,13 +120,13 @@ def check_indicators_and_alert():
             if not pd.isna(last_rsi) and last_rsi >= 80:
                 alerts.append(f"📈 **RSI 과매수 도달 ({last_rsi:.1f} >= 80)**\n👉 차익 실현 및 관망 타점이 임박했습니다!")
 
-            # 조건 3: 볼린저밴드 상단 이탈 (초강력 익절)
-            if not pd.isna(last_bb_ub) and last_close >= last_bb_ub:
-                alerts.append(f"🔥 **볼린저 밴드(20,3) 상단 돌파!**\n현재가: {last_close:,.0f}원 (상단선: {last_bb_ub:,.0f}원)\n👉 초과열 상태입니다. 익절을 고려하세요.")
+            # 조건 3: 볼린저밴드 상단 이탈 (고가 기준)
+            if not pd.isna(last_bb_ub) and last_high >= last_bb_ub:
+                alerts.append(f"🔥 **볼린저 밴드(20,3) 상단 돌파!**\n당일 고가: {last_high:,.0f}원 (상단선: {last_bb_ub:,.0f}원)\n👉 장중 초과열 상태를 터치했습니다. 익절을 고려하세요.")
 
-            # 조건 4: 볼린저밴드 하단 이탈 (초강력 매수)
-            if not pd.isna(last_bb_lb) and last_close <= last_bb_lb:
-                alerts.append(f"🥶 **볼린저 밴드(20,3) 하단 이탈!**\n현재가: {last_close:,.0f}원 (하단선: {last_bb_lb:,.0f}원)\n👉 과도한 투매 상태입니다. 초강력 매수/물타기를 고려하세요.")
+            # 조건 4: 볼린저밴드 하단 이탈 (저가 기준)
+            if not pd.isna(last_bb_lb) and last_low <= last_bb_lb:
+                alerts.append(f"🥶 **볼린저 밴드(20,3) 하단 이탈!**\n당일 저가: {last_low:,.0f}원 (하단선: {last_bb_lb:,.0f}원)\n👉 장중 과도한 투매 상태를 터치했습니다. 초강력 매수/물타기를 고려하세요.")
 
             if alerts:
                 msg = f"🚨 **[Trend-Lotto Alert] {target_name} ({target_ticker})** 🚨\n\n"

@@ -215,6 +215,56 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+# --- 🎯 모바일 반응형 완벽 최적화 CSS 주입 ---
+st.markdown("""
+<style>
+/* 모바일 화면 (768px 이하) 대응 */
+@media (max-width: 768px) {
+    /* 1. 전체 좌우 패딩 축소하여 공간 확보 */
+    .block-container {
+        padding-top: 1rem !important;
+        padding-bottom: 1rem !important;
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
+    }
+    
+    /* 2. 제목 글꼴 크기 모바일 최적화 */
+    h1 {
+        font-size: 1.5rem !important;
+    }
+    h2 {
+        font-size: 1.25rem !important;
+    }
+    h3 {
+        font-size: 1.1rem !important;
+    }
+    h4 {
+        font-size: 1rem !important;
+    }
+
+    /* 3. Metric 텍스트 크기 축소 (현재가, 점수 등) */
+    .stMetric label {
+        font-size: 0.8rem !important;
+    }
+    .stMetric [data-testid="stMetricValue"] {
+        font-size: 1.2rem !important;
+    }
+    
+    /* 4. 데스크탑의 탭(Tabs) 글자 크기 축소 */
+    button[data-baseweb="tab"] p {
+        font-size: 0.8rem !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    /* 5. 버튼 및 체크박스 패딩 최적화 */
+    .stButton>button {
+        padding: 0.3rem 0.5rem !important;
+    }
+}
+</style>
+""", unsafe_allow_html=True)
+
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/3256/3256424.png", width=100) 
     st.title("Trend-Lotto Invest")
@@ -532,12 +582,13 @@ with tab4:
                             fig_candle.add_trace(go.Scatter(x=df_trade.index, y=df_trade['BB20_LB_vis'], mode='lines', name='BB Lower (20,2)', line=dict(color='rgba(173, 216, 230, 0.6)', width=1, dash='dot'), fill='tonexty', fillcolor='rgba(173, 216, 230, 0.1)'))
                             fig_candle.add_trace(go.Scatter(x=df_trade.index, y=df_trade['BB20_MB_vis'], mode='lines', name='BB Mid (20)', line=dict(color='rgba(173, 216, 230, 0.8)', width=1)))
                         
+                        # 모바일 최적화를 위해 마진 최소화
                         fig_candle.update_layout(
                             title=f"{target_name} [{target_ticker}] 최근 {period_days}일 추세 차트",
                             xaxis_title='Date', yaxis_title='Price',
                             xaxis_rangeslider_visible=False,
-                            template="plotly_white", margin=dict(l=40, r=40, t=40, b=40),
-                            height=500
+                            template="plotly_white", margin=dict(l=10, r=10, t=40, b=20),
+                            height=400 # 모바일 스와이프를 위해 높이를 살짝 줄임
                         )
                         st.plotly_chart(fig_candle, use_container_width=True)
                         

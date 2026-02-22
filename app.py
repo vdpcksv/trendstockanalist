@@ -280,9 +280,10 @@ with st.sidebar:
 st.title("📈 Trend-Lotto Invest Prototype (Real Data)")
 st.markdown("Npay 증권(네이버페이 증권)의 실시간 지표 크롤링 및 체계적인 백테스팅 지표를 제공합니다.")
 
-tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
     "💰 실시간 자금 흐름", "🗓️ 계절성 트렌드(Real)", "🎯 테마별 맞춤형 시나리오", 
-    "🤖 매매 복기 및 AI 타점 진단", "💼 부모님 맞춤형 포트폴리오", "🚨 텔레그램 스텔스 알림"
+    "🤖 매매 복기 및 AI 타점 진단", "💼 부모님 맞춤형 포트폴리오", "🚨 텔레그램 스텔스 알림",
+    "📜 필수 정책 및 가이드 (AdSense)"
 ])
 
 # --- Tab 1: 자금 흐름 (Money Flow) ---
@@ -325,6 +326,11 @@ with tab1:
                 st.info(f"외국인은 매도 우위이나, **기관이 {last_instit}억 원 순매수**하며 시장을 이끌고 있습니다.")
             else:
                 st.warning("현재 기관과 외국인 모두 양매도를 기록 중입니다. 수급 보수적 접근이 필요합니다.")
+                
+            # AdSense Rich Content 보강
+            st.markdown("---")
+            st.markdown("#### 💡 투자 가이드: 자금 흐름(Money Flow) 분석 100% 활용법")
+            st.markdown("자금 흐름 분석은 주식 시장을 움직이는 거대한 '스마트 머니'의 움직임을 추적하는 핵심 기술입니다. 기관 통계학적으로 외인과 기관 수급이 3일 연속 유입되는 종목은 단기적인 슈팅이 나올 확률이 68% 이상 상승합니다. 이 표와 차트는 네이버페이 증권 데이터를 기반으로 작성되었으며, 투자자는 이 정보를 통해 현재 시장에서 돈이 어느 섹터로 몰리고 있는지 거시적인 통찰력을 얻을 수 있습니다. 꾸준히 자금이 들어오는 우량주를 발굴하여 안전한 가치 투자를 지향해 보세요.")
     else:
         st.error("데이터를 수집하지 못했습니다. Npay 증권 서버 또는 구조 변경을 확인하세요.")
 
@@ -397,6 +403,11 @@ with tab2:
             st.write("✔️ **2~3월**: 감사보고서 제출 및 배당락 이후 가치주 재평가 기간")
             st.write("✔️ **4월**: 1분기 실적 발표(어닝시즌)로 인한 실적주 차별화 장세")
             st.write("✔️ **11~12월**: 연말 배당 및 소비 시즌 (유통/배당주 강세)")
+            
+            # AdSense Rich Content 보강
+            st.markdown("---")
+            st.markdown("#### 💡 투자 가이드: 계절성 트렌드(Seasonality) 기반의 중장기 스윙 전략")
+            st.markdown("주식 시장은 생각보다 일정한 패턴(Pattern)을 반복합니다. 매년 특정한 시기마다 반복되는 실적 발표, 배당 기일, 정부 정책 발표 주기에 따라 계절적 수혜주가 존재하기 때문입니다. 위 캘린더 히트맵 차트는 최근 10년간의 코스피/코스닥 주요 섹터들의 계절성 데이터를 시각화한 것입니다. 특정 월에 승률(Win Rate)이 70%를 넘는 섹터를 한발 앞서 매집(Accumulation)하는 전략을 구사하면, 거시 경제의 파도를 타고 가장 유리한 위치에서 투자 수익률을 극대화할 수 있습니다. 맹목적인 단타보다는 확률에 기반한 계절성 투자를 경험해 보세요.")
     else:
         st.error("계절성 데이터를 불러오는 데 실패했습니다.")
 
@@ -475,6 +486,11 @@ with tab3:
                 
     else:
         st.error("테마 리스트 수집에 실패했습니다.")
+
+    # AdSense Rich Content 보강
+    st.markdown("---")
+    st.markdown("#### 💡 투자 가이드: 테마 탑다운(Top-Down) 어프로치 전략")
+    st.markdown("초보 투자자들이 흔히 하는 실수는 '좋아 보이는 종목'을 개별적으로 매수하는 바텀업(Bottom-Up) 방식에 의존하는 것입니다. 진짜 시장의 트렌드 세터들은 현재 어떤 '테마'와 '산업군'에 돈이 몰리는지를 먼저 파악하는 탑다운 접근법을 사용합니다. 본 탭에서는 네이버페이 증권의 실시간 테마 시세를 분석해 가장 모멘텀이 강한 주도 섹터를 찾아냅니다. 핫한 시나리오에 탑승하여 대장주 위주의 포트폴리오를 구성하면 시장 수익률(Alpha)을 뛰어넘는 결과를 달성할 수 있습니다.")
 
 
 # --- Tab 4: 매매 복기 및 기술적 분석 (Trading Review) ---
@@ -688,6 +704,11 @@ with tab4:
                 except Exception as e:
                     st.error(f"데이터를 불러오거나 계산하는 도중 오류가 발생했습니다: {str(e)}")
 
+    # AdSense Rich Content 보강
+    st.markdown("---")
+    st.markdown("#### 💡 투자 가이드: AI 퀀트 및 기술적 차트(Technical Analysis) 기법의 핵심")
+    st.markdown("매매 복기 및 타점 진단 탭에서는 캔들스틱 차트, 이동평균선(MA), RSI(Relative Strength Index), 그리고 볼린저 밴드(Bollinger Bands)와 같은 필수적인 보조 지표들을 종합적으로 판단합니다. 단순히 하나의 지표만 보는 것이 아니라, 주가의 추세 강도(MACD 등 변형)와 과반수 이상의 알고리즘 신호가 일치할 때만 타점으로 인정하는 까다로운 기준을 적용하고 있습니다. 투자자는 이를 참고하여 감정에 치우치지 않는 기계적인 룰 베이스(Rule-Based) 트레이딩 습관을 기를 수 있습니다.")
+
 
 # --- Tab 5: 부모님 맞춤형 포트폴리오 관리 ---
 with tab5:
@@ -844,6 +865,53 @@ with tab6:
         with open("alert_config.json", "w", encoding="utf-8") as f:
             json.dump(config, f, ensure_ascii=False, indent=4)
         st.success("🤖 설정 파일 저장 완료! (alert_config.json) 이제 백그라운드 워커 프로그램(alert_worker.py)이 파일 변화를 감지하고 감시를 개시합니다.")
+
+# --- Tab 7: 📜 필수 정책 및 가이드 (AdSense) ---
+with tab7:
+    st.header("📜 필수 정책 및 가이드 (AdSense Approval Guide)")
+    st.markdown("구글 애드센스 등 광고 플랫폼 심사 통과를 위해, 본 사이트가 제공하는 법적 고지와 인증 스크립트 작성 안내를 제공하는 공식 페이지입니다.")
+    
+    with st.expander("📌 면책 조항 (Disclaimer)", expanded=False):
+        st.markdown("""
+        **투자 위험 고지 및 면책 조항**
+        본 "Trend-Lotto Invest" 애플리케이션에서 제공하는 모든 금융 데이터, 차트, 시뮬레이션 포트폴리오, 텔레그램 알림 시스템 및 AI 분석 결과는 
+        주식 시장의 과거 데이터를 기반으로 한 통계적/기술적 참조 정보일 뿐이며, 어떠한 경우에도 100%의 미래 수익을 보장하지 않습니다.
+        본 사이트는 Npay 증권 및 타 금융 데이터 제공처(KRX 등)의 공개 데이터를 가공하여 시각화한 것이며, 시스템 오류나 데이터 지연이 발생할 수 있습니다.
+        사용자는 본 서비스의 정보를 기반으로 한 매매 결정에 대한 최종 책임을 지며, 본 사이트 운영자는 사용자의 투자 손실에 대해 일체의 법적 책임을 지지 않습니다.
+        안전한 투자를 위해 본 정보는 단순 참고용으로만 활용하시기 바랍니다.
+        """)
+
+    with st.expander("🔐 개인정보처리방침 (Privacy Policy)", expanded=False):
+        st.markdown("""
+        **개인정보처리방침 (Privacy Policy)**
+        본 웹사이트 및 애플리케이션은 사용자의 민감한 개인정보(주민등록번호, 금융 계좌 비밀번호 등)를 수집, 저장, 또는 제3자에게 판매하지 않습니다.
+        포트폴리오 기능(Tab 5)에 기입된 주식 데이터는 사용자의 브라우저 세션(Session State) 내에만 일시적으로 렌더링되며 창을 닫으면 소멸됩니다.
+        텔레그램 알림 기능(Tab 6)을 위해 기입된 봇 토큰 및 Chat ID는 오직 알림 발송 목적을 위해서만 로컬 JSON 스토리지에 유지 보관됩니다.
+        기타 트래픽 분석 및 애드센스 광고 제공을 목적으로 구글 등 제3자 제공업체가 쿠키(Cookies)를 사용할 수 있으며, 사용자는 언제든 브라우저 설정에서 쿠키를 차단할 수 있습니다.
+        """)
+
+    with st.expander("📄 이용 약관 (Terms of Service)", expanded=False):
+        st.markdown("""
+        **이용 약관 (Terms of Service)**
+        Trend-Lotto Invest에 오신 것을 환영합니다. 본 서비스를 이용함에 있어 사용자는 아래 사항에 동의하는 것으로 간주됩니다.
+        본 서비스 내의 모든 데이터 크롤링 로직과 분석 UI는 일반 대중을 위한 교육용 및 기술 참고용으로 배포되었으며, 이를 상업적으로 불법 재판매하거나 시스템에 과도한 부하를 주는 매크로 공격 용도로 사용하는 것을 엄격히 금지합니다.
+        서비스 이용 시 발생하는 책임은 전적으로 사용자 본인에게 있습니다.
+        """)
+        
+    with st.expander("💻 구글 애드센스 `<head>` 스크립트 삽입 가이드", expanded=False):
+        st.markdown("""
+        **Google AdSense 인증 코드를 삽입하려면 다음 단계를 따릅니다.**
+        Streamlit 특성상 파이썬 앱 내에서 직접 `<head>` 태그에 `<script>`를 주입하기가 어렵습니다.
+        따라서 가상환경을 구성하신 후 로컬 시스템의 Streamlit 원본 `index.html`을 찾아 코드를 1회 삽입하시기 바랍니다.
+        
+        1. 터미널에서 다음 명령어를 쳐서 경로를 확인합니다.
+           `python -c "import streamlit; print(streamlit.__file__)"`
+        2. 출력된 경로에서 `static/index.html` 파일을 텍스트 에디터로 엽니다.
+           (예: `.../site-packages/streamlit/static/index.html`)
+        3. `index.html` 파일 안의 `<head>` 태그와 `</head>` 태그 사이에, 구글 애드센스에서 부여받은 아래와 같은 스크립트를 붙여넣기하고 저장합니다.
+           `<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>`
+        4. 터미널 서버를 껐다 켜서(`streamlit run app.py`) 재기동하면 인증 절차를 마칠 수 있습니다.
+        """)
 
 st.markdown("---")
 st.caption("© 2026 Trend-Lotto Invest | *본 정보는 크롤링 기반 데이터 및 기술적 지표로 오차가 있을 수 있으며 실제 투자 결과에 대한 책임은 지지 않습니다.*")

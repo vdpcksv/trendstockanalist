@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-8">
+    <h1 class="text-3xl font-bold text-slate-900 mb-2">기술적 매매 복기 및 퀀트 진단</h1>
+    <p class="text-slate-600 max-w-3xl">입력하신 종목의 과거 흐름을 철저히 복기하고, AI 기반의 퀀트 지표를 통해 현재 주가의 상승 동력을 수치화하여 제공합니다.</p>
+</div>
+
+<!-- Search Form -->
+<div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 mb-8">
+    <form method="get" action="/review" class="flex flex-col sm:flex-row gap-4">
+        <div class="flex-grow">
+            <label for="ticker" class="sr-only">종목 코드 6자리</label>
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span class="text-slate-500 sm:text-sm">🔍</span>
+                </div>
+                <input type="text" name="ticker" id="ticker" value="{{ ticker }}"
+                    class="block w-full pl-10 pr-3 py-3 border border-slate-300 rounded-md leading-5 bg-white placeholder-slate-500 focus:outline-none focus:placeholder-slate-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    placeholder="종목 코드 6자리 입력 (예: 005930)" required pattern="[0-9]{6}">
+            </div>
+            <p class="mt-2 text-xs text-slate-500">※ 종목의 고유 숫자 6자리 티커를 입력해 주세요.</p>
+        </div>
+        <button type="submit"
+            class="w-full sm:w-auto flex justify-center py-3 px-8 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            차트 및 AI 진단 불러오기
+        </button>
+    </form>
+</div>
+
+{% if error %}
+<div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative mb-8" role="alert">
+    <span class="block sm:inline">{{ error }}</span>
+</div>
+{% endif %}
+
+{% if chart_data and ai_score %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+    <!-- Chart Area -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 lg:col-span-2">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-semibold text-slate-800">📊 6개월 기술적 캔들 차트 ({{ ticker }})</h2>
+
+            <!-- Indicator Toggles -->
+            <div class="flex space-x-4 text-sm bg-slate-100 p-1 rounded-lg">
+                <label class="flex items-center space-x-2 cursor-pointer px-2">
+                    <input type="checkbox" id="toggle-ma"
+                        class="form-checkbox h-4 w-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
+                        checked>
+                    <span class="text-slate-700">이동평균선(MA5,20,60)</span>
+                </label>
+                <label class="flex items-center space-x-2 cursor-pointer px-2">
+                    <input type="checkbox" id="toggle-bb"
+                        class="form-checkbox h-4 w-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
+                        checked>
+                    <span class="text-slate-700">볼린저밴드(20,2)</span>
+                </label>
+            </div>
+        </div>
+
+        <div id="plotly-candlestick" class="w-full h-96 bg-slate-50 border border-slate-200 rounded"></div>
+        <div id="plotly-rsi" class="w-full h-40 bg-slate-50 border border-slate-200 rounded mt-4"></div>
+    </div>
+
+    <!-- AI Score Dashboard -->
+    <div
+        class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 flex flex-col items-center justify-center text-center">
+        <h2 class="text-lg font-semibold mb-6 text-slate-800 w-full border-b pb-2">🤖 AI 퀀트 종합 분석 리포트</h2>
+
+        <div class="relative mb-6">
+            <!-- Score Circle -->
+            <svg class="w-32 h-32 transform -rotate-90">
+                <circle cx="64" cy="64" r="56" stroke="currentColor" stroke-width="12" fill="transparent"
+                    class="text-slate-100" />
+                <circle cx="64" cy="64" r="56" stroke="currentColor" stroke-width="12" fill="transparent"
+                    stroke-dasharray="351.858" stroke-dashoffset="{{ 351.858 - (351.858 * ai_score.score) / 100 }}"
+                    class="{% if ai_score.score >= 80 %}text-green-500{% elif ai_score.score >= 60 %}text-blue-500{% elif ai_score.score >= 40 %}text-yellow-500{% else %}text-red-500{% endif %} transition-all duration-1000 ease-out" />
+            </svg>
+            <div class="absolute inset-0 flex flex-col items-center justify-center">
+                <span class="text-3xl font-bold text-slate-800">{{ ai_score.score }}</span>
+                <span class="text-xs text-slate-500">Score</span>
+            </div>
+        </div>
+
+        <div class="w-full bg-slate-50 rounded-lg p-4 text-left border border-slate-200">
+            <h3 class="text-sm font-bold text-slate-700 mb-1">현재 시장 국면 (Phase)</h3>
+            <p
+                class="text-lg font-semibold {% if '매수' in ai_score.phase %}text-green-600{% elif '관망' in ai_score.phase %}text-yellow-600{% else %}text-red-600{% endif %}">
+                {{ ai_score.phase }}</p>
+
+            <div class="mt-4 border-t border-slate-200 pt-3">
+                <h3 class="text-sm font-bold text-slate-700 mb-1">RSI 추세 강도 (14일)</h3>
+                <div class="flex items-center justify-between">
+                    <span class="text-2xl font-bold text-slate-800">{{ ai_score.rsi }}</span>
+                    <span class="text-xs text-slate-500 bg-white border px-2 py-1 rounded">
+                        {% if ai_score.rsi < 30 %}과매도구간{% elif ai_score.rsi> 70 %}과매수구간{% else %}추세안정{% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <p class="mt-6 text-xs text-slate-400 text-left">
+            * 본 AI 진단은 가격 모멘텀과 기술적 지표의 이격도를 수학적으로 연산한 결과입니다. 맹신은 금물이며, 참고용 보조 지표로만 활용하시기 바랍니다. 내부 연산 알고리즘(수식)은 전략 보안상의
+            이유로 공개되지 않습니다.
+        </p>
+    </div>
+</div>
+
+<!-- AdSense Rich Content Section -->
+<div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+    <h3 class="text-lg font-bold text-slate-800 mb-3 block">💡 투자 가이드: 기술적 지표(Technical Analysis)와 퀀트 진단의 이해</h3>
+    <p class="text-slate-600 leading-relaxed text-sm">
+        주식 시장에서 인간의 감정(탐욕과 공포)을 완전히 배제하고 매매하는 것은 매우 어렵습니다. 기술적 분석(Technical Analysis)은 가격과 거래량이라는 객관적인 데이터를 바탕으로 시장
+        참여자들의 심리 상태를 읽어내는 도구입니다. 본 서비스가 제공하는 AI 퀀트 지표는 가장 신뢰도가 높은 3가지 지표(이동평균선의 수렴과 발산, 상대강도지수 RSI의 과매수/과매도, 볼린저 밴드의
+        표준편차 이탈 확률)를 복합적으로 연산하여 하나의 '종합 점수(Score)'로 도출한 것입니다. 수만 번의 백테스팅을 거친 로직을 내장하여, 투자자가 감정에 휘둘리지 않고 철저히 통계에 기반한 '시스템
+        트레이딩(System Trading)'의 영역에 다가설 수 있도록 안내합니다.
+    </p>
+</div>
+
+<!-- Scripts for Data Visualization -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const rawJsonData = `{{ chart_data | safe }}`;
+        const data = JSON.parse(rawJsonData);
+        if (!data || data.length === 0) return;
+
+        const dates = data.map(d => d.Date);
+        const opens = data.map(d => d.Open);
+        const highs = data.map(d => d.High);
+        const lows = data.map(d => d.Low);
+        const closes = data.map(d => d.Close);
+
+        // MA
+        const ma5 = data.map(d => d.MA5);
+        const ma20 = data.map(d => d.MA20);
+        const ma60 = data.map(d => d.MA60);
+
+        // Bollinger
+        const bbUpper = data.map(d => d.BB_UPPER);
+        const bbLower = data.map(d => d.BB_LOWER);
+
+        // RSI
+        const rsi = data.map(d => d.RSI);
+
+        // --- 1. Candlestick Chart Base ---
+        const traceCandle = {
+            x: dates, open: opens, high: highs, low: lows, close: closes,
+            type: 'candlestick', name: '가격',
+            increasing: { line: { color: '#ef4444' } },
+            decreasing: { line: { color: '#3b82f6' } }
+        };
+
+        // --- 2. Moving Averages ---
+        const traceMa5 = { x: dates, y: ma5, type: 'scatter', mode: 'lines', name: 'MA5', line: { color: '#f59e0b', width: 1 } };
+        const traceMa20 = { x: dates, y: ma20, type: 'scatter', mode: 'lines', name: 'MA20', line: { color: '#10b981', width: 1.5 } };
+        const traceMa60 = { x: dates, y: ma60, type: 'scatter', mode: 'lines', name: 'MA60', line: { color: '#8b5cf6', width: 1.5 } };
+
+        // --- 3. Bollinger Bands ---
+        const traceBbUpper = { x: dates, y: bbUpper, type: 'scatter', mode: 'lines', name: 'BB 상단', line: { color: '#94a3b8', width: 1, dash: 'dot' } };
+        const traceBbLower = { x: dates, y: bbLower, type: 'scatter', mode: 'lines', name: 'BB 하단', line: { color: '#94a3b8', width: 1, dash: 'dot' }, fill: 'tonexty', fillcolor: 'rgba(148, 163, 184, 0.1)' };
+
+        const layoutMain = {
+            margin: { t: 10, r: 10, b: 30, l: 40 },
+            xaxis: { rangeslider: { visible: false }, fixedrange: true },
+            yaxis: { fixedrange: true },
+            paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+            showlegend: true, legend: { orientation: 'h', y: 1.1 }
+        };
+        const config = { displayModeBar: false, responsive: true };
+
+        // Initial Plot
+        let mainTraces = [traceCandle, traceMa5, traceMa20, traceMa60, traceBbUpper, traceBbLower];
+        Plotly.newPlot('plotly-candlestick', mainTraces, layoutMain, config);
+
+        // Checkbox Toggle Logic
+        document.getElementById('toggle-ma').addEventListener('change', function (e) {
+            const visibility = e.target.checked ? true : 'legendonly';
+            Plotly.restyle('plotly-candlestick', { visible: visibility }, [1, 2, 3]); // MA5,20,60 index
+        });
+
+        document.getElementById('toggle-bb').addEventListener('change', function (e) {
+            const visibility = e.target.checked ? true : 'legendonly';
+            Plotly.restyle('plotly-candlestick', { visible: visibility }, [4, 5]); // BB Upper, Lower index
+        });
+
+        // --- 4. RSI Chart ---
+        const traceRsi = { x: dates, y: rsi, type: 'scatter', mode: 'lines', name: 'RSI(14)', line: { color: '#8b5cf6', width: 1.5 } };
+        const layoutRsi = {
+            margin: { t: 10, r: 10, b: 20, l: 40 },
+            xaxis: { fixedrange: true },
+            yaxis: { range: [0, 100], fixedrange: true },
+            paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+            shapes: [
+                { type: 'line', y0: 30, y1: 30, x0: dates[0], x1: dates[dates.length - 1], line: { color: '#ef4444', width: 1, dash: 'dash' } },
+                { type: 'line', y0: 70, y1: 70, x0: dates[0], x1: dates[dates.length - 1], line: { color: '#3b82f6', width: 1, dash: 'dash' } }
+            ]
+        };
+        Plotly.newPlot('plotly-rsi', [traceRsi], layoutRsi, config);
+    });
+</script>
+{% endif %}
+{% endblock %}

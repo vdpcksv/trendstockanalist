@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-8">
+    <h1 class="text-3xl font-bold text-slate-900 mb-2">당일 주도 테마 맞춤형 시나리오</h1>
+    <p class="text-slate-600 max-w-3xl">Npay 증권의 실시간 테마 시세를 분석하여, 오늘 시장을 주도하는 테마와 편입 종목들을 안내합니다.</p>
+</div>
+
+{% if error %}
+<div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
+    <span class="block sm:inline">{{ error }}</span>
+</div>
+{% else %}
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+
+    <!-- Theme Selection form -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+        <h2 class="text-lg font-semibold mb-4 text-slate-800">🔥 오늘의 핫 테마 리스트 (Top 20)</h2>
+
+        <form method="get" action="/themes" class="space-y-4">
+            <div>
+                <label for="theme" class="block text-sm font-medium text-slate-700 mb-1">💡 깊게 파보고 싶은 관심 테마 선택</label>
+                <select id="theme" name="theme"
+                    class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md border">
+                    <option value="" disabled {% if not selected_theme_data %}selected{% endif %}>테마를 선택하세요</option>
+                    {% for t in themes %}
+                    <option value="{{ t['테마명'] }}" {% if selected_theme_data and selected_theme_data['테마명']==t['테마명']
+                        %}selected{% endif %}>
+                        {{ t['테마명'] }} ({{ t['등락률(%)'] }}%)
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit"
+                class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition">
+                테마 분석하기
+            </button>
+        </form>
+
+        {% if selected_theme_data %}
+        <div class="mt-6 p-4 bg-indigo-50 rounded-lg text-center">
+            <span class="text-3xl block mb-2">🚀</span>
+            <p class="font-medium text-indigo-900">
+                선택하신 '{{ selected_theme_data['테마명'] }}' 테마의<br>
+                오늘 평균 등락률은 <strong class="text-xl">{{ selected_theme_data['등락률(%)'] }}%</strong> 입니다.
+            </p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Theme Details & Lotto -->
+    <div class="lg:col-span-2 space-y-8">
+        {% if selected_theme_data %}
+        <!-- Stocks Table -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+            <h2 class="text-lg font-semibold mb-2 text-slate-800">'{{ selected_theme_data['테마명'] }}' 테마 핵심 편입 종목</h2>
+            <p class="text-sm text-slate-500 mb-4">해당 테마에 편입된 주요 종목의 실시간 시세입니다.</p>
+
+            {% if stocks_data %}
+            <div class="overflow-x-auto border border-slate-200 rounded-lg">
+                <table class="min-w-full text-sm text-left text-slate-600">
+                    <thead class="text-xs text-slate-700 uppercase bg-slate-50 border-b border-slate-200">
+                        <tr>
+                            <th class="px-4 py-3">종목명</th>
+                            <th class="px-4 py-3 text-right">현재가</th>
+                            <th class="px-4 py-3 text-right">등락률</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stock in stocks_data %}
+                        <tr class="bg-white border-b hover:bg-slate-50 transition">
+                            <td class="px-4 py-3 font-medium text-slate-900">{{ stock['종목명'] }}</td>
+                            <td class="px-4 py-3 text-right">{{ stock['현재가'] }}</td>
+                            <td
+                                class="px-4 py-3 text-right {% if '+' in stock['등락률'] %}text-red-500{% elif '-' in stock['등락률'] %}text-blue-500{% endif %} font-medium">
+                                {{ stock['등락률'] }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Lotto Feature -->
+            <div
+                class="mt-8 bg-gradient-to-r from-yellow-50 to-orange-50 border border-orange-200 rounded-xl p-6 text-center shadow-inner">
+                <h3 class="text-xl font-bold text-orange-800 mb-2">🎲 오늘의 '{{ selected_theme_data['테마명'] }}' 로또 픽 뽑기!
+                </h3>
+                <p class="text-orange-700 mb-6 text-sm">해당 테마 내에서 가장 모멘텀(등락률)이 강한 유망 종목 하나를 AI가 추첨해 드립니다.</p>
+                <button onclick="drawLotto()"
+                    class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transform transition hover:scale-105">
+                    행운의 종목 뽑기 🍀
+                </button>
+                <!-- Result Modal / Card hidden by default -->
+                <div id="lotto-result"
+                    class="hidden mt-6 p-4 bg-white rounded-lg shadow-md border border-orange-100 animate-pulse">
+                    <!-- Filled via JS -->
+                </div>
+            </div>
+
+            {% else %}
+            <p class="text-slate-500">종목 데이터를 불러오지 못했습니다.</p>
+            {% endif %}
+        </div>
+
+        <!-- AI Comment -->
+        {% if ai_comment %}
+        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+            <h2 class="text-lg font-semibold mb-4 text-slate-800">🤖 AI 투자 시나리오 판단</h2>
+            <div class="flex items-start">
+                <div class="flex-grow">
+                    <h3 class="font-bold text-lg text-indigo-700">{{ ai_comment.title }}</h3>
+                    <p class="mt-2 text-slate-600">{{ ai_comment.desc }}</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <!-- Initial State empty container placeholder -->
+        <div
+            class="bg-slate-50 rounded-xl border border-dashed border-slate-300 p-12 flex items-center justify-center text-slate-400 h-full">
+            좌측에서 관심 테마를 먼저 선택해주세요.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- AdSense Rich Content Section -->
+<div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+    <h3 class="text-lg font-bold text-slate-800 mb-3 block">💡 투자 가이드: 테마 탑다운(Top-Down) 어프로치 전략</h3>
+    <p class="text-slate-600 leading-relaxed text-sm">
+        초보 투자자들이 흔히 하는 실수는 '좋아 보이는 종목'을 개별적으로 매수하는 바텀업(Bottom-Up) 방식에 의존하는 것입니다. 진짜 시장의 트렌드 세터들은 현재 어떤 '테마'와 '산업군'에 돈이
+        몰리는지를 먼저 파악하는 탑다운 접근법을 사용합니다. 본 탭에서는 네이버페이 증권의 실시간 테마 시세를 분석해 가장 모멘텀이 강한 주도 섹터를 찾아냅니다. 핫한 시나리오에 탑승하여 대장주 위주의
+        포트폴리오를 구성하면 시장 수익률(Alpha)을 뛰어넘는 결과를 달성할 수 있습니다.
+    </p>
+</div>
+
+<!-- Confetti Canvas for Lotto Effect -->
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+<script>
+    {% if stocks_data %}
+    const stocksList = {{ stocks_data | tojson | safe }};
+
+    function parseRate(rateStr) {
+        try {
+            return parseFloat(rateStr.replace('%', '').replace('+', '').trim()) || 0;
+        } catch {
+            return 0;
+        }
+    }
+
+    function drawLotto() {
+        if (!stocksList || stocksList.length === 0) return;
+
+        // 1. Sort by Rate
+        const sorted = [...stocksList].sort((a, b) => parseRate(b['등락률']) - parseRate(a['등락률']));
+
+        // 2. Pick top 3 and select 1 randomly for excitement
+        const topCandidates = sorted.slice(0, 3);
+        const randomIdx = Math.floor(Math.random() * topCandidates.length);
+        const luckyStock = topCandidates[randomIdx];
+
+        // 3. Fire Confetti
+        var duration = 3000;
+        var end = Date.now() + duration;
+
+        (function frame() {
+            confetti({
+                particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#ff0000', '#00ff00', '#0000ff']
+            });
+            confetti({
+                particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#ff0000', '#00ff00', '#0000ff']
+            });
+
+            if (Date.now() < end) requestAnimationFrame(frame);
+        }());
+
+        // 4. Show Result
+        const resDiv = document.getElementById('lotto-result');
+        resDiv.classList.remove('hidden');
+        resDiv.innerHTML = `
+            <div class="text-2xl mb-1">🎉 축하합니다! 🎉</div>
+            <div class="text-lg font-medium text-slate-800">
+                오늘의 로또 픽 종목은 <span class="text-indigo-600 font-bold text-xl">[${luckyStock['종목명']}]</span> 입니다!
+            </div>
+            <div class="mt-2 flex justify-center space-x-4 text-sm font-medium">
+                <span class="bg-gray-100 px-3 py-1 rounded">현재가: ${luckyStock['현재가']}</span>
+                <span class="bg-red-50 text-red-600 px-3 py-1 rounded border border-red-100">등락률: ${luckyStock['등락률']}</span>
+            </div>
+            <p class="mt-4 text-xs text-orange-600">단기 모멘텀이 매우 강하게 들어오고 있는 대장주급 종목입니다. (투자는 신중하게!)</p>
+        `;
+    }
+    {% endif %}
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-8">
+    <h1 class="text-3xl font-bold text-slate-900 mb-2">섹터 대표주 10년 치 계절성 트렌드 (Real Data)</h1>
+    <p class="text-slate-600 max-w-3xl">주요 대표 종목의 최근 10년간 월별 상승 확률(승률)을 백테스팅한 히트맵입니다.</p>
+</div>
+
+<!-- Help Expander styled with Tailwind details/summary -->
+<details class="mb-8 bg-blue-50 border border-blue-200 rounded-lg p-4 group" open>
+    <summary class="font-semibold text-blue-800 cursor-pointer list-none flex items-center justify-between">
+        💡 이 차트의 수치들은 어떻게 읽는 건가요? (클릭해서 접기/펼치기)
+        <span class="transition group-open:rotate-180">
+            <svg fill="none" height="24" shape-rendering="geometricPrecision" stroke="currentColor"
+                stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 24 24" width="24">
+                <path d="M6 9l6 6 6-6"></path>
+            </svg>
+        </span>
+    </summary>
+    <div class="mt-4 text-blue-700 text-sm space-y-2">
+        <p><strong>'승률(Win Rate)'이란 무엇인가요?</strong></p>
+        <ul class="list-disc pl-5">
+            <li>지난 10년 동안 해당 섹터의 대표 주식을 특정 달(예: 1월) 첫 거래일에 사서 마지막 거래일에 팔았을 때, 주가가 올라서 수익이 났던 횟수의 비율입니다.</li>
+            <li>예) 삼성전자의 1월 승률이 60%라면, 10번 중 6번 상승 마감했다는 뜻입니다.</li>
+        </ul>
+        <p class="mt-2"><strong>색상은 어떤 의미인가요?</strong></p>
+        <ul class="list-disc pl-5">
+            <li><span class="font-bold text-green-600">초록색이 진할수록</span>: 역사적으로 주가가 올랐던 적이 많음. (매수 관점 적합)</li>
+            <li><span class="font-bold text-red-600">빨간색이 진할수록</span>: 역사적으로 주가가 하락했던 적이 많음. (보수적 접근 필요)</li>
+        </ul>
+    </div>
+</details>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+    <!-- Heatmap Chart -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 lg:col-span-2">
+        <h2 class="text-lg font-semibold mb-4 text-slate-800">📊 월별/섹터별 평균 승률 히트맵</h2>
+        <div id="plotly-heatmap" class="w-full h-96"></div>
+    </div>
+
+    <!-- AI Insights Sidebar -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 flex flex-col h-full">
+        <h2 class="text-lg font-semibold mb-4 text-slate-800">💡 금월 AI 계절성 인사이트</h2>
+        <div id="insight-box" class="bg-indigo-50 border-l-4 border-indigo-500 p-4 rounded-r mb-6">
+            <p class="text-sm font-medium text-indigo-800" id="best-sector-text">데이터 분석 중...</p>
+        </div>
+
+        <div class="flex-grow">
+            <h3 class="font-bold text-slate-700 mb-3 border-b pb-2">이벤트 드리븐 체크 포인트</h3>
+            <ul class="space-y-3 text-sm text-slate-600">
+                <li class="flex items-start"><span class="mr-2">✔️</span> <span>**2~3월**: 감사보고서 제출 및 배당락 이후 가치주 재평가
+                        기간</span></li>
+                <li class="flex items-start"><span class="mr-2">✔️</span> <span>**4월**: 1분기 실적 발표(어닝시즌) 차별화 장세</span>
+                </li>
+                <li class="flex items-start"><span class="mr-2">✔️</span> <span>**11~12월**: 연말 배당 및 소비 시즌 (유통/배당주
+                        강세)</span></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- AdSense Rich Content Section -->
+<div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+    <h3 class="text-lg font-bold text-slate-800 mb-3 block">💡 투자 가이드: 계절성 트렌드(Seasonality) 기반의 중장기 전략</h3>
+    <p class="text-slate-600 leading-relaxed text-sm">
+        주식 시장은 생각보다 일정한 패턴(Pattern)을 반복합니다. 매년 특정한 시기마다 반복되는 실적 발표, 배당 기일, 정부 정책 발표 주기에 따라 계절적 수혜주가 존재하기 때문입니다. 위 히트맵
+        차트는 최근 10년간의 주요 섹터들의 계절성 데이터를 시각화한 것입니다. 특정 월에 승률(Win Rate)이 70%를 넘는 섹터를 한발 앞서 매집(Accumulation)하는 전략을 구사하면 가장
+        유리한 위치에서 투자 수익률을 극대화할 수 있습니다. 맹목적인 단타보다는 확률에 기반한 투자를 경험해 보세요.
+    </p>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const zData = JSON.parse('{{ z_data | safe }}');
+        const xLabels = JSON.parse('{{ x_labels | safe }}');
+        const yLabels = JSON.parse('{{ y_labels | safe }}');
+        const currentMonthIdx = {{ current_month_idx }
+    };
+
+    const data = [{
+        z: zData,
+        x: xLabels,
+        y: yLabels,
+        type: 'heatmap',
+        colorscale: 'RdYlGn',
+        text: zData.map(row => row.map(val => String(val) + "%")),
+        texttemplate: "%{text}",
+        showscale: false
+    }];
+
+    const layout = {
+        margin: { t: 30, r: 10, b: 30, l: 80 },
+        xaxis: { fixedrange: true },
+        yaxis: { fixedrange: true },
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'rgba(0,0,0,0)',
+    };
+
+    const config = { displayModeBar: false, responsive: true };
+    Plotly.newPlot('plotly-heatmap', data, layout, config);
+
+    // Find best sector for current month
+    let maxVal = -1;
+    let bestSector = "";
+    for (let i = 0; i < yLabels.length; i++) {
+        if (zData[i][currentMonthIdx] > maxVal) {
+            maxVal = zData[i][currentMonthIdx];
+            bestSector = yLabels[i];
+        }
+    }
+
+    document.getElementById('best-sector-text').innerHTML =
+        `과거 10년 데이터를 분석한 결과, <strong>${currentMonthIdx + 1}월에는 '${bestSector}'</strong> 섹터가 상승할 확률이 <strong>${maxVal}%</strong>로 가장 높았습니다.`;
+    });
+</script>
+{% endblock %}

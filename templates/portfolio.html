@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-8">
+    <h1 class="text-3xl font-bold text-slate-900 mb-2">포트폴리오 관리 (Local Storage)</h1>
+    <p class="text-slate-600 max-w-3xl">현재 보유 중인 종목을 등록하여 전체 자산 비중과 수익률을 브라우저 환경에서 안전하게 관리합니다.</p>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+    <!-- Form Area -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+        <h2 class="text-lg font-semibold mb-4 text-slate-800">✅ 신규 종목 등록</h2>
+        <form id="portfolio-form" class="space-y-4">
+            <div>
+                <label for="stock_name" class="block text-sm font-medium text-slate-700">종목명</label>
+                <input type="text" id="stock_name" required
+                    class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    placeholder="예: 삼성전자">
+            </div>
+            <div>
+                <label for="buy_price" class="block text-sm font-medium text-slate-700">매수 단가 (원)</label>
+                <input type="number" id="buy_price" required
+                    class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    placeholder="예: 70000">
+            </div>
+            <div>
+                <label for="quantity" class="block text-sm font-medium text-slate-700">보유 수량 (주)</label>
+                <input type="number" id="quantity" required
+                    class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    placeholder="예: 100">
+            </div>
+            <button type="submit"
+                class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                포트폴리오에 추가
+            </button>
+        </form>
+
+        <hr class="my-6 border-slate-200">
+
+        <h2 class="text-lg font-semibold mb-4 text-slate-800">🚨 텔레그램 스텔스 알림설정</h2>
+        <form id="bot-config-form" class="space-y-4">
+            <div>
+                <label for="bot_token" class="block text-sm font-medium text-slate-700">Bot Token</label>
+                <input type="password" id="bot_token"
+                    class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 text-sm"
+                    placeholder="BotFather에서 받은 토큰">
+            </div>
+            <div>
+                <label for="chat_id" class="block text-sm font-medium text-slate-700">Chat ID</label>
+                <input type="text" id="chat_id"
+                    class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 text-sm"
+                    placeholder="ID (숫자)">
+            </div>
+            <div>
+                <label for="watch_list" class="block text-sm font-medium text-slate-700">스텔스 감시 종목 (콤마 구분)</label>
+                <input type="text" id="watch_list"
+                    class="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 text-sm"
+                    placeholder="예: 005930, 000660">
+            </div>
+            <button type="button" onclick="saveBotConfig()"
+                class="w-full flex justify-center py-2 px-4 border border-slate-300 rounded-md shadow-sm text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 focus:outline-none">
+                설정 로컬 저장하기
+            </button>
+        </form>
+    </div>
+
+    <!-- Dashboard Area -->
+    <div class="lg:col-span-2 space-y-6">
+        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+            <h2 class="text-lg font-semibold mb-6 text-slate-800 border-b pb-2">💼 내 자산 보유 요약</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                <div class="bg-indigo-50 p-4 rounded-lg border border-indigo-100">
+                    <p class="text-sm text-indigo-600 font-semibold mb-1">총 매수 금액 (원금)</p>
+                    <p class="text-2xl font-bold text-slate-900" id="total-invest">0 원</p>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto border border-slate-200 rounded-lg">
+                <table class="min-w-full text-sm text-left text-slate-600">
+                    <thead class="text-xs text-slate-700 uppercase bg-slate-50 border-b border-slate-200">
+                        <tr>
+                            <th class="px-4 py-3">종목명</th>
+                            <th class="px-4 py-3 text-right">매수단가</th>
+                            <th class="px-4 py-3 text-right">수량</th>
+                            <th class="px-4 py-3 text-right">투자금액</th>
+                            <th class="px-4 py-3 text-center">관리</th>
+                        </tr>
+                    </thead>
+                    <tbody id="portfolio-tbody">
+                        <!-- Filled by JS -->
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+
+        <!-- Plotly Pie Chart -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+            <h2 class="text-lg font-semibold mb-4 text-slate-800">📊 포트폴리오 비중</h2>
+            <div id="plotly-pie" class="w-full h-80"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        let portfolio = JSON.parse(localStorage.getItem('trend_portfolio')) || [];
+
+        const form = document.getElementById('portfolio-form');
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const name = document.getElementById('stock_name').value;
+            const price = parseInt(document.getElementById('buy_price').value);
+            const qty = parseInt(document.getElementById('quantity').value);
+
+            portfolio.push({ id: Date.now(), name: name, price: price, qty: qty });
+            localStorage.setItem('trend_portfolio', JSON.stringify(portfolio));
+            form.reset();
+            renderDashboard();
+        });
+
+        window.deleteItem = function (id) {
+            portfolio = portfolio.filter(p => p.id !== id);
+            localStorage.setItem('trend_portfolio', JSON.stringify(portfolio));
+            renderDashboard();
+        }
+
+        window.saveBotConfig = function () {
+            const botToken = document.getElementById('bot_token').value;
+            const chatId = document.getElementById('chat_id').value;
+            const watchList = document.getElementById('watch_list').value;
+            localStorage.setItem('trend_bot', JSON.stringify({ token: botToken, chat: chatId, watch: watchList }));
+            alert("백그라운드 알림 봇 설정이 브라우저에 저장되었습니다.");
+        }
+
+        // Load bot config if exists
+        const savedBot = JSON.parse(localStorage.getItem('trend_bot'));
+        if (savedBot) {
+            document.getElementById('bot_token').value = savedBot.token || "";
+            document.getElementById('chat_id').value = savedBot.chat || "";
+            document.getElementById('watch_list').value = savedBot.watch || "";
+        }
+
+        function renderDashboard() {
+            const tbody = document.getElementById('portfolio-tbody');
+            tbody.innerHTML = "";
+            let totalInvest = 0;
+
+            const labels = [];
+            const values = [];
+
+            if (portfolio.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-400">등록된 종목이 없습니다.</td></tr>`;
+                document.getElementById('total-invest').innerText = "0 원";
+                Plotly.newPlot('plotly-pie', [{ values: [1], labels: ['비어있음'], type: 'pie', marker: { colors: ['#f1f5f9'] } }], { margin: { t: 0, b: 0, l: 0, r: 0 } });
+                return;
+            }
+
+            portfolio.forEach(p => {
+                const investAmount = p.price * p.qty;
+                totalInvest += investAmount;
+
+                labels.push(p.name);
+                values.push(investAmount);
+
+                const tr = document.createElement('tr');
+                tr.className = "bg-white border-b hover:bg-slate-50";
+                tr.innerHTML = `
+                    <td class="px-4 py-3 font-medium text-slate-900">${p.name}</td>
+                    <td class="px-4 py-3 text-right">${p.price.toLocaleString()}</td>
+                    <td class="px-4 py-3 text-right">${p.qty.toLocaleString()}</td>
+                    <td class="px-4 py-3 text-right font-medium text-indigo-700">${investAmount.toLocaleString()}</td>
+                    <td class="px-4 py-3 text-center">
+                        <button onclick="deleteItem(${p.id})" class="text-red-500 hover:text-red-700 text-xs">삭제</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('total-invest').innerText = totalInvest.toLocaleString() + " 원";
+
+            const pieData = [{
+                values: values,
+                labels: labels,
+                type: 'pie',
+                hole: .4,
+                textposition: 'inside',
+                textinfo: 'percent+label'
+            }];
+
+            const layout = {
+                margin: { t: 20, b: 20, l: 20, r: 20 },
+                showlegend: true,
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)'
+            };
+
+            Plotly.newPlot('plotly-pie', pieData, layout, { displayModeBar: false, responsive: true });
+        }
+
+        renderDashboard();
+    });
+</script>
+{% endblock %}

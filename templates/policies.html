@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-8 border-b pb-4">
+    <h1 class="text-3xl font-bold text-slate-900 mb-2">📜 필수 정책 및 가이드 (AdSense Approval Guide)</h1>
+    <p class="text-slate-600 max-w-3xl">구글 애드센스 등 광고 플랫폼 심사 통과를 위해, 본 사이트가 제공하는 법적 고지와 인증 스크립트 작성 안내를 제공하는 공식 페이지입니다.
+    </p>
+</div>
+
+<div class="space-y-6">
+
+    <!-- Disclaimer -->
+    <details class="group bg-white rounded-xl shadow-sm border border-slate-200">
+        <summary
+            class="flex justify-between items-center font-medium cursor-pointer list-none p-5 text-slate-800 hover:bg-slate-50 transition">
+            <span class="flex items-center gap-2"><span class="text-xl">📌</span> 면책 조항 (Disclaimer)</span>
+            <span class="transition group-open:rotate-180">
+                <svg fill="none" height="24" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" width="24">
+                    <path d="M6 9l6 6 6-6"></path>
+                </svg>
+            </span>
+        </summary>
+        <div class="p-5 border-t border-slate-100 text-sm text-slate-600 space-y-3 leading-relaxed">
+            <h3 class="font-bold text-slate-800 mb-2">투자 위험 고지 및 면책 조항</h3>
+            <p>1. <strong>정보의 목적 및 한계</strong>: 본 웹사이트("Trend-Lotto Invest", 이하 "본 사이트")에서 제공하는 모든 금융 데이터, 차트, 종목 분석, AI
+                기반 스코어링 등의 정보는 철저히 투자자들의 학습 및 시장 참고용으로만 제공됩니다. 본 사이트의 어떠한 내용도 <strong>특정 주식, 채권, 파생상품 등의 매수, 매도, 유지 등에
+                    대한 직접적인 투자 권유나 금융 자문에 해당하지 않습니다.</strong></p>
+            <p>2. <strong>데이터의 정확성 부족 가능성</strong>: 본 사이트는 네이버페이 증권 등 공개된 제3자 데이터를 기반으로 정보를 가공 및 표시합니다. 시스템 오류, 통신 지연,
+                제공처의 데이터 오류 등으로 인해 제공되는 정보의 정확성, 완전성, 적시성을 철저히 보장할 수 없습니다.</p>
+            <p>3. <strong>투자의 책임 소재</strong>: 주식 투자는 원금 손실의 위험을 수반합니다. 본 사이트의 정보를 활용하여 내린 투자 결정 및 그로 인해 발생하는 모든 직·간접적인
+                손실이나 법적 분쟁에 대해 본 사이트 운영자 및 개발자는 어떠한 민·형사상 법적 책임도 지지 않습니다. 투자의 최종 결정권 및 그 결과에 대한 책임은 전적으로 사용자 본인에게 있습니다.
+            </p>
+        </div>
+    </details>
+
+    <!-- Privacy Policy -->
+    <details class="group bg-white rounded-xl shadow-sm border border-slate-200">
+        <summary
+            class="flex justify-between items-center font-medium cursor-pointer list-none p-5 text-slate-800 hover:bg-slate-50 transition">
+            <span class="flex items-center gap-2"><span class="text-xl">🔐</span> 개인정보처리방침 (Privacy Policy)</span>
+            <span class="transition group-open:rotate-180">
+                <svg fill="none" height="24" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" width="24">
+                    <path d="M6 9l6 6 6-6"></path>
+                </svg>
+            </span>
+        </summary>
+        <div class="p-5 border-t border-slate-100 text-sm text-slate-600 space-y-3 leading-relaxed">
+            <h3 class="font-bold text-slate-800 mb-2">개인정보처리방침</h3>
+            <p>1. <strong>수집하는 개인정보의 항목 및 수집 방법</strong>: 본 사이트는 사용자의 사이트 이용 시, 서버 로그 파일, 쿠키(Cookies), 웹 비콘 등을 통해 IP 주소,
+                브라우저 유형, 접속 시간 등 식별 불가능한 기술적 데이터를 자동 수집할 수 있습니다. 텔레그램 봇 토큰 및 Chat ID, 모의 포트폴리오 데이터는 브라우저 내부(Local
+                Storage)에 저장되며, 운영자의 서버로 전송되거나 수집되지 않습니다.</p>
+            <p>2. <strong>제3자 광고업체(Google AdSense) 관련 규정</strong>: 본 사이트는 광고 게재를 위해 Google AdSense와 같은 제3자 광고 회사를 이용할 수
+                있습니다. 이러한 회사들은 사용자에게 가장 관련성 높은 맞춤형 광고를 제공하기 위해, 본 사이트 및 다른 평소 방문 사이트에 대한 사용자 방문 정보(DART 쿠키 등, 이름/주소/전화번호
+                등 민감정보 제외)를 사용할 수 있습니다. 사용자는 Google 광고 및 콘텐츠 네트워크 개인정보처리방침에 방문하여 이 쿠키의 사용을 거부(Opt-out)할 수 있습니다.</p>
+        </div>
+    </details>
+
+    <!-- Terms of Service -->
+    <details class="group bg-white rounded-xl shadow-sm border border-slate-200">
+        <summary
+            class="flex justify-between items-center font-medium cursor-pointer list-none p-5 text-slate-800 hover:bg-slate-50 transition">
+            <span class="flex items-center gap-2"><span class="text-xl">📄</span> 이용 약관 (Terms of Service)</span>
+            <span class="transition group-open:rotate-180">
+                <svg fill="none" height="24" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" width="24">
+                    <path d="M6 9l6 6 6-6"></path>
+                </svg>
+            </span>
+        </summary>
+        <div class="p-5 border-t border-slate-100 text-sm text-slate-600 space-y-3 leading-relaxed">
+            <h3 class="font-bold text-slate-800 mb-2">이용 약관</h3>
+            <p>1. 본 사이트의 인터페이스 및 표출된 데이터 구조를 상업적인 목적으로 무단 복제, 대량 크롤링(Scraping), 재배포하는 행위를 금지합니다.</p>
+            <p>2. 사이트는 시스템 유지보수, API 장애 상황, 기타 불가항력적인 사유로 인해 사전 예고 없이 서비스가 일시 중단될 수 있습니다.</p>
+        </div>
+    </details>
+
+    <!-- AdSense Guide -->
+    <details class="group bg-indigo-50 rounded-xl shadow-sm border border-indigo-200" open>
+        <summary
+            class="flex justify-between items-center font-bold cursor-pointer list-none p-5 text-indigo-900 hover:bg-indigo-100 transition">
+            <span class="flex items-center gap-2"><span class="text-xl">💻</span> Google AdSense `base.html` 삽입
+                가이드</span>
+            <span class="transition group-open:rotate-180">
+                <svg fill="none" height="24" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" width="24">
+                    <path d="M6 9l6 6 6-6"></path>
+                </svg>
+            </span>
+        </summary>
+        <div
+            class="p-5 border-t border-indigo-100 text-sm text-indigo-800 space-y-4 leading-relaxed bg-white rounded-b-xl border-x border-b">
+            <p><strong>FastAPI 리빌딩으로 인해 사이트 소유권 인증 문제가 완벽히 해결되었습니다.</strong> 아래 가이드에 따라 ID 값만 변경하세요.</p>
+            <ol class="list-decimal pl-5 space-y-2">
+                <li>구글 애드센스에 로그인 후 '사이트 추가' 메뉴로 이동합니다.</li>
+                <li>본 서비스가 배포된 도메인(예: <code>www.my-invest.com</code>)을 입력합니다.</li>
+                <li>구글에서 제공하는 <code>&lt;script async src="https://pagead2...&gt;&lt;/script&gt;</code> 코드를 확인합니다.</li>
+                <li>프로젝트의 <strong><code>templates/base.html</code></strong> 파일을 엽니다. (현재 하드코딩 되어있습니다)</li>
+                <li><code>base.html</code> 의 맨 위, <code>&lt;head&gt;</code> 와 <code>&lt;/head&gt;</code> 사이에 있는 스크립트의
+                    <code>ca-pub-XXXXXXXXXXXXXXXX</code> 부분을 본인의 실제 Publisher ID로 수정합니다.</li>
+                <li>(선택 사항) 만약 <code>ads.txt</code> 파일 인증을 요구한다면, FastAPI의 <code>static/ads.txt</code> 파일을 생성 및 마운트하여
+                    해결할 수 있습니다.</li>
+                <li>변경사항을 적용 후 애드센스 페이지에서 "검토 요청"을 클릭합니다.</li>
+            </ol>
+        </div>
+    </details>
+
+</div>
+{% endblock %}

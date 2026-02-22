@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trend-Lotto Invest Dashboard</title>
+
+    <!-- ✅ Google AdSense Verification Code (Hardcoded here for SEO Bot Crawlability) -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"
+        crossorigin="anonymous"></script>
+
+    <!-- Tailwind CSS (CDN for Premium Aesthetic) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Plotly JS (To replace Streamlit charts) -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Custom Premium Aesthetics and overrides */
+    </style>
+</head>
+
+<body class="bg-slate-50 text-slate-900 overflow-x-hidden min-h-screen">
+
+    <!-- Premium Navigation Bar -->
+    <nav class="bg-indigo-600 shadow-lg text-white sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo -->
+                <div class="flex-shrink-0 flex items-center gap-2">
+                    <span class="font-bold text-xl tracking-wide">📈 Trend-Lotto Invest</span>
+                </div>
+
+                <!-- Desktop Nav Link (Hidden on mobile) -->
+                <div class="hidden md:flex space-x-6 overflow-x-auto whitespace-nowrap scrollbar-hide">
+                    <a href="/" class="hover:bg-indigo-500 px-3 py-2 rounded-md font-medium transition">💰 자금 흐름</a>
+                    <a href="/seasonality" class="hover:bg-indigo-500 px-3 py-2 rounded-md font-medium transition">🗓️
+                        계절성 트렌드</a>
+                    <a href="/themes" class="hover:bg-indigo-500 px-3 py-2 rounded-md font-medium transition">🎯 테마
+                        맞춤형</a>
+                    <a href="/review" class="hover:bg-indigo-500 px-3 py-2 rounded-md font-medium transition">🤖 매매
+                        복기</a>
+                    <a href="/portfolio" class="hover:bg-indigo-500 px-3 py-2 rounded-md font-medium transition">💼
+                        포트폴리오</a>
+                    <a href="/policies" class="hover:bg-indigo-500 px-3 py-2 rounded-md font-medium transition">📜 필수
+                        정책</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Injection Zone -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 mt-12 py-6 text-center text-slate-500">
+        <p class="text-sm">© 2026 Trend-Lotto Invest | 본 정보는 오류가 있을 수 있으며 투자 결과에 대한 책임은 지지 않습니다.</p>
+    </footer>
+
+</body>
+
+</html>

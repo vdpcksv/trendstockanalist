@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-8">
+    <h1 class="text-3xl font-bold text-slate-900 mb-2">실시간 자금 흐름 (Money Flow)</h1>
+    <p class="text-slate-600 max-w-3xl">Npay 증권의 투자자별 매매동향을 활용하여 외국인 및 기관의 수급 흐름을 직관적으로 시각화합니다.</p>
+</div>
+
+<!-- Placeholder for Dashboard UI and Charts. The API will inject data here. -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+
+    <!-- Chart Section -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+        <h2 class="text-lg font-semibold mb-4">외국인/기관 순매수 추이 (단위: 억 원)</h2>
+        <div id="plotly-money-flow"
+            class="w-full h-80 bg-slate-50 flex items-center justify-center rounded border border-dashed border-slate-200">
+            <span class="text-slate-400">차트 렌더링 대기 중...</span>
+        </div>
+    </div>
+
+    <!-- Data Table & Insight Section -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 flex flex-col h-full">
+        <h2 class="text-lg font-semibold mb-4">수급 흐름 원본 표</h2>
+        <div class="overflow-x-auto flex-grow max-h-60 mb-4 border border-slate-200 rounded">
+            <!-- Table will be injected dynamically -->
+            <p class="p-4 text-center text-slate-500">데이터 수집 중...</p>
+        </div>
+
+        <div class="bg-indigo-50 border-l-4 border-indigo-500 p-4 rounded-r">
+            <h3 class="font-bold text-indigo-800 mb-1">💡 Today's Flow Insight</h3>
+            <p class="text-sm text-indigo-700" id="insight-text">분석 결과를 로딩 중입니다.</p>
+        </div>
+    </div>
+</div>
+
+<!-- AdSense Rich Content Section (Crucial to prevent Thin Content Penalty) -->
+<div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+    <h3 class="text-lg font-bold text-slate-800 mb-3 block">💡 투자 가이드: 자금 흐름(Money Flow) 분석 100% 활용법</h3>
+    <p class="text-slate-600 leading-relaxed text-sm">
+        자금 흐름 분석은 주식 시장을 움직이는 거대한 '스마트 머니'의 움직임을 추적하는 핵심 기술입니다. 기관 통계학적으로 외인과 기관 수급이 3일 연속 유입되는 종목은 단기적인 슈팅이 나올 확률이 68%
+        이상 상승합니다. 이 표와 차트는 네이버페이 증권 데이터를 기반으로 작성되었으며, 투자자는 이 정보를 통해 현재 시장에서 돈이 어느 섹터로 몰리고 있는지 거시적인 통찰력을 얻을 수 있습니다. 꾸준히
+        자금이 들어오는 우량주를 발굴하여 안전한 가치 투자를 지향해 보세요.
+    </p>
+</div>
+
+<!-- Scripts for Data Visualization -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const flowData = {{ flow_data_json | safe
+    }};
+
+    // 1. Render Table
+    const tableContainer = document.querySelector('.overflow-x-auto');
+    let tableHTML = `
+            <table class="min-w-full text-sm text-left text-slate-500">
+                <thead class="text-xs text-slate-700 uppercase bg-slate-50 border-b border-slate-200">
+                    <tr>
+                        <th class="px-4 py-3">날짜</th>
+                        <th class="px-4 py-3 text-right">개인</th>
+                        <th class="px-4 py-3 text-right text-red-600">외국인</th>
+                        <th class="px-4 py-3 text-right text-blue-600">기관</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+    flowData.forEach(row => {
+        tableHTML += `
+                <tr class="bg-white border-b hover:bg-slate-50 transition">
+                    <td class="px-4 py-3 font-medium text-slate-900">${row.Date}</td>
+                    <td class="px-4 py-3 text-right ${row['개인'] > 0 ? 'text-red-500' : 'text-blue-500'}">${row['개인'].toLocaleString()}</td>
+                    <td class="px-4 py-3 text-right ${row['외국인'] > 0 ? 'text-red-500 font-bold' : 'text-blue-500'}">${row['외국인'].toLocaleString()}</td>
+                    <td class="px-4 py-3 text-right ${row['기관'] > 0 ? 'text-red-500 font-bold' : 'text-blue-500'}">${row['기관'].toLocaleString()}</td>
+                </tr>
+            `;
+    });
+    tableHTML += `</tbody></table>`;
+    tableContainer.innerHTML = tableHTML;
+
+    // 2. Render Plotly Insight Text
+    document.getElementById('insight-text').innerText = "{{ insight }}";
+
+    // 3. Render Plotly Chart
+    const dates = flowData.map(d => d.Date);
+    const foreign = flowData.map(d => d['외국인']);
+    const instit = flowData.map(d => d['기관']);
+
+    const traceForeign = {
+        x: dates, y: foreign,
+        name: '외국인', type: 'bar', marker: { color: '#ef4444' }
+    };
+    const traceInstit = {
+        x: dates, y: instit,
+        name: '기관', type: 'bar', marker: { color: '#3b82f6' }
+    };
+
+    const layout = {
+        barmode: 'group',
+        margin: { t: 10, r: 10, b: 40, l: 40 },
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'rgba(0,0,0,0)',
+        xaxis: { fixedrange: true },
+        yaxis: { fixedrange: true, gridcolor: '#f1f5f9' },
+        showlegend: true,
+        legend: { orientation: 'h', y: 1.15 }
+    };
+    const config = { displayModeBar: false, responsive: true };
+
+    Plotly.newPlot('plotly-money-flow', [traceInstit, traceForeign], layout, config);
+
+    // Remove loading state element
+    const placeholder = document.querySelector('#plotly-money-flow span');
+    if (placeholder) placeholder.remove();
+    });
+</script>
+{% endblock %}

@@ -280,7 +280,10 @@ with st.sidebar:
 st.title("📈 Trend-Lotto Invest Prototype (Real Data)")
 st.markdown("Npay 증권(네이버페이 증권)의 실시간 지표 크롤링 및 체계적인 백테스팅 지표를 제공합니다.")
 
-tab1, tab2, tab3, tab4 = st.tabs(["💰 실시간 자금 흐름", "🗓️ 계절성 트렌드(Real)", "🎯 테마별 맞춤형 시나리오", "🤖 매매 복기 및 AI 타점 진단"])
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+    "💰 실시간 자금 흐름", "🗓️ 계절성 트렌드(Real)", "🎯 테마별 맞춤형 시나리오", 
+    "🤖 매매 복기 및 AI 타점 진단", "💼 부모님 맞춤형 포트폴리오", "🚨 텔레그램 스텔스 알림"
+])
 
 # --- Tab 1: 자금 흐름 (Money Flow) ---
 with tab1:
@@ -685,6 +688,162 @@ with tab4:
                 except Exception as e:
                     st.error(f"데이터를 불러오거나 계산하는 도중 오류가 발생했습니다: {str(e)}")
 
+
+# --- Tab 5: 부모님 맞춤형 포트폴리오 관리 ---
+with tab5:
+    st.header("💼 부모님 맞춤형 모의 포트폴리오")
+    st.markdown("자산 관리가 불편한 부모님을 위해 손쉽게 수익률을 직관적으로 보여주는 포트폴리오 탭입니다.")
+    
+    # 1. 포트폴리오 세션 스테이트 초기화
+    if 'portfolio' not in st.session_state:
+        st.session_state['portfolio'] = []  # [{name, ticker, buy_price, quantity}]
+        
+    col_p1, col_p2 = st.columns([1, 2])
+    with col_p1:
+        st.subheader("종목 추가하기")
+        p_search = st.text_input("추가할 종목명 또는 코드", key="p_search")
+        p_price = st.number_input("매수 단가 (원)", min_value=0, step=100)
+        p_qty = st.number_input("보유 수량 (주)", min_value=1, step=1)
+        
+        if st.button("➕ 포트폴리오에 추가", use_container_width=True):
+            df_krx = get_krx_stock_list()
+            t_ticker, t_name = p_search, p_search
+            if p_search.isdigit():
+                match = df_krx[df_krx['Code'] == p_search]
+                if not match.empty:
+                    t_name = match.iloc[0]['Name']
+            else:
+                match = df_krx[df_krx['Name'] == p_search]
+                if not match.empty:
+                    t_ticker = match.iloc[0]['Code']
+            
+            # 중복 체크
+            if any(item['name'] == t_name for item in st.session_state['portfolio']):
+                st.warning(f"이미 '{t_name}' 종목이 포트폴리오에 있습니다. 삭제 후 다시 추가해주세요.")
+            else:
+                st.session_state['portfolio'].append({
+                    'name': t_name, 'ticker': t_ticker, 'buy_price': p_price, 'quantity': p_qty
+                })
+                st.success(f"'{t_name}' 추가 완료!")
+                st.rerun() # Refresh UI
+                
+        st.markdown("---")
+        st.subheader("종목 삭제하기")
+        if st.session_state['portfolio']:
+            p_delete = st.selectbox("삭제할 종목 선택", [item['name'] for item in st.session_state['portfolio']])
+            if st.button("🗑️ 선택 종목 삭제", use_container_width=True):
+                st.session_state['portfolio'] = [item for item in st.session_state['portfolio'] if item['name'] != p_delete]
+                st.success(f"'{p_delete}' 삭제 완료!")
+                st.rerun()
+                
+    with col_p2:
+        st.subheader("📊 내 자산 총합 대시보드")
+        if not st.session_state['portfolio']:
+            st.info("좌측 패널에서 보유 중인 종목을 등록해주세요.")
+        else:
+            total_buy_amount = 0
+            total_current_amount = 0
+            
+            p_data = [] # For dataframe display
+            
+            with st.spinner("실시간 현재가를 불러오는 중..."):
+                for item in st.session_state['portfolio']:
+                    ticker = item['ticker']
+                    name = item['name']
+                    buy_p = item['buy_price']
+                    qty = item['quantity']
+                    
+                    # Fetch latest close price
+                    target_dt = datetime.now()
+                    try:
+                        rdf = fdr.DataReader(ticker, target_dt - timedelta(days=7), target_dt)
+                        current_p = rdf['Close'].iloc[-1] if not rdf.empty else buy_p
+                    except:
+                        current_p = buy_p
+                        
+                    buy_amt = buy_p * qty
+                    cur_amt = current_p * qty
+                    profit_pct = ((current_p - buy_p) / buy_p * 100) if buy_p > 0 else 0
+                    
+                    total_buy_amount += buy_amt
+                    total_current_amount += cur_amt
+                    
+                    p_data.append({
+                        "종목명": name,
+                        "매수 단가": f"{buy_p:,.0f}원",
+                        "현재가": f"{current_p:,.0f}원",
+                        "수량": f"{qty:,.0f}주",
+                        "평가 금액": f"{cur_amt:,.0f}원",
+                        "수익률": f"{profit_pct:.2f}%"
+                    })
+            
+            # 요약 매트릭
+            total_profit = total_current_amount - total_buy_amount
+            total_profit_pct = (total_profit / total_buy_amount * 100) if total_buy_amount > 0 else 0
+            metric_color = "normal" if total_profit_pct >= 0 else "inverse"
+            
+            c_m1, c_m2, c_m3 = st.columns(3)
+            c_m1.metric("총 매수 금액", f"{total_buy_amount:,.0f} 원")
+            c_m2.metric("총 평가 금액", f"{total_current_amount:,.0f} 원", delta=f"{total_profit:,.0f} 원", delta_color=metric_color)
+            c_m3.metric("총 합산 수익률", f"{total_profit_pct:.2f} %", delta=None)
+            
+            st.markdown("---")
+            st.caption("👈 표를 좌우로 밀어서 전체 자산을 확인하세요.")
+            st.dataframe(pd.DataFrame(p_data), use_container_width=True, hide_index=True)
+            
+            # 포트폴리오 비중 표시 (도넛 차트)
+            if total_current_amount > 0:
+                df_pie = pd.DataFrame(p_data)
+                # Cleanup "원" and commas for float conversion calculating pie slices
+                df_pie['평가 금액(int)'] = df_pie['평가 금액'].str.replace('원','').str.replace(',','').astype(float)
+                fig_pie = px.pie(df_pie, values='평가 금액(int)', names='종목명', title="자산 비중 (도넛 차트)", hole=0.4)
+                fig_pie.update_traces(textposition='inside', textinfo='percent+label')
+                fig_pie.update_layout(margin=dict(t=30, b=10, l=10, r=10), dragmode=False) # 모바일 최적화 고정
+                st.plotly_chart(fig_pie, use_container_width=True, config={'displayModeBar': False})
+
+
+# --- Tab 6: 🚨 텔레그램 스텔스 알림 봇 ---
+with tab6:
+    st.header("🚨 텔레그램 스텔스 자동 알림 (감시 모드)")
+    st.markdown("관심 종목이 **지정해둔 필살기 타점(RSI, 볼린저 밴드 상/하 이탈 등)**에 도달하면 텔레그램으로 봇이 자동 메시지를 발송하는 설정 탭입니다.")
+    st.info("💡 이 설정들을 저장한 뒤, 컴퓨터나 로컬 서버에서 24시간 도는 `alert_worker.py` 백그라운드 프로그램을 실행해두기만 하면 알아서 감시합니다.")
+    
+    col_a1, col_a2 = st.columns(2)
+    with col_a1:
+        st.subheader("1. 텔레그램 봇 정보 설정")
+        bot_token = st.text_input("Telegram Bot Token 입력", type="password", help="BotFather에서 발급받은 HTTP API Token")
+        chat_id = st.text_input("Telegram Chat 방 ID 입력", help="GetIDs 봇 등을 통해 확인 가능한 숫자 ID")
+        
+    with col_a2:
+        st.subheader("2. 감시 대상 종목 등록 (알람 켜기)")
+        if 'alert_stocks' not in st.session_state:
+            st.session_state['alert_stocks'] = []
+            
+        a_search = st.text_input("알림을 받을 종목명 (ex: 삼성전자)", key="a_search_input")
+        if st.button("감시 목록에 추가", use_container_width=True):
+            if a_search and a_search not in st.session_state['alert_stocks']:
+                st.session_state['alert_stocks'].append(a_search)
+                st.success(f"'{a_search}' 감시 목록 추가!")
+                st.rerun()
+                
+        if st.session_state['alert_stocks']:
+            st.markdown("**현재 등록된 자동 감시 리스트:**")
+            st.write(", ".join(st.session_state['alert_stocks']))
+            if st.button("전체 초기화", key="reset_alerts"):
+                st.session_state['alert_stocks'] = []
+                st.rerun()
+                
+    st.markdown("---")
+    if st.button("💾 이 설정들을 시스템(alert_config.json)에 덮어쓰기 저장", type="primary", use_container_width=True):
+        import json
+        config = {
+            "telegram_token": bot_token,
+            "telegram_chat_id": chat_id,
+            "watch_list": st.session_state['alert_stocks']
+        }
+        with open("alert_config.json", "w", encoding="utf-8") as f:
+            json.dump(config, f, ensure_ascii=False, indent=4)
+        st.success("🤖 설정 파일 저장 완료! (alert_config.json) 이제 백그라운드 워커 프로그램(alert_worker.py)이 파일 변화를 감지하고 감시를 개시합니다.")
 
 st.markdown("---")
 st.caption("© 2026 Trend-Lotto Invest | *본 정보는 크롤링 기반 데이터 및 기술적 지표로 오차가 있을 수 있으며 실제 투자 결과에 대한 책임은 지지 않습니다.*")

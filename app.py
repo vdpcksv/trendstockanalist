@@ -479,6 +479,7 @@ with tab4:
                         last_rsi = df_trade['RSI'].iloc[-1]
                         last_bb_ub = df_trade['BB_UB'].iloc[-1]
                         last_bb_lb = df_trade['BB_LB'].iloc[-1]
+                        last_bb_mb = df_trade['BB_MB'].iloc[-1]
                         
                         last_date_str = df_trade.index[-1].strftime('%Y-%m-%d')
                         

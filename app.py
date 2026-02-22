@@ -18,8 +18,10 @@ headers = {
 @st.cache_data(ttl=600) # 10분 캐싱
 def get_kospi_investor_trend():
     """네이버 금융 - KOSPI 투자매매 동향 크롤링 (최근 15일치 추이)"""
-    url = "https://finance.naver.com/sise/investorDealTrendDay.naver?bizdate=&mktType=KOSPI&page=1"
+    today_str = datetime.now().strftime('%Y%m%d')
+    url = f"https://finance.naver.com/sise/investorDealTrendDay.naver?bizdate={today_str}&mktType=KOSPI&page=1"
     res = requests.get(url, headers=headers)
+    res.encoding = 'euc-kr' # 해결: 한글 깨짐 및 데이터 누락 방지
     soup = BeautifulSoup(res.text, 'html.parser')
     
     dates = []
@@ -27,12 +29,14 @@ def get_kospi_investor_trend():
     foreign = [] # 외국인
     instit = [] # 기관
     
-    # 일별매매동향 테이블의 데이터 행 탐색
-    rows = soup.find_all('tr')
+    table = soup.find('table', {'class': 'type_1'})
+    if not table: return pd.DataFrame()
+    rows = table.find_all('tr')
+    
     for row in rows:
         cols = row.find_all('td')
-        # 날짜가 첫번째 컬럼에 있는 유효한 행 (개인, 외국인, 기관계)
-        if len(cols) >= 4 and cols[0].text.strip().replace('.', '').isdigit():
+        # 해결: 네이버 금융 일별매매동향 실제 컬럼 수는 11개임
+        if len(cols) == 11 and cols[0].text.strip().replace('.', '').isdigit():
             date_str = cols[0].text.strip()
             
             def parse_num(txt):
@@ -60,6 +64,9 @@ def get_kospi_investor_trend():
         '외국인': foreign,
         '기관': instit
     })
+    
+    if df.empty: return df
+    
     # 과거 날짜순 정렬
     df = df.iloc[::-1].reset_index(drop=True)
     return df
@@ -69,6 +76,7 @@ def get_theme_list():
     """네이버 주요 테마 최근 등락률 상위 크롤링"""
     url = "https://finance.naver.com/sise/theme.naver"
     res = requests.get(url, headers=headers)
+    res.encoding = 'euc-kr'
     soup = BeautifulSoup(res.text, 'html.parser')
     
     themes = []
@@ -103,6 +111,7 @@ def get_theme_list():
 def get_theme_top_stocks(theme_url):
     """특정 테마 페이지 진입하여 속한 종목들 크롤링"""
     res = requests.get(theme_url, headers=headers)
+    res.encoding = 'euc-kr'
     soup = BeautifulSoup(res.text, 'html.parser')
     
     stocks = []

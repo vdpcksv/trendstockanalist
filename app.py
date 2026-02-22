@@ -300,10 +300,13 @@ with tab1:
             fig_net_buy.add_trace(go.Bar(x=df_flow['Date'], y=df_flow['기관'], name='기관', marker_color='#3b82f6'))
             fig_net_buy.add_trace(go.Bar(x=df_flow['Date'], y=df_flow['외국인'], name='외국인', marker_color='#ef4444'))
             fig_net_buy.update_layout(barmode='group', xaxis_title='날짜', yaxis_title='순매수 (억원)', template="plotly_white")
-            st.plotly_chart(fig_net_buy, use_container_width=True)
+            fig_net_buy.update_xaxes(fixedrange=True)
+            fig_net_buy.update_yaxes(fixedrange=True)
+            st.plotly_chart(fig_net_buy, use_container_width=True, config={'displayModeBar': False})
 
         with col2:
             st.subheader("세력 별 수급 원본 표")
+            st.caption("👈 표를 좌우로 밀어서(Scroll) 전체 수치를 확인하세요.") 
             st.dataframe(df_flow, use_container_width=True, hide_index=True)
             
             # 간단 분석 로직
@@ -358,7 +361,9 @@ with tab2:
                            color_continuous_scale="RdYlGn", # 직관적인 빨강-노랑-초록 색상
                            text_auto=True,
                            aspect="auto")
-        st.plotly_chart(fig_hm, use_container_width=True)
+        fig_hm.update_xaxes(fixedrange=True)
+        fig_hm.update_yaxes(fixedrange=True)
+        st.plotly_chart(fig_hm, use_container_width=True, config={'displayModeBar': False})
         
         # 3. 현재 달 기준 분석 레이더 차트
         st.markdown("---")
@@ -376,7 +381,8 @@ with tab2:
                 fig_radar = px.line_polar(df_radar, r='Win Rate (%)', theta='Sector', line_close=True,
                                           color_discrete_sequence=['#8b5cf6'])
                 fig_radar.update_traces(fill='toself')
-                st.plotly_chart(fig_radar, use_container_width=True)
+                fig_radar.update_layout(dragmode=False)
+                st.plotly_chart(fig_radar, use_container_width=True, config={'displayModeBar': False})
             
         with col2:
             st.write("#### 💡 AI 계절성 인사이트")
@@ -590,7 +596,9 @@ with tab4:
                             template="plotly_white", margin=dict(l=10, r=10, t=40, b=20),
                             height=400 # 모바일 스와이프를 위해 높이를 살짝 줄임
                         )
-                        st.plotly_chart(fig_candle, use_container_width=True)
+                        fig_candle.update_xaxes(fixedrange=True)
+                        fig_candle.update_yaxes(fixedrange=True)
+                        st.plotly_chart(fig_candle, use_container_width=True, config={'displayModeBar': False})
                         
                         # 3. 데이터 요약 (단순 현재가 표출)
                         st.markdown("---")

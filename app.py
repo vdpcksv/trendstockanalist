@@ -428,6 +428,16 @@ with tab4:
         search_query = st.text_input("📈 종목명 또는 종목코드 입력 (예: 삼성전자, 005930)", value="삼성전자")
         period_days = st.slider("조회 기간 (일)", min_value=30, max_value=365, value=180, step=30)
         
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("#### 📊 시각적 보조 지표 (최대 3개)")
+        indicator_options = ["MA 5 (5일 이동평균선)", "MA 20 (20일 이동평균선)", "MA 60 (60일 이동평균선)", "MA 120 (120일 이동평균선)", "Bollinger Bands (20, 2)"]
+        selected_indicators = st.multiselect(
+            "차트에 추가할 지표를 선택하세요",
+            options=indicator_options,
+            default=[],
+            max_selections=3
+        )
+        
     with col_t2:
         if search_query:
             with st.spinner("주가 데이터를 로드 중입니다..."):
@@ -473,7 +483,22 @@ with tab4:
                         df_trade['BB_UB'] = df_trade['BB_MB'] + (df_trade['BB_STD'] * 3)
                         df_trade['BB_LB'] = df_trade['BB_MB'] - (df_trade['BB_STD'] * 3)
                         
-                        # 최신 값 추출
+                        # 1-1. 시각적 보조 지표 계산 (사용자 선택용 범용 수치)
+                        if "MA 5 (5일 이동평균선)" in selected_indicators:
+                            df_trade['MA5_vis'] = df_trade['Close'].rolling(window=5).mean()
+                        if "MA 20 (20일 이동평균선)" in selected_indicators:
+                            df_trade['MA20_vis'] = df_trade['Close'].rolling(window=20).mean()
+                        if "MA 60 (60일 이동평균선)" in selected_indicators:
+                            df_trade['MA60_vis'] = df_trade['Close'].rolling(window=60).mean()
+                        if "MA 120 (120일 이동평균선)" in selected_indicators:
+                            df_trade['MA120_vis'] = df_trade['Close'].rolling(window=120).mean()
+                        if "Bollinger Bands (20, 2)" in selected_indicators:
+                            df_trade['BB20_MB_vis'] = df_trade['Close'].rolling(window=20).mean()
+                            df_trade['BB20_STD_vis'] = df_trade['Close'].rolling(window=20).std()
+                            df_trade['BB20_UB_vis'] = df_trade['BB20_MB_vis'] + (df_trade['BB20_STD_vis'] * 2)
+                            df_trade['BB20_LB_vis'] = df_trade['BB20_MB_vis'] - (df_trade['BB20_STD_vis'] * 2)
+
+                        # 최신 값 추출 (비밀 전략용)
                         last_close = df_trade['Close'].iloc[-1]
                         last_ma5 = df_trade['MA5'].iloc[-1]
                         last_rsi = df_trade['RSI'].iloc[-1]
@@ -483,7 +508,7 @@ with tab4:
                         
                         last_date_str = df_trade.index[-1].strftime('%Y-%m-%d')
                         
-                        # 2. Plotly 형태의 캔들차트 (보안 유지를 위해 보조지표 선들은 차트에서 숨김)
+                        # 2. Plotly 형태의 캔들차트 (비밀 전략 선은 숨기고, 사용자가 선택한 범용 지표만 그림)
                         fig_candle = go.Figure()
                         # 캔들
                         fig_candle.add_trace(go.Candlestick(
@@ -491,6 +516,21 @@ with tab4:
                             high=df_trade['High'], low=df_trade['Low'], close=df_trade['Close'],
                             name='Price'
                         ))
+                        
+                        # 사용자 선택 지표 오버레이
+                        if "MA 5 (5일 이동평균선)" in selected_indicators:
+                            fig_candle.add_trace(go.Scatter(x=df_trade.index, y=df_trade['MA5_vis'], mode='lines', name='MA 5', line=dict(color='orange', width=1.5)))
+                        if "MA 20 (20일 이동평균선)" in selected_indicators:
+                            fig_candle.add_trace(go.Scatter(x=df_trade.index, y=df_trade['MA20_vis'], mode='lines', name='MA 20', line=dict(color='yellow', width=1.5)))
+                        if "MA 60 (60일 이동평균선)" in selected_indicators:
+                            fig_candle.add_trace(go.Scatter(x=df_trade.index, y=df_trade['MA60_vis'], mode='lines', name='MA 60', line=dict(color='green', width=1.5)))
+                        if "MA 120 (120일 이동평균선)" in selected_indicators:
+                            fig_candle.add_trace(go.Scatter(x=df_trade.index, y=df_trade['MA120_vis'], mode='lines', name='MA 120', line=dict(color='gray', width=1.5)))
+                            
+                        if "Bollinger Bands (20, 2)" in selected_indicators:
+                            fig_candle.add_trace(go.Scatter(x=df_trade.index, y=df_trade['BB20_UB_vis'], mode='lines', name='BB Upper (20,2)', line=dict(color='rgba(173, 216, 230, 0.6)', width=1, dash='dot')))
+                            fig_candle.add_trace(go.Scatter(x=df_trade.index, y=df_trade['BB20_LB_vis'], mode='lines', name='BB Lower (20,2)', line=dict(color='rgba(173, 216, 230, 0.6)', width=1, dash='dot'), fill='tonexty', fillcolor='rgba(173, 216, 230, 0.1)'))
+                            fig_candle.add_trace(go.Scatter(x=df_trade.index, y=df_trade['BB20_MB_vis'], mode='lines', name='BB Mid (20)', line=dict(color='rgba(173, 216, 230, 0.8)', width=1)))
                         
                         fig_candle.update_layout(
                             title=f"{target_name} [{target_ticker}] 최근 {period_days}일 추세 차트",

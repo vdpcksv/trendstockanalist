@@ -187,9 +187,22 @@ def get_seasonality_data():
                     
             heatmap_dict[name] = win_rates
         except Exception as e:
-            pass
+            print(f"Seasonality Data Error: {e}")
+            # For seasonality data, if one ticker fails, we still want to return data for others.
+            # If all fail, an empty dict will be returned.
+            pass 
             
     return heatmap_dict
+
+@st.cache_data(ttl=86400) # 1일 캐싱
+def get_krx_stock_list():
+    """KRX 상장 종목 리스트 가져오기 (종목명으로 코드 검색용)"""
+    try:
+        df_krx = fdr.StockListing('KRX')
+        return df_krx[['Code', 'Name']]
+    except Exception as e:
+        print(f"KRX Stock Listing Error: {e}")
+        return pd.DataFrame()
 
 # ==========================================
 # 2. UI 구성 (Streamlit)
@@ -407,40 +420,69 @@ with tab3:
 
 # --- Tab 4: 매매 복기 및 기술적 분석 (Trading Review) ---
 with tab4:
-    st.header("매매 복기 및 기술적 분석 (MA5 & RSI)")
-    st.markdown("종목 코드를 입력하여 최근 주가의 시계열 차트를 렌더링하고, **RSI 지수 및 [5일선 ±5% 기법]** 시그널을 확인하세요.")
+    st.header("매매 복기 및 종합 기술적 분석 (MA5, RSI, Bollinger Bands)")
+    st.markdown("종목명(또는 코드)을 입력하여 시계열 차트와 **AI 기반 종합 기술적 타점 분석**을 확인하세요.")
     
     col_t1, col_t2 = st.columns([1, 3])
     with col_t1:
-        ticker = st.text_input("📈 종목 코드 입력 (예: 005930)", value="005930")
+        search_query = st.text_input("📈 종목명 또는 종목코드 입력 (예: 삼성전자, 005930)", value="삼성전자")
         period_days = st.slider("조회 기간 (일)", min_value=30, max_value=365, value=180, step=30)
         
     with col_t2:
-        if ticker:
+        if search_query:
             with st.spinner("주가 데이터를 로드 중입니다..."):
                 try:
+                    # 종목명 -> 코드 변환 로직
+                    df_krx = get_krx_stock_list()
+                    target_ticker = search_query
+                    target_name = search_query
+                    
+                    if not df_krx.empty:
+                        # 숫자인지 확인
+                        if search_query.isdigit():
+                            # 종목 코드 입력됨 => 이름 찾기
+                            match = df_krx[df_krx['Code'] == search_query]
+                            if not match.empty:
+                                target_name = match.iloc[0]['Name']
+                        else:
+                            # 종목명 입력됨 => 코드 찾기
+                            match = df_krx[df_krx['Name'] == search_query]
+                            if not match.empty:
+                                target_ticker = match.iloc[0]['Code']
+                            else:
+                                st.warning(f"'{search_query}' 이름상 일치하는 주식 종목을 찾지 못했습니다. 근사치 데이터로 검색을 시도합니다.")
+                                
                     end_dt = datetime.now()
                     start_dt = end_dt - timedelta(days=period_days)
-                    df_trade = fdr.DataReader(ticker, start_dt, end_dt)
+                    df_trade = fdr.DataReader(target_ticker, start_dt, end_dt)
                     
                     if not df_trade.empty:
-                        # 1. 지표 계산 (MA5, RSI 14일)
+                        # 1. 지표 계산 (MA5, RSI 14일, Bollinger Bands 20일 std3)
                         df_trade['MA5'] = df_trade['Close'].rolling(window=5).mean()
                         
+                        # RSI 14일
                         delta = df_trade['Close'].diff()
                         gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
                         loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
                         rs = gain / loss
                         df_trade['RSI'] = 100 - (100 / (1 + rs))
                         
+                        # 볼린저 밴드 (기간 20, 표준편차 3)
+                        df_trade['BB_MB'] = df_trade['Close'].rolling(window=20).mean()
+                        df_trade['BB_STD'] = df_trade['Close'].rolling(window=20).std()
+                        df_trade['BB_UB'] = df_trade['BB_MB'] + (df_trade['BB_STD'] * 3)
+                        df_trade['BB_LB'] = df_trade['BB_MB'] - (df_trade['BB_STD'] * 3)
+                        
                         # 최신 값 추출
                         last_close = df_trade['Close'].iloc[-1]
                         last_ma5 = df_trade['MA5'].iloc[-1]
                         last_rsi = df_trade['RSI'].iloc[-1]
+                        last_bb_ub = df_trade['BB_UB'].iloc[-1]
+                        last_bb_lb = df_trade['BB_LB'].iloc[-1]
                         
                         last_date_str = df_trade.index[-1].strftime('%Y-%m-%d')
                         
-                        # 2. Plotly 형태의 캔들차트 + 5일선 그리기
+                        # 2. Plotly 형태의 캔들차트 + 지표 오버레이
                         fig_candle = go.Figure()
                         # 캔들
                         fig_candle.add_trace(go.Candlestick(
@@ -448,65 +490,114 @@ with tab4:
                             high=df_trade['High'], low=df_trade['Low'], close=df_trade['Close'],
                             name='Price'
                         ))
-                        # 5일 이동평균선
+                        # 5일 이동평균선 및 가이드 밴드 (±5%)
                         fig_candle.add_trace(go.Scatter(
-                            x=df_trade.index, y=df_trade['MA5'],
-                            mode='lines', name='MA5 (5일선)',
-                            line=dict(color='orange', width=2)
-                        ))
-                        # 가이드 밴드 (±5%)
-                        fig_candle.add_trace(go.Scatter(
-                            x=df_trade.index, y=df_trade['MA5'] * 1.05,
-                            mode='lines', name='+5% Upper Band',
-                            line=dict(color='red', width=1, dash='dot')
+                            x=df_trade.index, y=df_trade['MA5'], mode='lines', name='MA5 (5일선)', line=dict(color='orange', width=2)
                         ))
                         fig_candle.add_trace(go.Scatter(
-                            x=df_trade.index, y=df_trade['MA5'] * 0.95,
-                            mode='lines', name='-5% Lower Band',
-                            line=dict(color='blue', width=1, dash='dot')
+                            x=df_trade.index, y=df_trade['MA5'] * 1.05, mode='lines', name='MA5 +5%', line=dict(color='orange', width=1, dash='dot')
+                        ))
+                        fig_candle.add_trace(go.Scatter(
+                            x=df_trade.index, y=df_trade['MA5'] * 0.95, mode='lines', name='MA5 -5%', line=dict(color='orange', width=1, dash='dot')
+                        ))
+                        
+                        # 볼린저 밴드 (명확한 구분을 위해 연한 보라/회색 톤 사용)
+                        fig_candle.add_trace(go.Scatter(
+                            x=df_trade.index, y=df_trade['BB_UB'], mode='lines', name='BB Upper (20,3)', line=dict(color='rgba(128, 0, 128, 0.6)', width=1.5)
+                        ))
+                        fig_candle.add_trace(go.Scatter(
+                            x=df_trade.index, y=df_trade['BB_LB'], mode='lines', name='BB Lower (20,3)', line=dict(color='rgba(128, 128, 128, 0.6)', width=1.5),
+                            fill='tonexty', fillcolor='rgba(230, 230, 250, 0.1)' # 밴드 내부 채우기 
                         ))
                         
                         fig_candle.update_layout(
-                            title=f"종목코드 [{ticker}] 최근 {period_days}일 캔들 차트 (MA5 및 밴드)",
+                            title=f"{target_name} [{target_ticker}] 최근 {period_days}일 종합 차트",
                             xaxis_title='Date', yaxis_title='Price',
                             xaxis_rangeslider_visible=False,
-                            template="plotly_white", margin=dict(l=40, r=40, t=40, b=40)
+                            template="plotly_white", margin=dict(l=40, r=40, t=40, b=40),
+                            height=500
                         )
                         st.plotly_chart(fig_candle, use_container_width=True)
                         
-                        # 3. 전략적 인사이트 표출
+                        # 3. 데이터 요약
                         st.markdown("---")
-                        st.subheader(f"💡 현재가 ({last_date_str} 기준) 기술적 진단")
+                        st.subheader(f"💡 {target_name} ({last_date_str} 기준) 기술적 진단 요약")
                         
-                        st.write(f"- **현재 종가**: {last_close:,.0f} 원")
-                        st.write(f"- **MA5 (5일선)**: {last_ma5:,.0f} 원")
-                        st.write(f"- **현재 RSI (14일)**: {last_rsi:.1f}")
+                        col_i1, col_i2, col_i3, col_i4 = st.columns(4)
+                        col_i1.metric("현재 종가", f"{last_close:,.0f} 원")
+                        col_i2.metric("MA5 (5일선)", f"{last_ma5:,.0f} 원")
+                        col_i3.metric("RSI (14일)", f"{last_rsi:.1f}")
+                        col_i4.metric("BB 상단돌파까지", f"{(last_bb_ub - last_close):,.0f} 원")
+
+                        st.markdown("<br>", unsafe_allow_html=True)
                         
-                        # MA5 밴드 로직 판별 (+- 5%)
-                        upper_band = last_ma5 * 1.05
-                        lower_band = last_ma5 * 0.95
+                        # 4. 세부 진단 로직
+                        upper_band_ma5 = last_ma5 * 1.05
+                        lower_band_ma5 = last_ma5 * 0.95
                         
-                        col_s1, col_s2 = st.columns(2)
+                        score = 0 # 종합 진단 점수 (낮을수록 매도, 높을수록 매수)
+                        ai_comments = []
+                        
+                        col_s1, col_s2, col_s3 = st.columns(3)
                         
                         with col_s1:
-                            st.markdown("#### 📌 이동평균선(MA5) ±5% 진단")
-                            if last_close > upper_band:
-                                st.warning("🟡 **단기 과열 상태 (MA5 대비 +5% 초과)**\n\n주가가 5일선 대비 크게 이격되어 있어 단기 차익 실현 메모가 나올 가능성이 큽니다. 분할 매도를 고려해 보는 것이 좋습니다.")
-                            elif last_close < lower_band:
-                                st.error("🔴 **매도/손절 고려 구간 (MA5 대비 -5% 이탈)**\n\n5일선 대비 5% 이상 하락하여 추세 이탈 조짐이 보입니다. 보유 중이라면 리스크 관리를 최우선으로 해야 합니다.")
+                            st.markdown("#### 1️⃣ MA5 (±5%) 기법")
+                            if last_close > upper_band_ma5:
+                                st.warning("🟡 단기 과열 (+5% 초과)")
+                                ai_comments.append("5일선 대비 크게 상승해 단기 차익 실현 매물이 나올 수 있는 **단기 과열** 상태입니다.")
+                                score -= 1
+                            elif last_close < lower_band_ma5:
+                                st.error("🔴 이탈/손절 (-5% 이탈)")
+                                ai_comments.append("5일선 기준 -5%를 이탈하여 **단기 하락 추세**로 접어들 위험성이 존재합니다.")
+                                score -= 2
                             else:
-                                st.success("🟢 **보유 및 비중 확대 구간 (MA5 ±5% 이내 횡보/지지)**\n\n현재 급격한 하락 없이 5일선을 중심으로 건전하게 수렴하고 있는 긍정적인 구간입니다.")
+                                st.success("🟢 안정 보유/수렴")
+                                ai_comments.append("5일선(±5%) 내에서 가격 조정을 거치고 있어 **현재 추세를 건전하게 유지**하고 있습니다.")
+                                score += 1
                                 
                         with col_s2:
-                            st.markdown("#### 📏 RSI (상대강도지수) 진단")
+                            st.markdown("#### 2️⃣ RSI (상대강도지수)")
                             if pd.isna(last_rsi):
-                                st.write("데이터가 부족하여 계산되지 않았습니다.")
+                                st.write("-")
                             elif last_rsi >= 70:
-                                st.warning("🟥 **과매수 (Overbought) 구간!**\n\n현재 매수세가 과열되어 조정(하락)이 임박했을 확률이 높습니다.")
+                                st.warning("🟥 과매수 (Overbought)")
+                                ai_comments.append("RSI 지수가 70을 넘어 **과매수 상태**입니다. 매수 세력이 과열되어 하락 압력이 커질 수 있습니다.")
+                                score -= 2
                             elif last_rsi <= 30:
-                                st.success("🟩 **과매도 (Oversold) 구간!**\n\n심리적으로 과도하게 하락하여 단기 기술적 반등 위치로 매수를 고려해 볼 만합니다.")
+                                st.success("🟩 과매도 (Oversold)")
+                                ai_comments.append("RSI 지수가 30을 밑돌아 **과매도 상태**입니다. 낙폭 과대에 따른 단기 기술적 반등이 기대됩니다.")
+                                score += 2
                             else:
-                                st.info("🟨 **중립 (Neutral) 구간**\n\n과매수/과매도 어느 쪽에도 치우치지 않은 상태입니다. MA5 추세선 진단을 우선적으로 고려하세요.")
+                                st.info("🟨 중립 (Neutral)")
+                                ai_comments.append("RSI 기준 **중립 구간**으로 방향성이 확정되지 않았습니다.")
+                                
+                        with col_s3:
+                            st.markdown("#### 3️⃣ 볼린저 밴드 (20,3)")
+                            if last_close >= last_bb_ub:
+                                st.warning("💥 상향 이탈 (익절 고려)")
+                                ai_comments.append("종가가 극단적 볼린저 밴드(표준편차 3) 상단을 돌파했습니다. **강력한 수익 실현 타점**입니다.")
+                                score -= 2
+                            elif last_close <= last_bb_lb:
+                                st.error("💦 하향 이탈 (손절/물타기)")
+                                ai_comments.append("종가가 극단적 볼린저 밴드 하단을 이탈했습니다. 패닉셀 구간이며, **보수적 손절 혹은 기계적 물타기 진입** 영역입니다.")
+                                score += 2
+                            else:
+                                st.info("🌊 밴드 내 순항 중")
+                                ai_comments.append("볼린저 밴드 표준궤도 내에서 안전하게 주가가 형성되고 있습니다.")
+
+                        st.markdown("---")
+                        # 5. AI 종합 분석
+                        st.markdown("### 🤖 기술적 분석 종합 코멘트")
+                        st.write("*" + " ".join(ai_comments) + "*")
+                        
+                        if score >= 3:
+                            st.success("🔥 **AI 의견: [적극 매수/비중 확대]** 지표상 하락 국면의 끝자락(과매도/지지선 인접)에 있을 확률이 높아, 신규 진입 및 추가 매수에 유리한 기술적 타점입니다.")
+                        elif score >= 1:
+                            st.info("👍 **AI 의견: [분할 매수/완만한 홀딩]** 중립 이상의 안전한 흐름입니다. 추세를 지켜보며 보유 비중을 유지하거나 조금씩 모아가기 좋은 자리입니다.")
+                        elif score >= -1:
+                            st.warning("⚖️ **AI 의견: [관망 집중/중립]** 상하방 저항이 팽팽합니다. 보수적으로 접근하며 확실한 방향성 발생 시까지 섣부른 매매를 삼가는 것을 권장합니다.")
+                        else:
+                            st.error("🚨 **AI 의견: [리스크 주의/비중 축소]** 밴드 이탈 및 단기 과열 양상 등으로 인해 즉각적인 조정 우려가 있습니다. 방어적인 익절/손절 관점 세팅이 우선됩니다.")
 
                 except Exception as e:
                     st.error(f"데이터를 불러오거나 계산하는 도중 오류가 발생했습니다: {str(e)}")

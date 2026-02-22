@@ -7,6 +7,7 @@ import requests
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 import re
+import random
 
 # ==========================================
 # 1. 네이버 금융 데이터 크롤링 헬퍼 함수
@@ -275,6 +276,29 @@ with tab3:
                 
             if not df_stocks.empty:
                 st.dataframe(df_stocks, use_container_width=True, hide_index=True)
+                
+                # --- 로또 픽 (Lotto Pick) 기능 ---
+                st.markdown("<br>", unsafe_allow_html=True)
+                st.markdown("### 🎲 오늘의 주도 테마 로또 픽 뽑기!")
+                st.write("해당 테마 내에서 가장 모멘텀(등락률)이 강하거나 힘이 좋은 종목을 AI가 추첨해 드립니다!")
+                
+                if st.button("행운의 종목 뽑기 🍀", use_container_width=True):
+                    # 등락률 숫자로 변환 후 가장 높은 1~2개 중 랜덤 픽
+                    def parse_rate(val):
+                        try:
+                            return float(val.replace('%','').replace('+','').strip())
+                        except:
+                            return 0.0
+                            
+                    df_stocks['RateVal'] = df_stocks['등락률'].apply(parse_rate)
+                    
+                    # 상위 3개 중에서 하나를 랜덤으로 선택하여 로또 픽의 재미 요소 부여
+                    top_candidates = df_stocks.sort_values(by='RateVal', ascending=False).head(3)
+                    lucky_stock = top_candidates.sample(n=1).iloc[0]
+                    
+                    st.balloons() # 축포 터지기
+                    st.success(f"🎉 **축하합니다! 오늘의 로또 픽 종목은 [{lucky_stock['종목명']}] (현재가: {lucky_stock['현재가']}, 등락률: {lucky_stock['등락률']}) 입니다!** 🚀")
+                    st.info("단기 모멘텀이 매우 강하게 들어오고 있는 대장주급 종목입니다. (투자는 신중하게 결정하세요!)")
             else:
                 st.warning("해당 테마의 종목 리스트를 불러올 수 없습니다.")
                 

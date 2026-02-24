@@ -96,4 +96,107 @@ python -m uvicorn main:app --reload
 ```bash
 python main.py
 ```
+
 이후 Chrome 등 브라우저 창에 `http://127.0.0.1:8000` 을 입력하여 접속합니다.
+
+---
+
+## 7. 스크래치 복구를 위한 뼈대(Skeleton) 코드
+어떠한 이유로 서버나 코드가 전부 유실되었을 때, 이 3개의 파일 내용만 복사해 넣으면 즉시 구글 애드센스가 연동된 FastAPI 기본 화면이 구동됩니다.
+
+### 7.1 `main.py` (FastAPI 서버 및 데이터 라우팅 뼈대)
+```python
+from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
+import json
+
+app = FastAPI()
+
+# HTML 템플릿 폴더 지정
+templates = Jinja2Templates(directory="templates")
+
+@app.get("/", response_class=HTMLResponse)
+async def read_dashboard(request: Request):
+    # 예시: 백엔드에서 크롤링 또는 생성한 데이터
+    mock_data = [
+        {"Date": "2026-02-24", "기관": -500, "외국인": 2000, "개인": -1500}
+    ]
+    
+    # base.html을 상속받은 dashboard.html을 렌더링하면서 데이터를 전달
+    return templates.TemplateResponse(
+        request=request, 
+        name="dashboard.html",
+        context={
+            "flow_data_json": json.dumps(mock_data), # 자바스크립트에 넘길 JSON 데이터
+        }
+    )
+```
+
+### 7.2 `templates/base.html` (애드센스가 포함된 구동 뼈대)
+```html
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trend-Lotto Invest</title>
+
+    <!-- ✅ 구글 애드센스 소유권 인증 스크립트 (최상단) -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-본인고유코드입력"
+        crossorigin="anonymous"></script>
+
+    <!-- Tailwind CSS (예쁜 디자인을 위한 CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Plotly JS (차트 렌더링용) -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+</head>
+
+<body class="bg-gray-50 text-gray-900">
+    <nav class="bg-indigo-600 p-4 text-white font-bold">
+        Trend-Lotto Invest Dashboard
+    </nav>
+
+    <!-- 각 서브페이지(dashboard 등)의 코드 블록이 주입되는 핵심 공간 -->
+    <main class="max-w-7xl mx-auto p-4">
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>
+```
+
+### 7.3 `templates/dashboard.html` (메인 대시보드 화면 뼈대)
+```html
+{% extends "base.html" %}
+
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">실시간 자금 흐름</h1>
+
+<!-- 차트와 표가 들어갈 공간 부여 -->
+<div id="flow-table-container" class="mb-4 bg-white p-4 rounded shadow"></div>
+<div id="plotly-money-flow" class="w-full h-80 bg-white shadow rounded p-4"></div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // 1. 파이썬에서 넘겨준 데이터를 Javascript로 안전하게 받기
+        const rawJsonString = `{{ flow_data_json | safe }}`;
+        const flowData = JSON.parse(rawJsonString);
+        
+        // 2. 표 렌더링 예시
+        const container = document.getElementById('flow-table-container');
+        container.innerHTML = `<p>수신된 최신 데이터 개수: ${flowData.length}개</p>`;
+        
+        // 3. 차트 렌더링 예시
+        const dates = flowData.map(d => d.Date);
+        const foreign = flowData.map(d => d['외국인']);
+        const instit = flowData.map(d => d['기관']);
+        
+        Plotly.newPlot('plotly-money-flow', [
+            { x: dates, y: foreign, type: 'bar', name: '외국인' },
+            { x: dates, y: instit, type: 'bar', name: '기관' }
+        ]);
+    });
+</script>
+{% endblock %}
+```

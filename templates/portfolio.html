@@ -110,10 +110,15 @@
         // Fetch data from DB
         async function fetchPortfolio() {
             try {
-                const res = await fetch('/api/portfolio');
+                const token = localStorage.getItem('access_token');
+                const res = await fetch('/api/portfolio', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
                 if (res.ok) {
                     portfolio = await res.json();
                     renderDashboard();
+                } else {
+                    console.log("Not logged in or token expired.");
                 }
             } catch (error) {
                 console.error("Error fetching portfolio:", error);
@@ -128,9 +133,19 @@
             const qty = parseInt(document.getElementById('quantity').value) || 1; // Used locally for now
 
             try {
+                const token = localStorage.getItem('access_token');
+                if (!token) {
+                    alert("로그인이 필요한 서비스입니다.");
+                    openAuthModal();
+                    return;
+                }
+
                 const res = await fetch('/api/portfolio', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
                     body: JSON.stringify({ ticker: name, target_price: target_price, qty: qty })
                 });
 
@@ -145,7 +160,11 @@
 
         window.deleteItem = async function (id) {
             try {
-                const res = await fetch(`/api/portfolio/${id}`, { method: 'DELETE' });
+                const token = localStorage.getItem('access_token');
+                const res = await fetch(`/api/portfolio/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
                 if (res.ok) {
                     portfolio = portfolio.filter(p => p.id !== id);
                     renderDashboard();

@@ -11,11 +11,13 @@ import FinanceDataReader as fdr
 from contextlib import asynccontextmanager
 from apscheduler.schedulers.background import BackgroundScheduler
 from sqlalchemy.orm import Session
-from fastapi import Depends
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
 
 from database import engine, get_db
 import models
 import schemas
+import auth
 
 # Create all tables in the database (this is safe if they already exist)
 models.Base.metadata.create_all(bind=engine)
@@ -389,23 +391,42 @@ async def read_policies(request: Request):
     # Legal Policies and AdSense Guide
     return templates.TemplateResponse(request=request, name="policies.html", context={})
 
-# --- API Endpoints for DB CRUD ---
-def get_dummy_user(db: Session):
-    user = db.query(models.User).filter(models.User.username == "testuser").first()
-    if not user:
-        user = models.User(username="testuser", hashed_password="fake")
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-    return user
+# --- API Endpoints for DB CRUD & Auth ---
+@app.post("/api/register", response_model=schemas.PortfolioBase) # Reusing an empty model to hide user schema for now or just return dict
+def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    db_user = db.query(models.User).filter(models.User.username == user.username).first()
+    if db_user:
+        raise HTTPException(status_code=400, detail="Username already registered")
+    
+    hashed_password = auth.get_password_hash(user.password)
+    # By default, we grant premium for testing. In prod, this is triggered by payment.
+    db_user = models.User(username=user.username, hashed_password=hashed_password, membership="premium")
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return {"message": "User registered successfully"}
+
+@app.post("/api/token")
+def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.username == form_data.username).first()
+    if not user or not auth.verify_password(form_data.password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token_expires = auth.timedelta(minutes=auth.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = auth.create_access_token(
+        data={"sub": user.username}, expires_delta=access_token_expires
+    )
+    return {"access_token": access_token, "token_type": "bearer", "membership": user.membership}
 
 @app.post("/api/portfolio", response_model=schemas.Portfolio)
-def add_portfolio_item(item: schemas.PortfolioCreate, db: Session = Depends(get_db)):
-    user = get_dummy_user(db)
+def add_portfolio_item(item: schemas.PortfolioCreate, db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
     db_item = models.Portfolio(
         ticker=item.ticker,
         target_price=item.target_price,
-        user_id=user.id
+        user_id=current_user.id
     )
     db.add(db_item)
     db.commit()
@@ -413,19 +434,19 @@ def add_portfolio_item(item: schemas.PortfolioCreate, db: Session = Depends(get_
     return db_item
 
 @app.get("/api/portfolio")
-def get_portfolio_items(db: Session = Depends(get_db)):
-    user = get_dummy_user(db)
-    items = db.query(models.Portfolio).filter(models.Portfolio.user_id == user.id).all()
+def get_portfolio_items(db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
+    items = db.query(models.Portfolio).filter(models.Portfolio.user_id == current_user.id).all()
     # Mocking qty for now in response to match frontend expectations
     return [{"id": i.id, "name": i.ticker, "price": i.target_price or 0, "qty": 1} for i in items]
 
 @app.delete("/api/portfolio/{item_id}")
-def delete_portfolio_item(item_id: int, db: Session = Depends(get_db)):
-    item = db.query(models.Portfolio).filter(models.Portfolio.id == item_id).first()
+def delete_portfolio_item(item_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
+    item = db.query(models.Portfolio).filter(models.Portfolio.id == item_id, models.Portfolio.user_id == current_user.id).first()
     if item:
         db.delete(item)
         db.commit()
-    return {"status": "success"}
+        return {"status": "success"}
+    raise HTTPException(status_code=404, detail="Item not found")
 
 # --- Google AdSense ads.txt 인증 우회 라우트 ---
 @app.get("/ads.txt", response_class=PlainTextResponse)

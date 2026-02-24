@@ -7,3 +7,7 @@ beautifulsoup4
 finance-datareader
 apscheduler
 sqlalchemy
+passlib
+python-jose
+bcrypt
+python-multipart

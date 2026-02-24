@@ -81,8 +81,8 @@
                 </table>
             </div>
 
-            <!-- Lotto Feature -->
-            <div
+            <!-- Lotto Feature (Premium Only) -->
+            <div id="lotto-container"
                 class="mt-8 bg-gradient-to-r from-yellow-50 to-orange-50 border border-orange-200 rounded-xl p-6 text-center shadow-inner">
                 <h3 class="text-xl font-bold text-orange-800 mb-2">🎲 오늘의 '{{ selected_theme_data['테마명'] }}' 로또 픽 뽑기!
                 </h3>
@@ -138,6 +138,35 @@
 
 <!-- Confetti Canvas for Lotto Effect -->
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const membership = localStorage.getItem('membership') || 'basic';
+
+        // 1. Paywall: Limit Top 5 themes for basic users
+        const themeSelect = document.getElementById('theme');
+        if (themeSelect && membership !== 'premium') {
+            const options = themeSelect.querySelectorAll('option');
+            // Index 0 is placeholder, so options 1 to 5 are allowed. Hide the rest.
+            for (let i = 6; i < options.length; i++) {
+                options[i].disabled = true;
+                options[i].textContent = "🔒 " + options[i].textContent.replace(/ \(.+/, " (Premium 전용)");
+            }
+        }
+
+        // 2. Paywall: Hide Lotto feature for basic users
+        const lottoContainer = document.getElementById('lotto-container');
+        if (lottoContainer) {
+            if (membership !== 'premium') {
+                lottoContainer.innerHTML = `
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">🔒 오늘의 '{{ selected_theme_data['테마명'] if selected_theme_data else '' }}' 로또 픽 뽑기 (Premium)</h3>
+                    <p class="text-slate-600 mb-6 text-sm">프리미엄 회원에게만 AI가 해당 테마 내 최고의 단기 모멘텀 종목을 추첨해 드립니다.</p>
+                    <button onclick="openAuthModal()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 px-8 rounded-full shadow-lg transition">프리미엄 구독 (로그인)</button>
+                `;
+            }
+        }
+    });
+</script>
 
 <script>
     {% if stocks_data %}

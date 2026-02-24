@@ -82,9 +82,9 @@
         document.getElementById('insight-text').innerText = "{{ insight }}";
 
         // 3. Render Plotly Chart
-        const dates = flowData.map(d => d.Date);
-        const foreign = flowData.map(d => d['외국인']);
-        const instit = flowData.map(d => d['기관']);
+        const dates = flowData.map(d => d.Date).reverse();
+        const foreign = flowData.map(d => d['외국인']).reverse();
+        const instit = flowData.map(d => d['기관']).reverse();
 
         const traceForeign = {
             x: dates, y: foreign,

@@ -83,7 +83,13 @@
             x: xLabels,
             y: yLabels,
             type: 'heatmap',
-            colorscale: 'RdYlGn',
+            colorscale: [
+                [0, '#f87171'],   // Red for low values
+                [0.5, '#fef08a'], // Yellow for middle
+                [1, '#4ade80']    // Green for high values
+            ],
+            zmin: 30,
+            zmax: 100,
             text: zData.map(row => row.map(val => String(val) + "%")),
             texttemplate: "%{text}",
             showscale: false

@@ -119,6 +119,7 @@ def get_theme_list():
     try:
         response = requests.get(url, headers=HEADERS, timeout=5)
         response.raise_for_status()
+        response.encoding = 'cp949'
         soup = BeautifulSoup(response.text, 'html.parser')
         
         themes = []
@@ -127,8 +128,8 @@ def get_theme_list():
             return pd.DataFrame()
             
         for tr in table.select('tr'):
-            col_name = tr.select_one('.col_type1 a')
-            col_rate = tr.select_one('.col_type2 .number')
+            col_name = tr.select_one('td.col_type1 a')
+            col_rate = tr.select_one('td.col_type2')
             
             if col_name and col_rate:
                 link = "https://finance.naver.com" + col_name['href']
@@ -148,6 +149,7 @@ def get_theme_top_stocks(theme_url):
     try:
         response = requests.get(theme_url, headers=HEADERS, timeout=5)
         response.raise_for_status()
+        response.encoding = 'cp949'
         soup = BeautifulSoup(response.text, 'html.parser')
         
         stocks = []
@@ -162,12 +164,12 @@ def get_theme_top_stocks(theme_url):
             price_tag = tr.select_one('.number')
             rate_tag = tr.select('.number')
             
-            if name_tag and price_tag and len(rate_tag) >= 2:
+            if name_tag and price_tag and len(rate_tag) >= 3:
                 # rate_tag 구조: 현재가, 전일비, 등락률 ...
                 stocks.append({
                     "종목명": name_tag.text.strip(),
                     "현재가": price_tag.text.strip(),
-                    "등락률": rate_tag[1].text.strip().replace('\n', '').replace('\t', '')
+                    "등락률": rate_tag[2].text.strip().replace('\n', '').replace('\t', '')
                 })
                 if len(stocks) >= 5:
                     break

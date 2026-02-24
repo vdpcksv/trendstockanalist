@@ -11,7 +11,7 @@
 
     <!-- Chart Section -->
     <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
-        <h2 class="text-lg font-semibold mb-4">외국인/기관 순매수 추이 (단위: 억 원)</h2>
+        <h2 class="text-lg font-semibold mb-4">투자자별 순매수 추이 (단위: 억 원)</h2>
         <div id="plotly-money-flow"
             class="w-full bg-slate-50 flex items-center justify-center rounded border border-dashed border-slate-200"
             style="height: 350px; overflow: hidden; min-height: 350px;">
@@ -83,9 +83,14 @@
 
         // 3. Render Plotly Chart
         const dates = flowData.map(d => d.Date).reverse();
+        const individual = flowData.map(d => d['개인']).reverse();
         const foreign = flowData.map(d => d['외국인']).reverse();
         const instit = flowData.map(d => d['기관']).reverse();
 
+        const traceIndividual = {
+            x: dates, y: individual,
+            name: '개인', type: 'bar', marker: { color: '#10b981' }
+        };
         const traceForeign = {
             x: dates, y: foreign,
             name: '외국인', type: 'bar', marker: { color: '#ef4444' }
@@ -97,17 +102,17 @@
 
         const layout = {
             barmode: 'group',
-            margin: { t: 10, r: 10, b: 40, l: 40 },
+            margin: { t: 30, r: 10, b: 60, l: 40 },
             paper_bgcolor: 'rgba(0,0,0,0)',
             plot_bgcolor: 'rgba(0,0,0,0)',
             xaxis: { fixedrange: true },
-            yaxis: { fixedrange: true, gridcolor: '#f1f5f9' },
+            yaxis: { fixedrange: true, gridcolor: '#f1f5f9', zerolinecolor: '#cbd5e1', zerolinewidth: 1 },
             showlegend: true,
-            legend: { orientation: 'h', y: 1.15 }
+            legend: { orientation: 'h', y: -0.2, x: 0.5, xanchor: 'center' }
         };
         const config = { displayModeBar: false, responsive: true };
 
-        Plotly.newPlot('plotly-money-flow', [traceInstit, traceForeign], layout, config);
+        Plotly.newPlot('plotly-money-flow', [traceIndividual, traceInstit, traceForeign], layout, config);
 
         // Remove loading state element
         const placeholder = document.querySelector('#plotly-money-flow span');

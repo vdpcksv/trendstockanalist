@@ -21,7 +21,7 @@
     <!-- Data Table & Insight Section -->
     <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 flex flex-col h-full">
         <h2 class="text-lg font-semibold mb-4">수급 흐름 원본 표</h2>
-        <div class="overflow-x-auto flex-grow max-h-60 mb-4 border border-slate-200 rounded">
+        <div id="flow-table-container" class="overflow-x-auto flex-grow max-h-60 mb-4 border border-slate-200 rounded">
             <!-- Table will be injected dynamically -->
             <p class="p-4 text-center text-slate-500">데이터 수집 중...</p>
         </div>
@@ -46,12 +46,12 @@
 <!-- Scripts for Data Visualization -->
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        const flowData = {{ flow_data_json | safe
-    }};
+        const rawJsonString = `{{ flow_data_json | safe }}`;
+        const flowData = JSON.parse(rawJsonString);
 
-    // 1. Render Table
-    const tableContainer = document.querySelector('.overflow-x-auto');
-    let tableHTML = `
+        // 1. Render Table
+        const tableContainer = document.getElementById('flow-table-container');
+        let tableHTML = `
             <table class="min-w-full text-sm text-left text-slate-500">
                 <thead class="text-xs text-slate-700 uppercase bg-slate-50 border-b border-slate-200">
                     <tr>
@@ -64,8 +64,8 @@
                 <tbody>
         `;
 
-    flowData.forEach(row => {
-        tableHTML += `
+        flowData.forEach(row => {
+            tableHTML += `
                 <tr class="bg-white border-b hover:bg-slate-50 transition">
                     <td class="px-4 py-3 font-medium text-slate-900">${row.Date}</td>
                     <td class="px-4 py-3 text-right ${row['개인'] > 0 ? 'text-red-500' : 'text-blue-500'}">${row['개인'].toLocaleString()}</td>
@@ -73,44 +73,44 @@
                     <td class="px-4 py-3 text-right ${row['기관'] > 0 ? 'text-red-500 font-bold' : 'text-blue-500'}">${row['기관'].toLocaleString()}</td>
                 </tr>
             `;
-    });
-    tableHTML += `</tbody></table>`;
-    tableContainer.innerHTML = tableHTML;
+        });
+        tableHTML += `</tbody></table>`;
+        tableContainer.innerHTML = tableHTML;
 
-    // 2. Render Plotly Insight Text
-    document.getElementById('insight-text').innerText = "{{ insight }}";
+        // 2. Render Plotly Insight Text
+        document.getElementById('insight-text').innerText = "{{ insight }}";
 
-    // 3. Render Plotly Chart
-    const dates = flowData.map(d => d.Date);
-    const foreign = flowData.map(d => d['외국인']);
-    const instit = flowData.map(d => d['기관']);
+        // 3. Render Plotly Chart
+        const dates = flowData.map(d => d.Date);
+        const foreign = flowData.map(d => d['외국인']);
+        const instit = flowData.map(d => d['기관']);
 
-    const traceForeign = {
-        x: dates, y: foreign,
-        name: '외국인', type: 'bar', marker: { color: '#ef4444' }
-    };
-    const traceInstit = {
-        x: dates, y: instit,
-        name: '기관', type: 'bar', marker: { color: '#3b82f6' }
-    };
+        const traceForeign = {
+            x: dates, y: foreign,
+            name: '외국인', type: 'bar', marker: { color: '#ef4444' }
+        };
+        const traceInstit = {
+            x: dates, y: instit,
+            name: '기관', type: 'bar', marker: { color: '#3b82f6' }
+        };
 
-    const layout = {
-        barmode: 'group',
-        margin: { t: 10, r: 10, b: 40, l: 40 },
-        paper_bgcolor: 'rgba(0,0,0,0)',
-        plot_bgcolor: 'rgba(0,0,0,0)',
-        xaxis: { fixedrange: true },
-        yaxis: { fixedrange: true, gridcolor: '#f1f5f9' },
-        showlegend: true,
-        legend: { orientation: 'h', y: 1.15 }
-    };
-    const config = { displayModeBar: false, responsive: true };
+        const layout = {
+            barmode: 'group',
+            margin: { t: 10, r: 10, b: 40, l: 40 },
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            plot_bgcolor: 'rgba(0,0,0,0)',
+            xaxis: { fixedrange: true },
+            yaxis: { fixedrange: true, gridcolor: '#f1f5f9' },
+            showlegend: true,
+            legend: { orientation: 'h', y: 1.15 }
+        };
+        const config = { displayModeBar: false, responsive: true };
 
-    Plotly.newPlot('plotly-money-flow', [traceInstit, traceForeign], layout, config);
+        Plotly.newPlot('plotly-money-flow', [traceInstit, traceForeign], layout, config);
 
-    // Remove loading state element
-    const placeholder = document.querySelector('#plotly-money-flow span');
-    if (placeholder) placeholder.remove();
+        // Remove loading state element
+        const placeholder = document.querySelector('#plotly-money-flow span');
+        if (placeholder) placeholder.remove();
     });
 </script>
 {% endblock %}

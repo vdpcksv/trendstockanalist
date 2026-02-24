@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import requests
@@ -335,6 +335,12 @@ async def read_portfolio(request: Request):
 async def read_policies(request: Request):
     # Legal Policies and AdSense Guide
     return templates.TemplateResponse(request=request, name="policies.html", context={})
+
+# --- Google AdSense ads.txt 인증 우회 라우트 ---
+@app.get("/ads.txt", response_class=PlainTextResponse)
+async def get_ads_txt():
+    # 캡처 화면에서 확인한 본인의 pub ID를 적용한 공식 인증 텍스트
+    return "google.com, pub-9065075656013134, DIRECT, f08c47fec0942fa0"
 
 if __name__ == "__main__":
     import uvicorn

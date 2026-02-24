@@ -5,3 +5,5 @@ pandas
 requests
 beautifulsoup4
 finance-datareader
+apscheduler
+sqlalchemy

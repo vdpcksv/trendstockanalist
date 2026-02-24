@@ -2,8 +2,8 @@
 
 {% block content %}
 <div class="mb-8">
-    <h1 class="text-3xl font-bold text-slate-900 mb-2">포트폴리오 관리 (Local Storage)</h1>
-    <p class="text-slate-600 max-w-3xl">현재 보유 중인 종목을 등록하여 전체 자산 비중과 수익률을 브라우저 환경에서 안전하게 관리합니다.</p>
+    <h1 class="text-3xl font-bold text-slate-900 mb-2">포트폴리오 관리 (Database)</h1>
+    <p class="text-slate-600 max-w-3xl">현재 보유 중인 종목을 등록하여 전체 자산 비중과 수익률을 안전하게 서버 데이터베이스에 저장하고 관리합니다.</p>
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
@@ -104,26 +104,55 @@
 </div>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        let portfolio = JSON.parse(localStorage.getItem('trend_portfolio')) || [];
+    document.addEventListener("DOMContentLoaded", async function () {
+        let portfolio = [];
+
+        // Fetch data from DB
+        async function fetchPortfolio() {
+            try {
+                const res = await fetch('/api/portfolio');
+                if (res.ok) {
+                    portfolio = await res.json();
+                    renderDashboard();
+                }
+            } catch (error) {
+                console.error("Error fetching portfolio:", error);
+            }
+        }
 
         const form = document.getElementById('portfolio-form');
-        form.addEventListener('submit', function (e) {
+        form.addEventListener('submit', async function (e) {
             e.preventDefault();
             const name = document.getElementById('stock_name').value;
-            const price = parseInt(document.getElementById('buy_price').value);
-            const qty = parseInt(document.getElementById('quantity').value);
+            const target_price = parseFloat(document.getElementById('buy_price').value);
+            const qty = parseInt(document.getElementById('quantity').value) || 1; // Used locally for now
 
-            portfolio.push({ id: Date.now(), name: name, price: price, qty: qty });
-            localStorage.setItem('trend_portfolio', JSON.stringify(portfolio));
-            form.reset();
-            renderDashboard();
+            try {
+                const res = await fetch('/api/portfolio', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ticker: name, target_price: target_price, qty: qty })
+                });
+
+                if (res.ok) {
+                    await fetchPortfolio();
+                    form.reset();
+                }
+            } catch (error) {
+                console.error("Error saving portfolio:", error);
+            }
         });
 
-        window.deleteItem = function (id) {
-            portfolio = portfolio.filter(p => p.id !== id);
-            localStorage.setItem('trend_portfolio', JSON.stringify(portfolio));
-            renderDashboard();
+        window.deleteItem = async function (id) {
+            try {
+                const res = await fetch(`/api/portfolio/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    portfolio = portfolio.filter(p => p.id !== id);
+                    renderDashboard();
+                }
+            } catch (error) {
+                console.error("Error deleting portfolio:", error);
+            }
         }
 
         window.saveBotConfig = function () {
@@ -158,7 +187,9 @@
             }
 
             portfolio.forEach(p => {
-                const investAmount = p.price * p.qty;
+                const price = p.price || 0;
+                const qty = p.qty || 1;
+                const investAmount = price * qty;
                 totalInvest += investAmount;
 
                 labels.push(p.name);
@@ -168,8 +199,8 @@
                 tr.className = "bg-white border-b hover:bg-slate-50";
                 tr.innerHTML = `
                     <td class="px-4 py-3 font-medium text-slate-900">${p.name}</td>
-                    <td class="px-4 py-3 text-right">${p.price.toLocaleString()}</td>
-                    <td class="px-4 py-3 text-right">${p.qty.toLocaleString()}</td>
+                    <td class="px-4 py-3 text-right">${price.toLocaleString()}</td>
+                    <td class="px-4 py-3 text-right">${qty.toLocaleString()}</td>
                     <td class="px-4 py-3 text-right font-medium text-indigo-700">${investAmount.toLocaleString()}</td>
                     <td class="px-4 py-3 text-center">
                         <button onclick="deleteItem(${p.id})" class="text-red-500 hover:text-red-700 text-xs">삭제</button>
@@ -199,7 +230,8 @@
             Plotly.newPlot('plotly-pie', pieData, layout, { displayModeBar: false, responsive: true });
         }
 
-        renderDashboard();
+        // Initialize Fetch
+        fetchPortfolio();
     });
 </script>
 {% endblock %}

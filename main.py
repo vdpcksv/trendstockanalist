@@ -8,14 +8,26 @@ import pandas as pd
 from datetime import datetime
 import json
 import FinanceDataReader as fdr
+from contextlib import asynccontextmanager
+from apscheduler.schedulers.background import BackgroundScheduler
+from sqlalchemy.orm import Session
+from fastapi import Depends
 
-app = FastAPI(title="Trend-Lotto Invest")
+from database import engine, get_db
+import models
+import schemas
 
-# Serve static files (CSS, JS) securely mapped to /static
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# Create all tables in the database (this is safe if they already exist)
+models.Base.metadata.create_all(bind=engine)
 
-# Initialize Jinja2 templates directory
-templates = Jinja2Templates(directory="templates")
+# --- Global Cache ---
+# Stores the results of slow web scraping tasks to serve instantly
+cache_data = {
+    "money_flow": [],
+    "theme_list": pd.DataFrame(),
+}
+
+
 
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
@@ -51,9 +63,54 @@ def _get_mock_flow_data():
         {"Date": "2026-02-17", "개인": 100, "외국인": 500, "기관": -600},
     ]
 
+# --- Background Task Functions ---
+def fetch_and_cache_data():
+    """Background task that periodically fetches scraping data."""
+    try:
+        print(f"[{datetime.now()}] Fetching background data...")
+        flow_data = get_money_flow_data()
+        theme_data = get_theme_list()
+        
+        # Safe update of cache
+        if flow_data:
+            cache_data["money_flow"] = flow_data
+        if not theme_data.empty:
+            cache_data["theme_list"] = theme_data
+            
+        print(f"[{datetime.now()}] Data fetch complete. Cached {len(flow_data)} flow records and {len(theme_data)} themes.")
+    except Exception as e:
+        print(f"Background fetch error: {e}")
+
+# --- Application Lifespan Events ---
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: Initialize scheduler and run immediately
+    scheduler = BackgroundScheduler()
+    # Execute immediately on boot
+    fetch_and_cache_data() 
+    # Schedule to run every 10 minutes
+    scheduler.add_job(fetch_and_cache_data, 'interval', minutes=10)
+    scheduler.start()
+    
+    yield # Hand control back to FastAPI
+    
+    # Shutdown: Stop scheduler
+    scheduler.shutdown()
+
+app = FastAPI(title="Trend-Lotto Invest", lifespan=lifespan)
+
+# Serve static files (CSS, JS) securely mapped to /static
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# Initialize Jinja2 templates directory
+templates = Jinja2Templates(directory="templates")
+
 @app.get("/", response_class=HTMLResponse)
 async def read_dashboard(request: Request):
-    flow_data = get_money_flow_data()
+    # Use cached data instead of real-time scraping
+    flow_data = cache_data.get("money_flow", [])
+    if not flow_data:
+        flow_data = _get_mock_flow_data()
     
     # Generate Insight
     last_record = flow_data[0]
@@ -181,8 +238,8 @@ def get_theme_top_stocks(theme_url):
 
 @app.get("/themes", response_class=HTMLResponse)
 async def read_themes(request: Request, theme: str = None):
-    # 테마 리스트 로딩
-    df_themes = get_theme_list()
+    # Use cached theme list
+    df_themes = cache_data.get("theme_list", pd.DataFrame())
     if df_themes.empty:
         context = {"error": "테마 리스트 수집에 실패했습니다."}
         return templates.TemplateResponse(request=request, name="themes.html", context=context)
@@ -324,10 +381,6 @@ async def read_review(request: Request, ticker: str = "005930"): # 기본값: �
 
 @app.get("/portfolio", response_class=HTMLResponse)
 async def read_portfolio(request: Request):
-    # In a real app, this would read from a DB or session. For this refactoring, 
-    # we'll pass an empty state and handle additions entirely via JavaScript localStorage 
-    # to maintain the "Serverless/Static" feel of Streamlit's state.
-    
     context = {"error": None}
     return templates.TemplateResponse(request=request, name="portfolio.html", context=context)
     
@@ -335,6 +388,44 @@ async def read_portfolio(request: Request):
 async def read_policies(request: Request):
     # Legal Policies and AdSense Guide
     return templates.TemplateResponse(request=request, name="policies.html", context={})
+
+# --- API Endpoints for DB CRUD ---
+def get_dummy_user(db: Session):
+    user = db.query(models.User).filter(models.User.username == "testuser").first()
+    if not user:
+        user = models.User(username="testuser", hashed_password="fake")
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+    return user
+
+@app.post("/api/portfolio", response_model=schemas.Portfolio)
+def add_portfolio_item(item: schemas.PortfolioCreate, db: Session = Depends(get_db)):
+    user = get_dummy_user(db)
+    db_item = models.Portfolio(
+        ticker=item.ticker,
+        target_price=item.target_price,
+        user_id=user.id
+    )
+    db.add(db_item)
+    db.commit()
+    db.refresh(db_item)
+    return db_item
+
+@app.get("/api/portfolio")
+def get_portfolio_items(db: Session = Depends(get_db)):
+    user = get_dummy_user(db)
+    items = db.query(models.Portfolio).filter(models.Portfolio.user_id == user.id).all()
+    # Mocking qty for now in response to match frontend expectations
+    return [{"id": i.id, "name": i.ticker, "price": i.target_price or 0, "qty": 1} for i in items]
+
+@app.delete("/api/portfolio/{item_id}")
+def delete_portfolio_item(item_id: int, db: Session = Depends(get_db)):
+    item = db.query(models.Portfolio).filter(models.Portfolio.id == item_id).first()
+    if item:
+        db.delete(item)
+        db.commit()
+    return {"status": "success"}
 
 # --- Google AdSense ads.txt 인증 우회 라우트 ---
 @app.get("/ads.txt", response_class=PlainTextResponse)

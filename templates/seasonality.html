@@ -35,7 +35,8 @@
     <!-- Heatmap Chart -->
     <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 lg:col-span-2">
         <h2 class="text-lg font-semibold mb-4 text-slate-800">📊 월별/섹터별 평균 승률 히트맵</h2>
-        <div id="plotly-heatmap" class="w-full h-96"></div>
+        <div id="plotly-heatmap" class="w-full bg-slate-50 border border-dashed border-slate-200"
+            style="height: 400px; overflow: hidden; min-height: 400px;"></div>
     </div>
 
     <!-- AI Insights Sidebar -->
@@ -74,44 +75,43 @@
         const zData = JSON.parse('{{ z_data | safe }}');
         const xLabels = JSON.parse('{{ x_labels | safe }}');
         const yLabels = JSON.parse('{{ y_labels | safe }}');
-        const currentMonthIdx = {{ current_month_idx }
-    };
+        const currentMonthIdx = parseInt('{{ current_month_idx }}');
 
-    // Wrap for responsiveness
-    const data = [{
-        z: zData,
-        x: xLabels,
-        y: yLabels,
-        type: 'heatmap',
-        colorscale: 'RdYlGn',
-        text: zData.map(row => row.map(val => String(val) + "%")),
-        texttemplate: "%{text}",
-        showscale: false
-    }];
+        // Wrap for responsiveness
+        const data = [{
+            z: zData,
+            x: xLabels,
+            y: yLabels,
+            type: 'heatmap',
+            colorscale: 'RdYlGn',
+            text: zData.map(row => row.map(val => String(val) + "%")),
+            texttemplate: "%{text}",
+            showscale: false
+        }];
 
-    const layout = {
-        margin: { t: 30, r: 10, b: 30, l: 80 },
-        xaxis: { fixedrange: true },
-        yaxis: { fixedrange: true },
-        paper_bgcolor: 'rgba(0,0,0,0)',
-        plot_bgcolor: 'rgba(0,0,0,0)',
-    };
+        const layout = {
+            margin: { t: 30, r: 10, b: 30, l: 80 },
+            xaxis: { fixedrange: true },
+            yaxis: { fixedrange: true },
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            plot_bgcolor: 'rgba(0,0,0,0)',
+        };
 
-    const config = { displayModeBar: false, responsive: true };
-    Plotly.newPlot('plotly-heatmap', data, layout, config);
+        const config = { displayModeBar: false, responsive: true };
+        Plotly.newPlot('plotly-heatmap', data, layout, config);
 
-    // Find best sector for current month
-    let maxVal = -1;
-    let bestSector = "";
-    for (let i = 0; i < yLabels.length; i++) {
-        if (zData[i][currentMonthIdx] > maxVal) {
-            maxVal = zData[i][currentMonthIdx];
-            bestSector = yLabels[i];
+        // Find best sector for current month
+        let maxVal = -1;
+        let bestSector = "";
+        for (let i = 0; i < yLabels.length; i++) {
+            if (zData[i][currentMonthIdx] > maxVal) {
+                maxVal = zData[i][currentMonthIdx];
+                bestSector = yLabels[i];
+            }
         }
-    }
 
-    document.getElementById('best-sector-text').innerHTML =
-        `과거 10년 데이터를 분석한 결과, <strong>${currentMonthIdx + 1}월에는 '${bestSector}'</strong> 섹터가 상승할 확률이 <strong>${maxVal}%</strong>로 가장 높았습니다.`;
+        document.getElementById('best-sector-text').innerHTML =
+            `과거 10년 데이터를 분석한 결과, <strong>${currentMonthIdx + 1}월에는 '${bestSector}'</strong> 섹터가 상승할 확률이 <strong>${maxVal}%</strong>로 가장 높았습니다.`;
     });
 </script>
 {% endblock %}

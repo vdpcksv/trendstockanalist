@@ -15,11 +15,11 @@
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <span class="text-slate-500 sm:text-sm">🔍</span>
                 </div>
-                <input type="text" name="ticker" id="ticker" value="{{ ticker }}"
+                <input type="text" name="ticker" id="ticker" value="{{ search_name }}"
                     class="block w-full pl-10 pr-3 py-3 border border-slate-300 rounded-md leading-5 bg-white placeholder-slate-500 focus:outline-none focus:placeholder-slate-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                    placeholder="종목 코드 6자리 입력 (예: 005930)" required pattern="[0-9]{6}">
+                    placeholder="종목명(예: 부광약품) 또는 코드(예: 003000)" required>
             </div>
-            <p class="mt-2 text-xs text-slate-500">※ 종목의 고유 숫자 6자리 티커를 입력해 주세요.</p>
+            <p class="mt-2 text-xs text-slate-500">※ 종목명 또는 고유 숫자 6자리 티커를 입력해 주세요.</p>
         </div>
         <button type="submit"
             class="w-full sm:w-auto flex justify-center py-3 px-8 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">

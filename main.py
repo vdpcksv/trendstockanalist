@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
@@ -9,6 +10,7 @@ from datetime import datetime
 import json
 import FinanceDataReader as fdr
 from contextlib import asynccontextmanager
+from functools import lru_cache
 from apscheduler.schedulers.background import BackgroundScheduler
 from sqlalchemy.orm import Session
 from fastapi import Depends, HTTPException, status
@@ -307,41 +309,67 @@ def calculate_technical_indicators(df):
 
     return df
 
+@lru_cache(maxsize=1)
+def get_krx_stock_listing():
+    return fdr.StockListing('KRX')
+
+def resolve_ticker(query: str):
+    query = query.strip()
+    if query.isdigit() and len(query) == 6:
+        return query
+    
+    try:
+        df = get_krx_stock_listing()
+        matches = df[df['Name'] == query]
+        if not matches.empty:
+            return matches.iloc[0]['Code']
+    except Exception as e:
+        print(f"Error resolving ticker: {e}")
+    return query
+
 def get_stock_fundamentals(ticker: str):
-    """Scrapes essential fundamental data (sales, operating profit, debt ratio, ROE, etc.)"""
-    url = f"https://finance.naver.com/item/main.naver?code={ticker}"
+    """Scrapes essential fundamental data using Naver mobile JSON API for stability."""
+    url = f"https://m.stock.naver.com/api/stock/{ticker}/finance/annual"
     try:
         res = requests.get(url, headers=HEADERS, timeout=5)
         res.raise_for_status()
-        res.encoding = 'cp949'
-        soup = BeautifulSoup(res.text, 'html.parser')
+        data = res.json()
         
-        table = soup.select_one('div.cop_analysis table')
-        if not table: return None
+        headers = [item['title'] for item in data['financeInfo']['trTitleList']]
+        parsed_data = {}
         
-        data = {}
-        for tr in table.select('tbody tr'):
-            th = tr.select_one('th')
-            if th:
-                name = th.text.strip()
-                tds = tr.select('td')
-                data[name] = [td.text.strip() for td in tds]
+        target_indices = {
+            0: "매출액",
+            1: "영업이익",
+            2: "당기순이익",
+            8: "부채비율",
+            7: "ROE(지배주주)",
+            12: "PER(배)",
+            14: "PBR(배)"
+        }
+        
+        row_list = data['financeInfo']['rowList']
+        header_keys = [item['key'] for item in data['financeInfo']['trTitleList']]
+        
+        for idx, key_name in target_indices.items():
+            if idx < len(row_list):
+                row = row_list[idx]
+                vals = []
+                for hk in header_keys:
+                    vals.append(row['columns'].get(hk, {}).get('value', '-'))
+                parsed_data[key_name] = vals
                 
-        headers = []
-        thead = table.select_one('thead')
-        if thead:
-            trs = thead.select('tr')
-            if len(trs) > 1:
-                headers = [th.text.strip() for th in trs[1].select('th')]
-                
-        return {"headers": headers, "data": data}
+        return {"headers": headers, "data": parsed_data}
     except Exception as e:
         print(f"Error fetching fundamentals: {e}")
         return None
 
 @app.get("/review", response_class=HTMLResponse)
 async def read_review(request: Request, ticker: str = "005930"): # 기본값: 삼성전자
-    context = {"ticker": ticker, "error": None, "chart_data": None, "ai_score": None, "fundamentals": None}
+    search_name = ticker.strip()
+    actual_ticker = resolve_ticker(search_name)
+    
+    context = {"ticker": actual_ticker, "search_name": search_name, "error": None, "chart_data": None, "ai_score": None, "fundamentals": None}
     
     try:
         # 최근 6개월 데이터 로드
@@ -349,7 +377,7 @@ async def read_review(request: Request, ticker: str = "005930"): # 기본값: �
         start_date = end_date - pd.DateOffset(months=6)
         
         # DataFrame 로컬 변수
-        df = fdr.DataReader(ticker, start_date, end_date)
+        df = fdr.DataReader(actual_ticker, start_date, end_date)
         if df.empty:
             context["error"] = "데이터를 불러올 수 없습니다. 종목 코드를 확인해 주세요."
             return templates.TemplateResponse(request=request, name="review.html", context=context)
@@ -405,7 +433,7 @@ async def read_review(request: Request, ticker: str = "005930"): # 기본값: �
         }
         
         # 펀더멘털 데이터 수집 결합
-        context["fundamentals"] = get_stock_fundamentals(ticker)
+        context["fundamentals"] = get_stock_fundamentals(actual_ticker)
         
         return templates.TemplateResponse(request=request, name="review.html", context=context)
             

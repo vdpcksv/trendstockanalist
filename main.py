@@ -360,7 +360,7 @@ async def read_review(request: Request, ticker: str = "005930"): # 기본값: �
         final_score = max(0, min(100, score))
         
         # 시나리오 매핑
-        if final_score >= 80: phase_text = "극단적 과매도 (초강력 매수 타점)"
+        if final_score >= 80: phase_text = "극단적 과매도 (기술적 반등 가능성 구간)"
         elif final_score >= 60: phase_text = "상승 추세 (홀딩 및 분할 매수)"
         elif final_score >= 40: phase_text = "중립/박스권 (관망)"
         elif final_score >= 20: phase_text = "하락 추세 (신규 매수 보류)"
@@ -392,7 +392,7 @@ async def read_policies(request: Request):
     return templates.TemplateResponse(request=request, name="policies.html", context={})
 
 # --- API Endpoints for DB CRUD & Auth ---
-@app.post("/api/register", response_model=schemas.PortfolioBase) # Reusing an empty model to hide user schema for now or just return dict
+@app.post("/api/register") # Removed response_model to prevent validation error when returning a dict
 def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db_user = db.query(models.User).filter(models.User.username == user.username).first()
     if db_user:

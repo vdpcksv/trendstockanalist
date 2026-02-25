@@ -81,19 +81,19 @@
                 </table>
             </div>
 
-            <!-- Lotto Feature (Premium Only) -->
+            <!-- Momentum Feature (Premium Only) -->
             <div id="lotto-container"
-                class="mt-8 bg-gradient-to-r from-yellow-50 to-orange-50 border border-orange-200 rounded-xl p-6 text-center shadow-inner">
-                <h3 class="text-xl font-bold text-orange-800 mb-2">🎲 오늘의 '{{ selected_theme_data['테마명'] }}' 로또 픽 뽑기!
+                class="mt-8 bg-slate-50 border border-slate-200 rounded-xl p-6 text-center shadow-sm">
+                <h3 class="text-xl font-bold text-slate-800 mb-2">📊 오늘의 '{{ selected_theme_data['테마명'] }}' 모멘텀 강세 종목
+                    분석!
                 </h3>
-                <p class="text-orange-700 mb-6 text-sm">해당 테마 내에서 가장 모멘텀(등락률)이 강한 유망 종목 하나를 AI가 추첨해 드립니다.</p>
+                <p class="text-slate-600 mb-6 text-sm">해당 테마 내에서 가장 모멘텀(등락률)이 강한 유망 종목 하나를 AI가 분석해 드립니다.</p>
                 <button onclick="drawLotto()"
-                    class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transform transition hover:scale-105">
-                    행운의 종목 뽑기 🍀
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-md shadow-sm transition">
+                    오늘의 모멘텀 강세 종목 분석하기
                 </button>
                 <!-- Result Modal / Card hidden by default -->
-                <div id="lotto-result"
-                    class="hidden mt-6 p-4 bg-white rounded-lg shadow-md border border-orange-100 animate-pulse">
+                <div id="lotto-result" class="hidden mt-6 p-4 bg-white rounded-lg shadow-sm border border-slate-200">
                     <!-- Filled via JS -->
                 </div>
             </div>
@@ -159,9 +159,9 @@
         if (lottoContainer) {
             if (membership !== 'premium') {
                 lottoContainer.innerHTML = `
-                    <h3 class="text-xl font-bold text-slate-800 mb-2">🔒 오늘의 '{{ selected_theme_data['테마명'] if selected_theme_data else '' }}' 로또 픽 뽑기 (Premium)</h3>
-                    <p class="text-slate-600 mb-6 text-sm">프리미엄 회원에게만 AI가 해당 테마 내 최고의 단기 모멘텀 종목을 추첨해 드립니다.</p>
-                    <button onclick="openAuthModal()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 px-8 rounded-full shadow-lg transition">프리미엄 구독 (로그인)</button>
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">🔒 오늘의 '{{ selected_theme_data['테마명'] if selected_theme_data else '' }}' 모멘텀 강세 종목 분석 (Premium)</h3>
+                    <p class="text-slate-600 mb-6 text-sm">프리미엄 회원에게만 AI가 해당 테마 내 최고의 단기 모멘텀 종목을 분석해 드립니다.</p>
+                    <button onclick="openAuthModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-md shadow-sm transition">프리미엄 구독 (로그인)</button>
                 `;
             }
         }
@@ -210,15 +210,14 @@
         const resDiv = document.getElementById('lotto-result');
         resDiv.classList.remove('hidden');
         resDiv.innerHTML = `
-            <div class="text-2xl mb-1">🎉 축하합니다! 🎉</div>
-            <div class="text-lg font-medium text-slate-800">
-                오늘의 로또 픽 종목은 <span class="text-indigo-600 font-bold text-xl">[${luckyStock['종목명']}]</span> 입니다!
+            <div class="text-lg font-medium text-slate-800 mb-2">
+                오늘의 모멘텀 강세 종목은 <span class="text-indigo-600 font-bold text-xl">[${luckyStock['종목명']}]</span> 입니다.
             </div>
             <div class="mt-2 flex justify-center space-x-4 text-sm font-medium">
-                <span class="bg-gray-100 px-3 py-1 rounded">현재가: ${luckyStock['현재가']}</span>
+                <span class="bg-slate-100 px-3 py-1 rounded">현재가: ${luckyStock['현재가']}</span>
                 <span class="bg-red-50 text-red-600 px-3 py-1 rounded border border-red-100">등락률: ${luckyStock['등락률']}</span>
             </div>
-            <p class="mt-4 text-xs text-orange-600">단기 모멘텀이 매우 강하게 들어오고 있는 대장주급 종목입니다. (투자는 신중하게!)</p>
+            <p class="mt-4 text-xs text-slate-500">단기 모멘텀이 매우 강하게 들어오고 있는 대장주급 종목입니다. 투자는 신중하게 결정하시기 바랍니다.</p>
         `;
     }
     {% endif %}

@@ -307,9 +307,41 @@ def calculate_technical_indicators(df):
 
     return df
 
+def get_stock_fundamentals(ticker: str):
+    """Scrapes essential fundamental data (sales, operating profit, debt ratio, ROE, etc.)"""
+    url = f"https://finance.naver.com/item/main.naver?code={ticker}"
+    try:
+        res = requests.get(url, headers=HEADERS, timeout=5)
+        res.raise_for_status()
+        res.encoding = 'cp949'
+        soup = BeautifulSoup(res.text, 'html.parser')
+        
+        table = soup.select_one('div.cop_analysis table')
+        if not table: return None
+        
+        data = {}
+        for tr in table.select('tbody tr'):
+            th = tr.select_one('th')
+            if th:
+                name = th.text.strip()
+                tds = tr.select('td')
+                data[name] = [td.text.strip() for td in tds]
+                
+        headers = []
+        thead = table.select_one('thead')
+        if thead:
+            trs = thead.select('tr')
+            if len(trs) > 1:
+                headers = [th.text.strip() for th in trs[1].select('th')]
+                
+        return {"headers": headers, "data": data}
+    except Exception as e:
+        print(f"Error fetching fundamentals: {e}")
+        return None
+
 @app.get("/review", response_class=HTMLResponse)
 async def read_review(request: Request, ticker: str = "005930"): # 기본값: 삼성전자
-    context = {"ticker": ticker, "error": None, "chart_data": None, "ai_score": None}
+    context = {"ticker": ticker, "error": None, "chart_data": None, "ai_score": None, "fundamentals": None}
     
     try:
         # 최근 6개월 데이터 로드
@@ -367,10 +399,15 @@ async def read_review(request: Request, ticker: str = "005930"): # 기본값: �
         else: phase_text = "극단적 과매수 (현금화/익절 타점)"
             
         context["ai_score"] = {
-            "score": int(final_score),
+            "score": round(final_score),
             "phase": phase_text,
-            "rsi": round(current_rsi, 1)
+            "rsi": round(current_rsi, 2)
         }
+        
+        # 펀더멘털 데이터 수집 결합
+        context["fundamentals"] = get_stock_fundamentals(ticker)
+        
+        return templates.TemplateResponse(request=request, name="review.html", context=context)
             
     except Exception as e:
         context["error"] = f"에러 발생: {e}"

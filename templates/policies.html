@@ -73,34 +73,5 @@
         </div>
     </details>
 
-    <!-- AdSense Guide -->
-    <details class="group bg-indigo-50 rounded-xl shadow-sm border border-indigo-200" open>
-        <summary
-            class="flex justify-between items-center font-bold cursor-pointer list-none p-5 text-indigo-900 hover:bg-indigo-100 transition">
-            <span class="flex items-center gap-2"><span class="text-xl">💻</span> Google AdSense `base.html` 삽입
-                가이드</span>
-            <span class="transition group-open:rotate-180">
-                <svg fill="none" height="24" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" width="24">
-                    <path d="M6 9l6 6 6-6"></path>
-                </svg>
-            </span>
-        </summary>
-        <div
-            class="p-5 border-t border-indigo-100 text-sm text-indigo-800 space-y-4 leading-relaxed bg-white rounded-b-xl border-x border-b">
-            <p><strong>FastAPI 리빌딩으로 인해 사이트 소유권 인증 문제가 완벽히 해결되었습니다.</strong> 아래 가이드에 따라 ID 값만 변경하세요.</p>
-            <ol class="list-decimal pl-5 space-y-2">
-                <li>구글 애드센스에 로그인 후 '사이트 추가' 메뉴로 이동합니다.</li>
-                <li>본 서비스가 배포된 도메인(예: <code>www.my-invest.com</code>)을 입력합니다.</li>
-                <li>구글에서 제공하는 <code>&lt;script async src="https://pagead2...&gt;&lt;/script&gt;</code> 코드를 확인합니다.</li>
-                <li>프로젝트의 <strong><code>templates/base.html</code></strong> 파일을 엽니다. (현재 하드코딩 되어있습니다)</li>
-                <li><code>base.html</code> 의 맨 위, <code>&lt;head&gt;</code> 와 <code>&lt;/head&gt;</code> 사이에 있는 스크립트의
-                    <code>ca-pub-XXXXXXXXXXXXXXXX</code> 부분을 본인의 실제 Publisher ID로 수정합니다.</li>
-                <li>(선택 사항) 만약 <code>ads.txt</code> 파일 인증을 요구한다면, FastAPI의 <code>static/ads.txt</code> 파일을 생성 및 마운트하여
-                    해결할 수 있습니다.</li>
-                <li>변경사항을 적용 후 애드센스 페이지에서 "검토 요청"을 클릭합니다.</li>
-            </ol>
-        </div>
-    </details>
-
 </div>
 {% endblock %}

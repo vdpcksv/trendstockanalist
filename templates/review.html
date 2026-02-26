@@ -160,6 +160,73 @@
 </div>
 {% endif %}
 
+{% if sentiment_data %}
+<!-- News Sentiment Analysis Section -->
+<div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 mb-12">
+    <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-bold text-slate-800">📰 시장 여론 및 뉴스 센티멘트 (News Sentiment)</h2>
+        <span class="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded">최근 {{ sentiment_data.total }}개 기사 기준</span>
+    </div>
+
+    <div class="mb-6">
+        <div class="flex justify-between items-end mb-2">
+            <div>
+                <p class="text-slate-600 text-sm">최근 시장에 보도된 뉴스 헤드라인의 어조(긍정/부정)를 분석한 투자 심리 지표입니다.</p>
+            </div>
+            <div class="text-right">
+                <span class="text-xs font-medium text-slate-500">긍정 {{ sentiment_data.pos_count }}건 / 중립 {{
+                    sentiment_data.neutral_count }}건 / 부정 {{ sentiment_data.neg_count }}건</span>
+            </div>
+        </div>
+
+        <!-- Sentiment Progress Bar -->
+        <div class="w-full h-4 bg-slate-200 rounded-full overflow-hidden flex">
+            {% if sentiment_data.positive_ratio > 0 %}
+            <div class="h-full bg-emerald-500 transition-all duration-1000"
+                style="width: {{ sentiment_data.positive_ratio }}%;"></div>
+            {% endif %}
+            {% if sentiment_data.neutral_ratio > 0 %}
+            <div class="h-full bg-slate-300 transition-all duration-1000"
+                style="width: {{ sentiment_data.neutral_ratio }}%;"></div>
+            {% endif %}
+            {% if sentiment_data.negative_ratio > 0 %}
+            <div class="h-full bg-red-500 transition-all duration-1000"
+                style="width: {{ sentiment_data.negative_ratio }}%;"></div>
+            {% endif %}
+        </div>
+        <div class="flex justify-between mt-2 text-xs font-bold">
+            <span class="text-emerald-600">긍정 {{ sentiment_data.positive_ratio }}%</span>
+            <span class="text-slate-500">중립 {{ sentiment_data.neutral_ratio }}%</span>
+            <span class="text-red-500">부정 {{ sentiment_data.negative_ratio }}%</span>
+        </div>
+    </div>
+
+    <!-- Latest News List -->
+    <div class="mt-6 border border-slate-100 rounded-lg overflow-hidden">
+        <div class="bg-slate-50 px-4 py-2 border-b border-slate-100 font-semibold text-sm text-slate-700">
+            최신 주요 헤드라인 (Top {{ sentiment_data.news_list|length }})
+        </div>
+        <ul class="divide-y divide-slate-100 text-sm">
+            {% for news in sentiment_data.news_list %}
+            <li class="px-4 py-3 flex items-start gap-4 hover:bg-slate-50 transition">
+                {% if news.sentiment == 'positive' %}
+                <span
+                    class="inline-flex shrink-0 items-center justify-center w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 text-xs font-bold">긍정</span>
+                {% elif news.sentiment == 'negative' %}
+                <span
+                    class="inline-flex shrink-0 items-center justify-center w-8 h-8 rounded-full bg-red-100 text-red-600 text-xs font-bold">부정</span>
+                {% else %}
+                <span
+                    class="inline-flex shrink-0 items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-slate-500 text-xs font-bold">중립</span>
+                {% endif %}
+                <span class="text-slate-700 mt-1 leading-snug">{{ news.title }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endif %}
+
 <!-- AdSense Rich Content Section -->
 <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
     <h3 class="text-lg font-bold text-slate-800 mb-3 block">💡 투자 가이드: 기술적 지표(Technical Analysis)와 퀀트 진단의 이해</h3>

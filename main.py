@@ -364,12 +364,77 @@ def get_stock_fundamentals(ticker: str):
         print(f"Error fetching fundamentals: {e}")
         return None
 
+def get_news_sentiment(ticker: str):
+    """Fetches recent news from Naver Mobile API and performs keyword-based sentiment analysis."""
+    url = f"https://m.stock.naver.com/api/news/stock/{ticker}?pageSize=15"
+    
+    # 긍정/부정 키워드 사전
+    pos_keywords = ['상승', '급등', '돌파', '흑자', '수주', '호조', 'MOU', '강세', '체결', '최대', '신고가', '성장', '기대', '수혜', '반등']
+    neg_keywords = ['하락', '급락', '적자', '우려', '수사', '악재', '약세', '신저가', '미달', '쇼크', '매도', '불안', '위기', '리스크']
+    
+    try:
+        res = requests.get(url, headers=HEADERS, timeout=5)
+        res.raise_for_status()
+        data = res.json()
+        
+        headlines = []
+        for group in data:
+            for item in group.get('items', []):
+                title = item.get('title', '')
+                if title:
+                    # 간단한 HTML 엔티티 제거 (예: &quot;)
+                    title = title.replace('&quot;', '"').replace('&lt;', '<').replace('&gt;', '>')
+                    headlines.append(title)
+                    if len(headlines) >= 15:
+                        break
+            if len(headlines) >= 15:
+                break
+                
+        pos_count = 0
+        neg_count = 0
+        neutral_count = 0
+        analyzed_news = []
+        
+        for title in headlines:
+            is_pos = any(kw in title for kw in pos_keywords)
+            is_neg = any(kw in title for kw in neg_keywords)
+            
+            if is_pos and not is_neg:
+                sentiment = 'positive'
+                pos_count += 1
+            elif is_neg and not is_pos:
+                sentiment = 'negative'
+                neg_count += 1
+            else:
+                sentiment = 'neutral'
+                neutral_count += 1
+                
+            analyzed_news.append({"title": title, "sentiment": sentiment})
+            
+        total = len(headlines)
+        if total == 0:
+            return None
+            
+        return {
+            "total": total,
+            "positive_ratio": round((pos_count / total) * 100),
+            "negative_ratio": round((neg_count / total) * 100),
+            "neutral_ratio": round((neutral_count / total) * 100),
+            "pos_count": pos_count,
+            "neg_count": neg_count,
+            "neutral_count": neutral_count,
+            "news_list": analyzed_news
+        }
+    except Exception as e:
+        print(f"Error fetching news sentiment: {e}")
+        return None
+
 @app.get("/review", response_class=HTMLResponse)
 async def read_review(request: Request, ticker: str = "005930"): # 기본값: 삼성전자
     search_name = ticker.strip()
     actual_ticker = resolve_ticker(search_name)
     
-    context = {"ticker": actual_ticker, "search_name": search_name, "error": None, "chart_data": None, "ai_score": None, "fundamentals": None}
+    context = {"ticker": actual_ticker, "search_name": search_name, "error": None, "chart_data": None, "ai_score": None, "fundamentals": None, "sentiment_data": None}
     
     try:
         # 최근 6개월 데이터 로드
@@ -434,6 +499,9 @@ async def read_review(request: Request, ticker: str = "005930"): # 기본값: �
         
         # 펀더멘털 데이터 수집 결합
         context["fundamentals"] = get_stock_fundamentals(actual_ticker)
+        
+        # 뉴스 센티멘트 분석 결합
+        context["sentiment_data"] = get_news_sentiment(actual_ticker)
         
         return templates.TemplateResponse(request=request, name="review.html", context=context)
             

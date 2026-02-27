@@ -17,6 +17,10 @@ from sqlalchemy.orm import Session
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.inmemory import InMemoryBackend
+from fastapi_cache.decorator import cache
+
 from database import engine, get_db
 import models
 import schemas
@@ -102,6 +106,9 @@ def fetch_and_cache_data():
 # --- Application Lifespan Events ---
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Initialize cache backend
+    FastAPICache.init(InMemoryBackend(), prefix="trendlotto-cache")
+    
     # Startup: Initialize scheduler and run immediately
     scheduler = BackgroundScheduler()
     # Execute immediately on boot
@@ -446,6 +453,7 @@ def get_news_sentiment(ticker: str):
         return None
 
 @app.get("/api/stock_seasonality/{ticker}")
+@cache(expire=1800) # 캐시 유지시간: 30분
 async def get_stock_seasonality(ticker: str):
     """최근 10년치 일봉을 바탕으로 월별 승률과 평균 수익률을 계산합니다."""
     # 종목명 입력시 로직에 의해 코드로 치환
@@ -496,6 +504,7 @@ async def get_stock_seasonality(ticker: str):
         return {"status": "error", "message": str(e)}
 
 @app.get("/review", response_class=HTMLResponse)
+@cache(expire=600) # 종목별 검색 페이지 10분 캐싱
 async def read_review(request: Request, ticker: str = "005930"): # 기본값: 삼성전자
     search_name = ticker.strip()
     actual_ticker = resolve_ticker(search_name)

@@ -325,7 +325,7 @@ def calculate_technical_indicators(df):
 
 @lru_cache(maxsize=1)
 def get_krx_stock_listing():
-    return fdr.StockListing('KRX')
+    return fdr.StockListing('KRX-DESC')
 
 def resolve_ticker(query: str):
     query = query.strip()

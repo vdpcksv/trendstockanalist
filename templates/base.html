@@ -182,8 +182,28 @@
                         body: JSON.stringify({ username: u, password: p })
                     });
                     if (res.ok) {
-                        alert("회원가입 성공! 이제 로그인해주세요.");
-                        toggleAuthMode();
+                        alert("회원가입 성공! 자동으로 로그인됩니다.");
+                        const loginFormData = new URLSearchParams();
+                        loginFormData.append('username', u);
+                        loginFormData.append('password', p);
+
+                        const loginRes = await fetch('/api/token', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                            body: loginFormData
+                        });
+
+                        if (loginRes.ok) {
+                            const loginData = await loginRes.json();
+                            localStorage.setItem('access_token', loginData.access_token);
+                            localStorage.setItem('username', u);
+                            localStorage.setItem('membership', loginData.membership);
+                            closeAuthModal();
+                            checkAuthState();
+                            window.location.reload();
+                        } else {
+                            toggleAuthMode();
+                        }
                     } else {
                         const err = await res.json();
                         alert(`회원가입 실패: ${err.detail}`);

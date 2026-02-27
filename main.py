@@ -6,8 +6,9 @@ from fastapi.templating import Jinja2Templates
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
+import random
 import FinanceDataReader as fdr
 from contextlib import asynccontextmanager
 from functools import lru_cache
@@ -58,14 +59,27 @@ def get_money_flow_data():
         return _get_mock_flow_data()
 
 def _get_mock_flow_data():
-    today = datetime.now().strftime("%Y-%m-%d")
-    return [
-        {"Date": today, "개인": -1500, "외국인": 2000, "기관": -500},
-        {"Date": "2026-02-20", "개인": 500, "외국인": -800, "기관": 300},
-        {"Date": "2026-02-19", "개인": -200, "외국인": 1200, "기관": -1000},
-        {"Date": "2026-02-18", "개인": 1800, "외국인": -1500, "기관": -300},
-        {"Date": "2026-02-17", "개인": 100, "외국인": 500, "기관": -600},
-    ]
+    dates = []
+    current_date = datetime.now()
+    while len(dates) < 5:
+        if current_date.weekday() < 5:  # 월~금
+            dates.append(current_date.strftime("%Y-%m-%d"))
+        current_date -= timedelta(days=1)
+        
+    flow_data = []
+    for d in dates:
+        random.seed(d) # 날짜를 시드로 주어 해당 날짜의 데이터는 고정되게 함
+        flow_data.append({
+            "Date": d,
+            "개인": random.randint(-2000, 2000),
+            "외국인": random.randint(-1500, 2500),
+            "기관": random.randint(-1000, 1500)
+        })
+    
+    # 다른 곳의 랜덤에 영향 없도록 시드 초기화
+    random.seed()
+    
+    return flow_data
 
 # --- Background Task Functions ---
 def fetch_and_cache_data():

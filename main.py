@@ -445,7 +445,55 @@ def get_news_sentiment(ticker: str):
         print(f"Error fetching news sentiment: {e}")
         return None
 
+@app.get("/api/stock_seasonality/{ticker}")
+async def get_stock_seasonality(ticker: str):
+    """최근 10년치 일봉을 바탕으로 월별 승률과 평균 수익률을 계산합니다."""
+    # 종목명 입력시 로직에 의해 코드로 치환
+    actual_ticker = resolve_ticker(ticker)
+    try:
+        end_date = datetime.now()
+        start_date = end_date - pd.DateOffset(years=10)
+        
+        df = fdr.DataReader(actual_ticker, start_date, end_date)
+        if df.empty:
+            raise HTTPException(status_code=404, detail="종목 데이터를 찾을 수 없습니다.")
+        
+        df['Year'] = df.index.year
+        df['Month'] = df.index.month
 
+        # 월별 첫 시가, 마지막 종가 추출
+        monthly_data = df.groupby(['Year', 'Month']).agg(
+            Open=('Open', 'first'),
+            Close=('Close', 'last')
+        ).reset_index()
+        
+        # 월별 수익률 계산 (%) = (종가-시가)/시가 * 100
+        monthly_data['Return'] = (monthly_data['Close'] - monthly_data['Open']) / monthly_data['Open'] * 100
+        
+        seasonality = []
+        for month in range(1, 13):
+            month_data = monthly_data[monthly_data['Month'] == month]
+            if month_data.empty:
+                seasonality.append({"Month": month, "WinRate": 0, "AvgReturn": 0})
+                continue
+            
+            total_years = len(month_data)
+            win_years = len(month_data[month_data['Return'] > 0])
+            
+            win_rate = (win_years / total_years) * 100
+            avg_return = month_data['Return'].mean()
+            
+            seasonality.append({
+                "Month": month,
+                "WinRate": round(win_rate, 1),
+                "AvgReturn": round(avg_return, 2)
+            })
+            
+        return {"status": "success", "data": seasonality}
+        
+    except Exception as e:
+        print(f"Seasonality API Error: {e}")
+        return {"status": "error", "message": str(e)}
 
 @app.get("/review", response_class=HTMLResponse)
 async def read_review(request: Request, ticker: str = "005930"): # 기본값: 삼성전자

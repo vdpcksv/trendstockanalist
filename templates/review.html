@@ -173,6 +173,44 @@
 </div>
 {% endif %}
 
+<!-- 10-Year Seasonality Analysis Section (Loaded via AJAX) -->
+<div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 mb-12" id="seasonality-section">
+    <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-bold text-slate-800">🗓️ 10년 치 월별 승률 및 평균 수익률 (계절성)</h2>
+        <span class="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded">데이터: 과거 10년 일봉 기준</span>
+    </div>
+    <p class="text-slate-600 text-sm mb-6">최근 10년간 해당 종목을 특정 월의 첫 거래일에 매수하여 마지막 거래일에 매도했을 때의 실제 승률과 평균 수익률을 시각화한 모형입니다.
+        데이터는 백그라운드에서 실시간 연산됩니다.</p>
+
+    <div id="seasonality-loading" class="flex flex-col items-center justify-center py-12">
+        <svg class="animate-spin h-8 w-8 text-indigo-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none"
+            viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+            </path>
+        </svg>
+        <span class="text-slate-500 text-sm font-medium">최근 10년 치 주가 데이터를 탐색 및 분석 중입니다... (약 1~3초 소요)</span>
+    </div>
+
+    <div id="seasonality-error"
+        class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm text-center">
+        데이터를 불러오는데 실패했습니다. 해당 종목의 상장일이 짧거나 일시적인 네트워크 오류일 수 있습니다.
+    </div>
+
+    <div id="seasonality-content" class="hidden">
+        <div class="border border-slate-200 rounded-lg p-2 bg-slate-50 relative overflow-x-auto">
+            <div style="min-width: 600px;">
+                <div id="plotly-seasonality-winrate" class="w-full h-24 mb-1"></div>
+                <div id="plotly-seasonality-return" class="w-full h-24"></div>
+            </div>
+        </div>
+        <div id="seasonality-insight" class="mt-4 bg-indigo-50 border-l-4 border-indigo-500 p-4 rounded-r">
+            <!-- Dynamic insight will be injected here -->
+        </div>
+    </div>
+</div>
+
 {% if sentiment_data %}
 <!-- News Sentiment Analysis Section -->
 <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 mb-12">
@@ -418,6 +456,101 @@
         };
 
         Plotly.newPlot('plotly-fundamental', [traceSales, traceOpProfit], layoutFundamental, { displayModeBar: false, responsive: true });
+    });
+
+    // --- 6. Seasonality Data Fetch (AJAX) ---
+    document.addEventListener("DOMContentLoaded", function () {
+        const ticker = "{{ ticker }}";
+        if (!ticker || ticker === "None") return;
+
+        fetch(`/api/stock_seasonality/${ticker}`)
+            .then(res => res.json())
+            .then(response => {
+                document.getElementById('seasonality-loading').classList.add('hidden');
+
+                if (response.status !== 'success' || !response.data) {
+                    document.getElementById('seasonality-error').classList.remove('hidden');
+                    return;
+                }
+
+                document.getElementById('seasonality-content').classList.remove('hidden');
+
+                const data = response.data;
+                const months = data.map(d => d.Month + '월');
+                const winRates = data.map(d => d.WinRate);
+                const avgReturns = data.map(d => d.AvgReturn);
+
+                // Win Rate Heatmap
+                Plotly.newPlot('plotly-seasonality-winrate', [{
+                    z: [winRates],
+                    x: months,
+                    y: ['승률(%)'],
+                    type: 'heatmap',
+                    colorscale: [[0, '#f87171'], [0.5, '#fef08a'], [1, '#4ade80']],
+                    zmin: 0, zmax: 100,
+                    text: [winRates.map(v => v + '%')],
+                    texttemplate: "<b>%{text}</b>",
+                    showscale: false,
+                    hoverinfo: 'x+y+z'
+                }], {
+                    margin: { t: 10, r: 20, b: 20, l: 80 },
+                    xaxis: { fixedrange: true },
+                    yaxis: { fixedrange: true },
+                    paper_bgcolor: 'rgba(0,0,0,0)',
+                    plot_bgcolor: 'rgba(0,0,0,0)',
+                }, { displayModeBar: false, responsive: true });
+
+                // Avg Return Heatmap
+                const maxAbs = Math.max(...avgReturns.map(Math.abs));
+                const bound = maxAbs > 0 ? maxAbs : 1;
+
+                Plotly.newPlot('plotly-seasonality-return', [{
+                    z: [avgReturns],
+                    x: months,
+                    y: ['수익률(%)'],
+                    type: 'heatmap',
+                    colorscale: [[0, '#3b82f6'], [0.5, '#f8fafc'], [1, '#ef4444']], // Blue, White, Red
+                    zmin: -bound, zmax: bound,
+                    text: [avgReturns.map(v => v > 0 ? '+' + v + '%' : v + '%')],
+                    texttemplate: "<b>%{text}</b>",
+                    showscale: false,
+                    hoverinfo: 'x+y+z'
+                }], {
+                    margin: { t: 10, r: 20, b: 20, l: 80 },
+                    xaxis: { fixedrange: true },
+                    yaxis: { fixedrange: true },
+                    paper_bgcolor: 'rgba(0,0,0,0)',
+                    plot_bgcolor: 'rgba(0,0,0,0)',
+                }, { displayModeBar: false, responsive: true });
+
+                let bestMonthIdx = 0;
+                let maxWinRate = -1;
+                for (let i = 0; i < winRates.length; i++) {
+                    if (winRates[i] > maxWinRate) {
+                        maxWinRate = winRates[i];
+                        bestMonthIdx = i;
+                    } else if (winRates[i] === maxWinRate) {
+                        if (avgReturns[i] > avgReturns[bestMonthIdx]) {
+                            bestMonthIdx = i;
+                        }
+                    }
+                }
+
+                const bestMonth = data[bestMonthIdx];
+                if (bestMonth && bestMonth.WinRate > 0) {
+                    document.getElementById('seasonality-insight').innerHTML =
+                        `<p class="text-sm font-medium text-indigo-800">💡 <strong>AI 과거 10년 통계 분석:</strong> 1년 중 <strong>${bestMonth.Month}월</strong>에 매수하여 월말에 매도했을 때 승률 <strong>${bestMonth.WinRate}%</strong>, 평균 수익률 <strong class="${bestMonth.AvgReturn > 0 ? 'text-red-600' : 'text-blue-600'}">${bestMonth.AvgReturn > 0 ? '+' : ''}${bestMonth.AvgReturn}%</strong>로 투자가 가장 유리했습니다.</p>`;
+                } else {
+                    document.getElementById('seasonality-insight').innerHTML =
+                        `<p class="text-sm font-medium text-slate-800">데이터가 존재하지 않거나 분석하기 부족합니다.</p>`;
+                }
+
+            })
+            .catch(err => {
+                console.error(err);
+                document.getElementById('seasonality-loading').classList.add('hidden');
+                document.getElementById('seasonality-error').classList.remove('hidden');
+            });
     });
 </script>
 {% endif %}

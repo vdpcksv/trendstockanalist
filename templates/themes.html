@@ -1,13 +1,17 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="mb-8">
-    <h1 class="text-3xl font-bold text-slate-900 mb-2">당일 주도 테마 맞춤형 시나리오</h1>
-    <p class="text-slate-600 max-w-3xl">Npay 증권의 실시간 테마 시세를 분석하여, 오늘 시장을 주도하는 테마와 편입 종목들을 안내합니다.</p>
+<div class="mb-10 flex flex-col items-center text-center">
+    <div
+        class="inline-block bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 px-4 py-1.5 rounded-full text-sm font-semibold mb-4 drop-shadow-sm">
+        Top-Down Investment Strategy</div>
+    <h1 class="text-4xl font-extrabold text-white mb-4 tracking-tight drop-shadow-md">당일 주도 테마 맞춤형 시나리오</h1>
+    <p class="text-slate-400 max-w-2xl text-lg">실시간 시장 테마 시세를 분석하여, 오늘 핫하게 돈이 몰리는 <br class="hidden sm:block">단기 주도 테마와
+        관련 수혜 종목들을 선별해 드립니다.</p>
 </div>
 
 {% if error %}
-<div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
+<div class="bg-rose-500/10 border border-rose-500/30 text-rose-400 px-4 py-3 rounded-xl relative mb-8" role="alert">
     <span class="block sm:inline">{{ error }}</span>
 </div>
 {% else %}
@@ -15,35 +19,49 @@
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
 
     <!-- Theme Selection form -->
-    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
-        <h2 class="text-lg font-semibold mb-4 text-slate-800">🔥 오늘의 핫 테마 리스트 (Top 20)</h2>
+    <div class="glass-card rounded-2xl p-6 md:p-8 hover-lift h-fit sticky top-24">
+        <h2 class="text-xl font-bold mb-6 text-white flex items-center gap-2">
+            <span class="text-rose-400">🔥</span> 오늘의 핫 테마 리스트
+        </h2>
 
-        <form method="get" action="/themes" class="space-y-4">
+        <form method="get" action="/themes" class="space-y-5">
             <div>
-                <label for="theme" class="block text-sm font-medium text-slate-700 mb-1">💡 깊게 파보고 싶은 관심 테마 선택</label>
-                <select id="theme" name="theme"
-                    class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md border">
-                    <option value="" disabled {% if not selected_theme_data %}selected{% endif %}>테마를 선택하세요</option>
-                    {% for t in themes %}
-                    <option value="{{ t['테마명'] }}" {% if selected_theme_data and selected_theme_data['테마명']==t['테마명']
-                        %}selected{% endif %}>
-                        {{ t['테마명'] }} ({{ t['등락률(%)'] }}%)
-                    </option>
-                    {% endfor %}
-                </select>
+                <label for="theme" class="block text-sm font-bold text-slate-300 mb-2">💡 깊게 파보고 싶은 관심 테마 선택</label>
+                <div class="relative">
+                    <select id="theme" name="theme"
+                        class="appearance-none mt-1 block w-full pl-4 pr-10 py-3 text-base font-medium text-slate-200 bg-[#151b30] border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-xl border shadow-inner transition-colors duration-200 cursor-pointer">
+                        <option value="" disabled {% if not selected_theme_data %}selected{% endif %}>테마를 선택하세요</option>
+                        {% for t in themes %}
+                        <option value="{{ t['테마명'] }}" {% if selected_theme_data and
+                            selected_theme_data['테마명']==t['테마명'] %}selected{% endif %}>
+                            {{ t['테마명'] }} ({{ t['등락률(%)'] }}%)
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
+                            </path>
+                        </svg>
+                    </div>
+                </div>
             </div>
             <button type="submit"
-                class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition">
-                테마 분석하기
+                class="w-full flex justify-center py-3 px-4 rounded-xl shadow-lg text-base font-bold text-white bg-gradient-to-r from-indigo-600 to-indigo-500 hover:shadow-indigo-500/30 transition-all duration-300 focus:outline-none ring-offset-[#0B1021]">
+                해당 테마 심층 분석하기
             </button>
         </form>
 
         {% if selected_theme_data %}
-        <div class="mt-6 p-4 bg-indigo-50 rounded-lg text-center">
-            <span class="text-3xl block mb-2">🚀</span>
-            <p class="font-medium text-indigo-900">
-                선택하신 '{{ selected_theme_data['테마명'] }}' 테마의<br>
-                오늘 평균 등락률은 <strong class="text-xl">{{ selected_theme_data['등락률(%)'] }}%</strong> 입니다.
+        <div
+            class="mt-8 p-5 bg-indigo-900/40 border border-indigo-500/30 rounded-xl text-center shadow-inner relative overflow-hidden">
+            <div class="absolute top-0 right-0 -mr-4 -mt-4 w-16 h-16 bg-indigo-500/20 rounded-full blur-xl">
+            </div>
+            <span class="text-4xl block mb-3 drop-shadow-sm">🚀</span>
+            <p class="font-medium text-indigo-100 leading-relaxed z-10 relative">
+                시장이 주목하는 <strong class="text-indigo-300">'{{ selected_theme_data['테마명'] }}'</strong> 테마의<br>
+                오늘 평균 등락률은 <strong class="text-2xl text-rose-400 mx-1 outfit-font">{{ selected_theme_data['등락률(%)']
+                    }}%</strong> 입니다.
             </p>
         </div>
         {% endif %}
@@ -53,28 +71,40 @@
     <div class="lg:col-span-2 space-y-8">
         {% if selected_theme_data %}
         <!-- Stocks Table -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
-            <h2 class="text-lg font-semibold mb-2 text-slate-800">'{{ selected_theme_data['테마명'] }}' 테마 핵심 편입 종목</h2>
-            <p class="text-sm text-slate-500 mb-4">해당 테마에 편입된 주요 종목의 실시간 시세입니다.</p>
+        <!-- Stocks Table -->
+        <div class="glass-card rounded-2xl p-6 md:p-8 hover-lift">
+            <div class="flex items-center justify-between border-b border-slate-700/50 pb-4 mb-6">
+                <h2 class="text-xl font-bold text-white"><span class="text-indigo-400">'{{
+                        selected_theme_data['테마명'] }}'</span> 테마 핵심 주도주</h2>
+                <span
+                    class="text-xs font-medium text-slate-400 bg-slate-800/50 border border-slate-700 px-3 py-1.5 rounded-lg whitespace-nowrap">실시간
+                    시세 반영</span>
+            </div>
+            <p class="text-sm text-slate-400 mb-6 leading-relaxed">최근 시장에서 거래량이 몰리며 가장 활발하게 움직이는 해당 테마의 주요 편입 종목들입니다.
+                자금이 집중되는 주도주 위주로 포트폴리오를 구성하세요.</p>
 
             {% if stocks_data %}
-            <div class="overflow-x-auto border border-slate-200 rounded-lg">
-                <table class="min-w-full text-sm text-left text-slate-600">
-                    <thead class="text-xs text-slate-700 uppercase bg-slate-50 border-b border-slate-200">
+            <div class="overflow-x-auto border border-slate-700/50 rounded-xl shadow-inner bg-[#0B1021]/50">
+                <table class="min-w-full text-sm text-left text-slate-300">
+                    <thead
+                        class="text-xs text-slate-400 uppercase bg-slate-800/80 border-b border-slate-700/50 backdrop-blur-md">
                         <tr>
-                            <th class="px-4 py-3">종목명</th>
-                            <th class="px-4 py-3 text-right">현재가</th>
-                            <th class="px-4 py-3 text-right">등락률</th>
+                            <th class="px-5 py-4 font-bold">상장 종목명</th>
+                            <th class="px-5 py-4 text-right font-bold">현재 주가</th>
+                            <th class="px-5 py-4 text-right font-bold tracking-wider">단기 변동률</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="divide-y divide-slate-800/50">
                         {% for stock in stocks_data %}
-                        <tr class="bg-white border-b hover:bg-slate-50 transition">
-                            <td class="px-4 py-3 font-medium text-slate-900">{{ stock['종목명'] }}</td>
-                            <td class="px-4 py-3 text-right">{{ stock['현재가'] }}</td>
+                        <tr class="bg-transparent hover:bg-indigo-500/10 transition-colors duration-200">
+                            <td class="px-5 py-3.5 font-bold text-slate-200 flex items-center gap-2">
+                                {{ stock['종목명'] }}
+                            </td>
+                            <td class="px-5 py-3.5 text-right font-semibold">{{ stock['현재가'] }}</td>
                             <td
-                                class="px-4 py-3 text-right {% if '+' in stock['등락률'] %}text-red-500{% elif '-' in stock['등락률'] %}text-blue-500{% endif %} font-medium">
-                                {{ stock['등락률'] }}</td>
+                                class="px-5 py-3.5 text-right font-bold {% if '+' in stock['등락률'] %}text-rose-400 bg-rose-500/10{% elif '-' in stock['등락률'] %}text-blue-400 bg-blue-500/10{% endif %}">
+                                {{ stock['등락률'] }}
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -83,18 +113,30 @@
 
             <!-- Momentum Feature (Premium Only) -->
             <div id="lotto-container"
-                class="mt-8 bg-slate-50 border border-slate-200 rounded-xl p-6 text-center shadow-sm">
-                <h3 class="text-xl font-bold text-slate-800 mb-2">📊 오늘의 '{{ selected_theme_data['테마명'] }}' 모멘텀 강세 종목
-                    분석!
-                </h3>
-                <p class="text-slate-600 mb-6 text-sm">해당 테마 내에서 가장 모멘텀(등락률)이 강한 유망 종목 하나를 AI가 분석해 드립니다.</p>
-                <button onclick="drawLotto()"
-                    class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-md shadow-sm transition">
-                    오늘의 모멘텀 강세 종목 분석하기
-                </button>
-                <!-- Result Modal / Card hidden by default -->
-                <div id="lotto-result" class="hidden mt-6 p-4 bg-white rounded-lg shadow-sm border border-slate-200">
-                    <!-- Filled via JS -->
+                class="mt-10 bg-gradient-to-br from-[#12182B] to-[#0B1021] border border-indigo-500/20 rounded-2xl p-8 text-center shadow-lg relative overflow-hidden">
+                <div
+                    class="absolute -top-10 -right-10 w-32 h-32 bg-amber-500/20 rounded-full mix-blend-screen filter blur-3xl opacity-50 animate-blob">
+                </div>
+                <div
+                    class="absolute -bottom-10 -left-10 w-32 h-32 bg-indigo-500/20 rounded-full mix-blend-screen filter blur-3xl opacity-50 animate-blob animation-delay-2000">
+                </div>
+
+                <div class="relative z-10">
+                    <h3
+                        class="text-2xl font-extrabold text-white mb-3 drop-shadow-md flex items-center justify-center gap-2">
+                        <span class="text-amber-400">🏆</span> 오늘의 모멘텀 1 PICK!
+                    </h3>
+                    <p class="text-slate-400 mb-8 font-medium">해당 테마 내에서 가장 상승 모멘텀(등락률 및 거래대금 기준)이 강력한 유망 종목 단 1개를 AI가
+                        선별해 드립니다.</p>
+                    <button onclick="drawLotto()"
+                        class="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white font-bold py-4 px-10 rounded-xl shadow-[0_0_15px_rgba(245,158,11,0.5)] transition-all duration-300 transform hover:-translate-y-1 text-lg">
+                        AI 주도주 스캐닝 시작
+                    </button>
+                    <!-- Result Modal / Card hidden by default -->
+                    <div id="lotto-result"
+                        class="hidden mt-8 p-6 bg-[#1A2238]/80 backdrop-blur-md rounded-xl shadow-md border-2 border-amber-500/30">
+                        <!-- Filled via JS -->
+                    </div>
                 </div>
             </div>
 
@@ -104,13 +146,16 @@
         </div>
 
         <!-- AI Comment -->
+        <!-- AI Comment -->
         {% if ai_comment %}
-        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
-            <h2 class="text-lg font-semibold mb-4 text-slate-800">🤖 AI 투자 시나리오 판단</h2>
+        <div class="glass-card rounded-2xl p-6 md:p-8 hover-lift">
+            <h2 class="text-xl font-bold mb-6 text-white flex items-center gap-2 border-b border-slate-700/50 pb-4">
+                <span class="text-indigo-400">🤖</span> AI 투자 시나리오 판단
+            </h2>
             <div class="flex items-start">
                 <div class="flex-grow">
-                    <h3 class="font-bold text-lg text-indigo-700">{{ ai_comment.title }}</h3>
-                    <p class="mt-2 text-slate-600">{{ ai_comment.desc }}</p>
+                    <h3 class="font-extrabold text-lg text-indigo-300 mb-2">{{ ai_comment.title }}</h3>
+                    <p class="text-slate-400 leading-relaxed font-medium">{{ ai_comment.desc }}</p>
                 </div>
             </div>
         </div>
@@ -119,20 +164,29 @@
         {% else %}
         <!-- Initial State empty container placeholder -->
         <div
-            class="bg-slate-50 rounded-xl border border-dashed border-slate-300 p-12 flex items-center justify-center text-slate-400 h-full">
-            좌측에서 관심 테마를 먼저 선택해주세요.
+            class="bg-[#0B1021]/50 rounded-2xl border-2 border-dashed border-slate-700 p-16 flex flex-col items-center justify-center text-slate-500 h-full">
+            <svg class="w-16 h-16 mb-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z">
+                </path>
+            </svg>
+            <p class="text-lg font-medium text-slate-400">좌측에서 분석할 관심 테마를 먼저 선택하세요.</p>
         </div>
         {% endif %}
     </div>
 </div>
 
 <!-- AdSense Rich Content Section -->
-<div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
-    <h3 class="text-lg font-bold text-slate-800 mb-3 block">💡 투자 가이드: 테마 탑다운(Top-Down) 어프로치 전략</h3>
-    <p class="text-slate-600 leading-relaxed text-sm">
-        초보 투자자들이 흔히 하는 실수는 '좋아 보이는 종목'을 개별적으로 매수하는 바텀업(Bottom-Up) 방식에 의존하는 것입니다. 진짜 시장의 트렌드 세터들은 현재 어떤 '테마'와 '산업군'에 돈이
-        몰리는지를 먼저 파악하는 탑다운 접근법을 사용합니다. 본 탭에서는 네이버페이 증권의 실시간 테마 시세를 분석해 가장 모멘텀이 강한 주도 섹터를 찾아냅니다. 핫한 시나리오에 탑승하여 대장주 위주의
-        포트폴리오를 구성하면 시장 수익률(Alpha)을 뛰어넘는 결과를 달성할 수 있습니다.
+<div class="glass-card p-8 rounded-2xl border border-indigo-500/20 hover-lift mb-8 relative overflow-hidden">
+    <div
+        class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-full blur-3xl pointer-events-none">
+    </div>
+    <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2 relative z-10">
+        <span class="text-emerald-400">🎯</span> 투자 전략: 테마 탑다운(Top-Down) 필터링 기법
+    </h3>
+    <p class="text-slate-400 leading-relaxed text-[15px] relative z-10">
+        대다수의 개인 투자자들이 겪는 한계는 숲을 보지 못한 채 나무(개별 종목)에 집착하는 전형적인 바텀업(Bottom-Up) 방식에 의존한다는 것입니다. 전문 트레이더와 기관 투자자들은 오늘 어떤
+        <strong>'거시적인 테마군'에 스마트 머니(자금)가 몰리는지를 최우선으로 분석</strong>하는 탑다운 접근법을 지향합니다. 본 대시보드는 실시간 테마 시세를 크롤링하여 오늘 가장 강력한
+        모멘텀을 형성하는 주도 섹터를 수치화합니다. 자금 흐름에 직접 편승하는 전략으로 확률 높은 투자 시나리오를 설계하십시오.
     </p>
 </div>
 
@@ -159,9 +213,9 @@
         if (lottoContainer) {
             if (membership !== 'premium') {
                 lottoContainer.innerHTML = `
-                    <h3 class="text-xl font-bold text-slate-800 mb-2">🔒 오늘의 '{{ selected_theme_data['테마명'] if selected_theme_data else '' }}' 모멘텀 강세 종목 분석 (Premium)</h3>
-                    <p class="text-slate-600 mb-6 text-sm">프리미엄 회원에게만 AI가 해당 테마 내 최고의 단기 모멘텀 종목을 분석해 드립니다.</p>
-                    <button onclick="openAuthModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-md shadow-sm transition">프리미엄 구독 (로그인)</button>
+                    <h3 class="text-xl font-bold text-white mb-2">🔒 오늘의 '{{ selected_theme_data['테마명'] if selected_theme_data else '' }}' 모멘텀 강세 종목 분석 (Premium)</h3>
+                    <p class="text-slate-400 mb-6 text-sm">프리미엄 회원에게만 AI가 해당 테마 내 최고의 단기 모멘텀 종목을 분석해 드립니다.</p>
+                    <button onclick="openAuthModal()" class="bg-gradient-to-r from-indigo-600 to-indigo-500 hover:shadow-indigo-500/30 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition">프리미엄 구독 (로그인)</button>
                 `;
             }
         }
@@ -210,12 +264,12 @@
         const resDiv = document.getElementById('lotto-result');
         resDiv.classList.remove('hidden');
         resDiv.innerHTML = `
-            <div class="text-lg font-medium text-slate-800 mb-2">
-                오늘의 모멘텀 강세 종목은 <span class="text-indigo-600 font-bold text-xl">[${luckyStock['종목명']}]</span> 입니다.
+            <div class="text-lg font-medium text-white mb-2">
+                오늘의 모멘텀 강세 종목은 <span class="text-amber-400 font-bold text-xl">[${luckyStock['종목명']}]</span> 입니다.
             </div>
             <div class="mt-2 flex justify-center space-x-4 text-sm font-medium">
-                <span class="bg-slate-100 px-3 py-1 rounded">현재가: ${luckyStock['현재가']}</span>
-                <span class="bg-red-50 text-red-600 px-3 py-1 rounded border border-red-100">등락률: ${luckyStock['등락률']}</span>
+                <span class="bg-slate-800/60 text-slate-200 px-3 py-1 rounded border border-slate-700">현재가: ${luckyStock['현재가']}</span>
+                <span class="bg-rose-500/20 text-rose-400 px-3 py-1 rounded border border-rose-500/30">등락률: ${luckyStock['등락률']}</span>
             </div>
             <p class="mt-4 text-xs text-slate-500">단기 모멘텀이 매우 강하게 들어오고 있는 대장주급 종목입니다. 투자는 신중하게 결정하시기 바랍니다.</p>
         `;

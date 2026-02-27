@@ -1,35 +1,42 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="mb-8">
-    <h1 class="text-3xl font-bold text-slate-900 mb-2">기술적 매매 복기 및 퀀트 진단</h1>
-    <p class="text-slate-600 max-w-3xl">입력하신 종목의 과거 흐름을 철저히 복기하고, AI 기반의 퀀트 지표를 통해 현재 주가의 상승 동력을 수치화하여 제공합니다.</p>
+<div class="mb-10 flex flex-col items-center text-center">
+    <div
+        class="inline-block bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 px-4 py-1.5 rounded-full text-sm font-semibold mb-4 drop-shadow-sm">
+        Quant AI Diagnostics</div>
+    <h1 class="text-4xl font-extrabold text-white mb-4 tracking-tight drop-shadow-md">기술적 매매 복기 및 퀀트 진단</h1>
+    <p class="text-slate-400 max-w-2xl text-lg">과거 주가 흐름을 철저히 복기하고, AI 기반의 퀀트 지표를 통해 <br class="hidden sm:block">현재 주가의
+        상승 동력을 수치화하여 객관적으로 제공합니다.</p>
 </div>
 
 <!-- Search Form -->
-<div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 mb-8">
-    <form method="get" action="/review" class="flex flex-col sm:flex-row gap-4">
+<div class="glass-card rounded-2xl p-8 mb-10 hover-lift relative overflow-hidden">
+    <div
+        class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none">
+    </div>
+    <form method="get" action="/review" class="flex flex-col sm:flex-row gap-4 relative z-10 w-full max-w-4xl mx-auto">
         <div class="flex-grow">
-            <label for="ticker" class="sr-only">종목 코드 6자리</label>
+            <label for="ticker" class="sr-only">종목명 또는 코드</label>
             <div class="relative">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span class="text-slate-500 sm:text-sm">🔍</span>
+                <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+                    <span class="text-slate-400 text-lg">🔍</span>
                 </div>
                 <input type="text" name="ticker" id="ticker" value="{{ search_name }}"
-                    class="block w-full pl-10 pr-3 py-3 border border-slate-300 rounded-md leading-5 bg-white placeholder-slate-500 focus:outline-none focus:placeholder-slate-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                    placeholder="종목명(예: 부광약품) 또는 코드(예: 003000)" required>
+                    class="block w-full pl-14 pr-4 py-4 bg-[#151b30] border border-slate-700 rounded-xl leading-5 placeholder-slate-500 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base font-medium transition-all shadow-inner"
+                    placeholder="분석할 종목명(예: 삼성전자) 또는 코드(예: 005930)를 입력하세요" required>
             </div>
-            <p class="mt-2 text-xs text-slate-500">※ 종목명 또는 고유 숫자 6자리 티커를 입력해 주세요.</p>
+            <p class="mt-3 text-sm text-slate-400 font-medium pl-2">💡 팁: 정확한 종목명이나 6자리 티커를 입력해 주시면 더 빠릅니다.</p>
         </div>
         <button type="submit"
-            class="w-full sm:w-auto flex justify-center py-3 px-8 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-            차트 및 AI 진단 불러오기
+            class="w-full sm:w-auto flex justify-center items-center py-4 px-8 rounded-xl shadow-lg text-base font-bold text-white bg-gradient-to-r from-indigo-600 to-indigo-500 hover:shadow-indigo-500/30 transition-all duration-300 focus:outline-none ring-offset-[#0B1021]">
+            차트 및 AI 진단 시작
         </button>
     </form>
 </div>
 
 {% if error %}
-<div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative mb-8" role="alert">
+<div class="bg-rose-500/10 border border-rose-500/30 text-rose-400 px-4 py-3 rounded-xl relative mb-8" role="alert">
     <span class="block sm:inline">{{ error }}</span>
 </div>
 {% endif %}
@@ -37,99 +44,123 @@
 {% if chart_data and ai_score %}
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
     <!-- Chart Area -->
-    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 lg:col-span-2">
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-lg font-semibold text-slate-800">📊 6개월 기술적 캔들 차트 ({{ ticker }})</h2>
+    <div class="glass-card rounded-2xl p-6 md:p-8 lg:col-span-2 hover-lift">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+            <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                <span class="text-indigo-400">📊</span> 6개월 기술적 캔들 차트 <span
+                    class="bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 px-3 py-1 rounded-md text-sm ml-2">{{
+                    ticker }}</span>
+            </h2>
 
             <!-- Indicator Toggles -->
-            <div class="flex space-x-4 text-sm bg-slate-100 p-1 rounded-lg">
-                <label class="flex items-center space-x-2 cursor-pointer px-2">
+            <div class="flex space-x-2 text-sm bg-[#151b30] p-1.5 rounded-xl border border-slate-700 shadow-inner">
+                <label
+                    class="flex items-center space-x-2 cursor-pointer px-3 py-1 rounded-lg hover:bg-slate-800 transition-colors">
                     <input type="checkbox" id="toggle-ma"
-                        class="form-checkbox h-4 w-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
+                        class="form-checkbox h-4 w-4 text-indigo-500 bg-slate-700 border-slate-600 rounded focus:ring-indigo-500 transition duration-150"
                         checked>
-                    <span class="text-slate-700">이동평균선(MA5,20,60)</span>
+                    <span class="text-slate-300 font-medium select-none">이동평균선</span>
                 </label>
-                <label class="flex items-center space-x-2 cursor-pointer px-2">
+                <label
+                    class="flex items-center space-x-2 cursor-pointer px-3 py-1 rounded-lg hover:bg-slate-800 transition-colors">
                     <input type="checkbox" id="toggle-bb"
-                        class="form-checkbox h-4 w-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
+                        class="form-checkbox h-4 w-4 text-indigo-500 bg-slate-700 border-slate-600 rounded focus:ring-indigo-500 transition duration-150"
                         checked>
-                    <span class="text-slate-700">볼린저밴드(20,2)</span>
+                    <span class="text-slate-300 font-medium select-none">볼린저밴드</span>
                 </label>
             </div>
         </div>
 
-        <div id="plotly-candlestick" class="w-full h-96 bg-slate-50 border border-slate-200 rounded"></div>
-        <div id="plotly-rsi" class="w-full h-40 bg-slate-50 border border-slate-200 rounded mt-4"></div>
+        <div id="plotly-candlestick"
+            class="w-full h-96 bg-[#0B1021]/50 border border-slate-700/50 rounded-xl overflow-hidden shadow-inner">
+        </div>
+        <div id="plotly-rsi"
+            class="w-full h-40 bg-[#0B1021]/50 border border-slate-700/50 rounded-xl mt-4 overflow-hidden shadow-inner">
+        </div>
     </div>
 
     <!-- AI Score Dashboard -->
     <div
-        class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 flex flex-col items-center justify-center text-center">
-        <h2 class="text-lg font-semibold mb-6 text-slate-800 w-full border-b pb-2">🤖 AI 퀀트 종합 분석 리포트</h2>
+        class="bg-gradient-to-br from-indigo-900 to-slate-900 rounded-2xl shadow-lg border border-slate-800 p-8 flex flex-col items-center justify-center text-center relative overflow-hidden hover-lift">
+        <div class="absolute top-0 right-0 -mr-10 -mt-10 w-40 h-40 bg-indigo-500 opacity-20 rounded-full blur-3xl">
+        </div>
+        <h2
+            class="text-xl font-bold mb-8 text-white w-full border-b border-slate-700/50 pb-4 flex justify-center items-center gap-2">
+            <span class="text-2xl">🤖</span> AI 퀀트 종합 스코어
+        </h2>
 
-        <div class="relative mb-6">
+        <div class="relative mb-8 transform hover:scale-105 transition-transform duration-500 cursor-default">
             <!-- Score Circle -->
-            <svg class="w-32 h-32 transform -rotate-90">
-                <circle cx="64" cy="64" r="56" stroke="currentColor" stroke-width="12" fill="transparent"
-                    class="text-slate-100" />
-                <circle cx="64" cy="64" r="56" stroke="currentColor" stroke-width="12" fill="transparent"
-                    stroke-dasharray="351.858" stroke-dashoffset="{{ 351.858 - (351.858 * ai_score.score) / 100 }}"
-                    class="{% if ai_score.score >= 80 %}text-green-500{% elif ai_score.score >= 60 %}text-blue-500{% elif ai_score.score >= 40 %}text-yellow-500{% else %}text-red-500{% endif %} transition-all duration-1000 ease-out" />
+            <svg class="w-40 h-40 transform -rotate-90">
+                <circle cx="80" cy="80" r="70" stroke="currentColor" stroke-width="14" fill="transparent"
+                    class="text-slate-700/50" />
+                <circle cx="80" cy="80" r="70" stroke="currentColor" stroke-width="14" fill="transparent"
+                    stroke-dasharray="439.8" stroke-dashoffset="{{ 439.8 - (439.8 * ai_score.score) / 100 }}"
+                    class="{% if ai_score.score >= 80 %}text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.8)]{% elif ai_score.score >= 60 %}text-blue-400 drop-shadow-[0_0_8px_rgba(96,165,250,0.8)]{% elif ai_score.score >= 40 %}text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]{% else %}text-rose-500 drop-shadow-[0_0_8px_rgba(244,63,94,0.8)]{% endif %} transition-all duration-1500 ease-out"
+                    stroke-linecap="round" />
             </svg>
-            <div class="absolute inset-0 flex flex-col items-center justify-center">
-                <span class="text-3xl font-bold text-slate-800">{{ ai_score.score }}</span>
-                <span class="text-xs text-slate-500">Score</span>
+            <div class="absolute inset-0 flex flex-col items-center justify-center pt-2">
+                <span class="text-5xl font-extrabold text-white tracking-tighter outfit-font">{{ ai_score.score
+                    }}</span>
+                <span class="text-xs text-indigo-300 font-bold tracking-widest uppercase mt-1">Total Score</span>
             </div>
         </div>
 
-        <div class="w-full bg-slate-50 rounded-lg p-4 text-left border border-slate-200">
-            <h3 class="text-sm font-bold text-slate-700 mb-1">현재 시장 국면 (Phase)</h3>
+        <div
+            class="w-full bg-slate-800/50 backdrop-blur-sm rounded-xl p-5 text-left border border-slate-700 shadow-inner z-10">
+            <h3 class="text-xs font-bold text-slate-400 mb-1 uppercase tracking-wider">현재 시장 국면 (Phase)</h3>
             <p
-                class="text-lg font-semibold {% if '매수' in ai_score.phase %}text-green-600{% elif '관망' in ai_score.phase %}text-yellow-600{% else %}text-red-600{% endif %}">
+                class="text-xl font-bold {% if '매수' in ai_score.phase %}text-emerald-400{% elif '관망' in ai_score.phase %}text-yellow-400{% else %}text-rose-400{% endif %} mb-4 drop-shadow-sm">
                 {{ ai_score.phase }}</p>
 
-            <div class="mt-4 border-t border-slate-200 pt-3">
-                <h3 class="text-sm font-bold text-slate-700 mb-1">RSI 추세 강도 (14일)</h3>
+            <div class="border-t border-slate-700/50 pt-4">
+                <h3 class="text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">RSI 모멘텀 강도 (14일 기준)</h3>
                 <div class="flex items-center justify-between">
-                    <span class="text-2xl font-bold text-slate-800">{{ ai_score.rsi }}</span>
-                    <span class="text-xs text-slate-500 bg-white border px-2 py-1 rounded">
-                        {% if ai_score.rsi < 30 %}과매도구간{% elif ai_score.rsi> 70 %}과매수구간{% else %}추세안정{% endif %}
+                    <span class="text-3xl font-extrabold text-white outfit-font">{{ ai_score.rsi }}</span>
+                    <span class="text-xs font-bold text-slate-800 bg-slate-100 px-3 py-1.5 rounded-md shadow-sm">
+                        {% if ai_score.rsi < 30 %}🟢 과매도 (반등 대비){% elif ai_score.rsi> 70 %}🔴 과매수 (차익 실현){% else %}⚪ 추세
+                            안정형{% endif %}
                     </span>
                 </div>
             </div>
         </div>
 
-        <p class="mt-6 text-xs text-slate-400 text-left">
-            * 본 AI 진단은 가격 모멘텀과 기술적 지표의 이격도를 수학적으로 연산한 결과입니다. 맹신은 금물이며, 참고용 보조 지표로만 활용하시기 바랍니다. 내부 연산 알고리즘(수식)은 전략 보안상의
-            이유로 공개되지 않습니다.
+        <p class="mt-6 text-[11px] text-slate-400 text-left leading-relaxed z-10 opacity-80">
+            * 본 AI 진단 Score는 가격 단기 모멘텀과 기술적 지표의 이격도를 수학적으로 연산한 퀀트 결과입니다. 맹신은 금물이며, 리스크 조절의 보조 지표로만 활용하십시오. 내부 전략의 코어
+            알고리즘은 공개되지 않습니다.
         </p>
     </div>
 </div>
 
 {% if fundamentals and fundamentals.data %}
 <!-- Fundamental Analysis Section -->
-<div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 mb-12">
-    <div class="flex items-center justify-between mb-4">
-        <h2 class="text-xl font-bold text-slate-800">🏢 핵심 재무제표 및 향후 성장성 진단 (Fundamental)</h2>
-        <span class="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded">데이터: 네이버페이 증권</span>
+<div class="glass-card rounded-2xl p-6 md:p-8 mb-12 hover-lift">
+    <div class="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-2">
+        <h2 class="text-xl font-bold text-white flex items-center gap-2">
+            <span class="text-amber-400">🏢</span> 재무 펀더멘탈 및 컨센서스 (Fundamental)
+        </h2>
+        <span
+            class="text-xs text-slate-400 bg-slate-800/50 px-3 py-1.5 rounded-lg border border-slate-700 font-medium whitespace-nowrap">데이터
+            출처: Npay 증권</span>
     </div>
-    <p class="text-slate-600 text-sm mb-6">기업의 매출액, 영업이익 성장성과 부채비율 등 안정성 지표, 그리고 향후 컨센서스(E)를 종합적으로 점검합니다.</p>
+    <p class="text-slate-400 text-sm mb-8 leading-relaxed">최근 3개년의 핵심 재무제표(매출액, 영업이익, 안정성 지표)와 향후 시장의 성장성
+        컨센서스(Estimates)를 종합적으로 시각화합니다. 적자 지속 및 고부채 기업은 투자에 각별히 유의하십시오.</p>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <!-- 1. Fundamental Table (Left) -->
-        <div class="overflow-x-auto pb-4 custom-scrollbar">
-            <table class="min-w-full text-sm text-right text-slate-600 border border-slate-200 whitespace-nowrap">
-                <thead class="bg-slate-50 border-b border-slate-200 text-slate-700">
+        <div class="overflow-x-auto pb-4 custom-scrollbar rounded-xl border border-slate-700/50 shadow-inner">
+            <table class="min-w-full text-sm text-right text-slate-400 whitespace-nowrap">
+                <thead class="bg-slate-800/50 border-b border-slate-700/50 text-slate-400">
                     <tr>
                         <th
-                            class="px-4 py-3 text-left font-semibold border-r border-slate-200 bg-slate-100 sticky left-0 z-10 w-40">
-                            주요 지표</th>
+                            class="px-5 py-4 text-left font-bold uppercase tracking-wider border-r border-slate-700/50 bg-[#12182B] sticky left-0 z-10 w-40 backdrop-blur-md">
+                            주요 재무 지표</th>
                         {% for header in fundamentals.headers %}
-                        <th class="px-4 py-3 font-semibold min-w-[100px]">{{ header }}</th>
+                        <th class="px-5 py-4 font-bold">{{ header }}</th>
                         {% endfor %}
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody class="divide-y divide-slate-800/50 bg-transparent">
                     {% set target_keys = [
                     ('매출액', '억 원'),
                     ('영업이익', '억 원'),
@@ -142,14 +173,14 @@
 
                     {% for key, unit in target_keys %}
                     {% if key in fundamentals.data %}
-                    <tr class="hover:bg-slate-50 transition">
+                    <tr class="hover:bg-indigo-500/10 transition-colors duration-200">
                         <td
-                            class="px-4 py-3 text-left font-medium text-slate-800 bg-slate-50 border-r border-slate-200 sticky left-0 z-10">
-                            {{ key }} <span class="text-xs text-slate-400 font-normal">({{ unit }})</span>
+                            class="px-5 py-3.5 text-left font-bold text-slate-200 bg-[#0B1021]/80 backdrop-blur-md border-r border-slate-700/50 sticky left-0 z-10">
+                            {{ key }} <span class="text-xs text-slate-500 font-normal ml-1">({{ unit }})</span>
                         </td>
                         {% for val in fundamentals.data[key] %}
                         <td
-                            class="px-4 py-3 {% if val == '' or val == 'N/A' %}text-slate-300{% else %}font-medium{% endif %}">
+                            class="px-5 py-3.5 {% if val == '' or val == 'N/A' %}text-slate-600{% else %}font-medium text-slate-300{% endif %} {% if '-' in val %}text-rose-400{% endif %}">
                             {{ val if val else '-' }}
                         </td>
                         {% endfor %}
@@ -161,7 +192,7 @@
         </div>
 
         <!-- 2. Fundamental Chart (Right) -->
-        <div class="h-64 lg:h-auto border border-slate-200 rounded-lg p-2 bg-slate-50 relative">
+        <div class="h-64 lg:h-auto border border-slate-100 shadow-inner rounded-xl p-3 bg-slate-50 relative">
             <div id="plotly-fundamental" class="w-full h-full"></div>
             <!-- Pass Data to JS -->
             <script>
@@ -174,13 +205,17 @@
 {% endif %}
 
 <!-- 10-Year Seasonality Analysis Section (Loaded via AJAX) -->
-<div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 mb-12" id="seasonality-section">
-    <div class="flex items-center justify-between mb-4">
-        <h2 class="text-xl font-bold text-slate-800">🗓️ 10년 치 월별 승률 및 평균 수익률 (계절성)</h2>
-        <span class="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded">데이터: 과거 10년 일봉 기준</span>
+<div class="glass-card rounded-2xl p-6 md:p-8 mb-12 hover-lift" id="seasonality-section">
+    <div class="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-2">
+        <h2 class="text-xl font-bold text-white flex items-center gap-2">
+            <span class="text-rose-400">🗓️</span> 10년 치 월별 승률 및 평균 수익률 (계절성)
+        </h2>
+        <span
+            class="text-xs font-medium text-slate-400 bg-slate-800/50 px-3 py-1.5 rounded-lg border border-slate-700 whitespace-nowrap">과거
+            10년 일봉 빅데이터</span>
     </div>
-    <p class="text-slate-600 text-sm mb-6">최근 10년간 해당 종목을 특정 월의 첫 거래일에 매수하여 마지막 거래일에 매도했을 때의 실제 승률과 평균 수익률을 시각화한 모형입니다.
-        데이터는 백그라운드에서 실시간 연산됩니다.</p>
+    <p class="text-slate-400 text-sm mb-8 leading-relaxed">최근 10년간 해당 종목을 특정 월의 첫 거래일에 매수하여 마지막 거래일에 매도했을 때의 실제 통계적 승률과
+        평균 수익률 시각화 모형입니다. 데이터는 백그라운드 엔진에서 실시간으로 연산됩니다.</p>
 
     <div id="seasonality-loading" class="flex flex-col items-center justify-center py-12">
         <svg class="animate-spin h-8 w-8 text-indigo-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none"
@@ -190,22 +225,24 @@
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
             </path>
         </svg>
-        <span class="text-slate-500 text-sm font-medium">최근 10년 치 주가 데이터를 탐색 및 분석 중입니다... (약 1~3초 소요)</span>
+        <span class="text-slate-400 text-sm font-medium">최근 10년 치 주가 데이터를 탐색 및 분석 중입니다... (약 1~3초 소요)</span>
     </div>
 
     <div id="seasonality-error"
-        class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm text-center">
-        데이터를 불러오는데 실패했습니다. 해당 종목의 상장일이 짧거나 일시적인 네트워크 오류일 수 있습니다.
+        class="hidden bg-rose-500/10 border border-rose-500/30 text-rose-400 px-4 py-4 rounded-xl text-sm font-medium text-center">
+        해당 종목의 히스토리 데이터가 10년에 미치지 못하거나, 일시적인 네트워크 오류로 데이터를 불러올 수 없습니다.
     </div>
 
     <div id="seasonality-content" class="hidden">
-        <div class="border border-slate-200 rounded-lg p-2 bg-slate-50 relative overflow-x-auto">
+        <div
+            class="border border-slate-700/50 rounded-xl p-4 bg-[#0B1021]/50 shadow-inner relative overflow-x-auto text-slate-300">
             <div style="min-width: 600px;">
-                <div id="plotly-seasonality-winrate" class="w-full h-24 mb-1"></div>
+                <div id="plotly-seasonality-winrate" class="w-full h-24 mb-2"></div>
                 <div id="plotly-seasonality-return" class="w-full h-24"></div>
             </div>
         </div>
-        <div id="seasonality-insight" class="mt-4 bg-indigo-50 border-l-4 border-indigo-500 p-4 rounded-r">
+        <div id="seasonality-insight"
+            class="mt-6 bg-gradient-to-r from-indigo-900/40 to-blue-900/30 border-l-4 border-indigo-500 p-5 rounded-r-xl shadow-inner font-medium text-indigo-300 text-sm">
             <!-- Dynamic insight will be injected here -->
         </div>
     </div>
@@ -213,42 +250,48 @@
 
 {% if sentiment_data %}
 <!-- News Sentiment Analysis Section -->
-<div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 mb-12">
-    <div class="flex items-center justify-between mb-4">
-        <h2 class="text-xl font-bold text-slate-800">📰 시장 여론 및 뉴스 센티멘트 (News Sentiment)</h2>
-        <span class="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded">최근 {{ sentiment_data.total }}개 기사 기준</span>
+<div class="glass-card rounded-2xl p-6 md:p-8 mb-12 hover-lift">
+    <div class="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 gap-2">
+        <h2 class="text-xl font-bold text-white flex items-center gap-2">
+            <span class="text-blue-400">📰</span> 시장 보도 언론 및 여론 센티멘탈 지수
+        </h2>
+        <span
+            class="text-xs font-medium text-slate-400 bg-slate-800/50 border border-slate-700 px-3 py-1.5 rounded-lg whitespace-nowrap">최근
+            {{ sentiment_data.total }}개 경제 기사 분석</span>
     </div>
 
-    <div class="mb-6">
-        <div class="flex justify-between items-end mb-2">
+    <div class="mb-8">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-4 gap-2">
             <div>
-                <p class="text-slate-600 text-sm">최근 시장에 보도된 뉴스 헤드라인의 어조(긍정/부정)를 분석한 투자 심리 지표입니다.</p>
+                <p class="text-slate-400 text-sm">최근 시장에 보도된 뉴스 헤드라인의 어조(긍정/부정)를 자연어 처리로 분석한 투자 심리 나침반입니다.</p>
             </div>
-            <div class="text-right">
-                <span class="text-xs font-medium text-slate-500">긍정 {{ sentiment_data.pos_count }}건 / 중립 {{
-                    sentiment_data.neutral_count }}건 / 부정 {{ sentiment_data.neg_count }}건</span>
+            <div class="bg-[#151b30] border border-slate-700 px-3 py-1.5 rounded-lg whitespace-nowrap shadow-inner">
+                <span class="text-xs font-bold text-slate-400">긍정 <span class="text-emerald-400">{{
+                        sentiment_data.pos_count }}</span>건 / 중립 <span class="text-slate-500">{{
+                        sentiment_data.neutral_count }}</span>건 / 부정 <span class="text-rose-400">{{
+                        sentiment_data.neg_count }}</span>건</span>
             </div>
         </div>
 
         <!-- Sentiment Progress Bar -->
-        <div class="w-full h-4 bg-slate-200 rounded-full overflow-hidden flex">
+        <div class="w-full h-4 bg-slate-800/50 rounded-full overflow-hidden flex shadow-inner">
             {% if sentiment_data.positive_ratio > 0 %}
-            <div class="h-full bg-emerald-500 transition-all duration-1000"
+            <div class="h-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)] transition-all duration-1000"
                 style="width: {{ sentiment_data.positive_ratio }}%;"></div>
             {% endif %}
             {% if sentiment_data.neutral_ratio > 0 %}
-            <div class="h-full bg-slate-300 transition-all duration-1000"
+            <div class="h-full bg-slate-600 transition-all duration-1000"
                 style="width: {{ sentiment_data.neutral_ratio }}%;"></div>
             {% endif %}
             {% if sentiment_data.negative_ratio > 0 %}
-            <div class="h-full bg-red-500 transition-all duration-1000"
+            <div class="h-full bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.8)] transition-all duration-1000"
                 style="width: {{ sentiment_data.negative_ratio }}%;"></div>
             {% endif %}
         </div>
         <div class="flex justify-between mt-2 text-xs font-bold">
-            <span class="text-emerald-600">긍정 {{ sentiment_data.positive_ratio }}%</span>
+            <span class="text-emerald-400">긍정 {{ sentiment_data.positive_ratio }}%</span>
             <span class="text-slate-500">중립 {{ sentiment_data.neutral_ratio }}%</span>
-            <span class="text-red-500">부정 {{ sentiment_data.negative_ratio }}%</span>
+            <span class="text-rose-400">부정 {{ sentiment_data.negative_ratio }}%</span>
         </div>
     </div>
 
@@ -256,60 +299,63 @@
     <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
 
         <!-- 긍정 뉴스 -->
-        <div class="border border-emerald-100 rounded-lg overflow-hidden flex flex-col">
+        <div class="border border-emerald-500/20 rounded-lg overflow-hidden flex flex-col bg-[#0B1021]/30">
             <div
-                class="bg-emerald-50 px-4 py-2 border-b border-emerald-100 font-bold text-sm text-emerald-700 flex justify-between items-center">
+                class="bg-emerald-500/10 px-4 py-2 border-b border-emerald-500/20 font-bold text-sm text-emerald-400 flex justify-between items-center">
                 <span>긍정 헤드라인</span>
-                <span class="bg-emerald-200 text-emerald-800 text-xs px-2 py-0.5 rounded-full">{{
+                <span class="bg-emerald-500/20 text-emerald-300 text-xs px-2 py-0.5 rounded-full">{{
                     sentiment_data.pos_count }}건</span>
             </div>
-            <ul class="divide-y divide-emerald-50 text-sm flex-1 bg-white">
+            <ul class="divide-y divide-emerald-500/10 text-sm flex-1">
                 {% for news in sentiment_data.news_list if news.sentiment == 'positive' %}
-                <li class="px-4 py-3 flex items-start gap-3 hover:bg-emerald-50 transition">
-                    <span class="text-slate-700 leading-snug">{{ news.title }}</span>
+                <li class="px-4 py-3 flex items-start gap-3 hover:bg-emerald-500/5 transition">
+                    <span class="text-slate-300 leading-snug">{{ news.title }}</span>
                 </li>
                 {% else %}
-                <li class="px-4 py-6 flex items-center justify-center text-slate-400 text-xs italic bg-slate-50">조회된 긍정
+                <li class="px-4 py-6 flex items-center justify-center text-slate-500 text-xs italic bg-[#0B1021]/50">조회된
+                    긍정
                     뉴스가 없습니다.</li>
                 {% endfor %}
             </ul>
         </div>
 
         <!-- 중립 뉴스 -->
-        <div class="border border-slate-200 rounded-lg overflow-hidden flex flex-col">
+        <div class="border border-slate-700/50 rounded-lg overflow-hidden flex flex-col bg-[#0B1021]/30">
             <div
-                class="bg-slate-100 px-4 py-2 border-b border-slate-200 font-bold text-sm text-slate-700 flex justify-between items-center">
+                class="bg-slate-800/50 px-4 py-2 border-b border-slate-700/50 font-bold text-sm text-slate-300 flex justify-between items-center">
                 <span>중립 헤드라인</span>
-                <span class="bg-slate-200 text-slate-600 text-xs px-2 py-0.5 rounded-full">{{
+                <span class="bg-slate-700/50 text-slate-400 text-xs px-2 py-0.5 rounded-full">{{
                     sentiment_data.neutral_count }}건</span>
             </div>
-            <ul class="divide-y divide-slate-100 text-sm flex-1 bg-white">
+            <ul class="divide-y divide-slate-800/50 text-sm flex-1">
                 {% for news in sentiment_data.news_list if news.sentiment == 'neutral' %}
-                <li class="px-4 py-3 flex items-start gap-3 hover:bg-slate-50 transition">
-                    <span class="text-slate-700 leading-snug">{{ news.title }}</span>
+                <li class="px-4 py-3 flex items-start gap-3 hover:bg-slate-800/30 transition">
+                    <span class="text-slate-300 leading-snug">{{ news.title }}</span>
                 </li>
                 {% else %}
-                <li class="px-4 py-6 flex items-center justify-center text-slate-400 text-xs italic bg-slate-50">조회된 중립
+                <li class="px-4 py-6 flex items-center justify-center text-slate-500 text-xs italic bg-[#0B1021]/50">조회된
+                    중립
                     뉴스가 없습니다.</li>
                 {% endfor %}
             </ul>
         </div>
 
         <!-- 부정 뉴스 -->
-        <div class="border border-red-100 rounded-lg overflow-hidden flex flex-col">
+        <div class="border border-rose-500/20 rounded-lg overflow-hidden flex flex-col bg-[#0B1021]/30">
             <div
-                class="bg-red-50 px-4 py-2 border-b border-red-100 font-bold text-sm text-red-700 flex justify-between items-center">
+                class="bg-rose-500/10 px-4 py-2 border-b border-rose-500/20 font-bold text-sm text-rose-400 flex justify-between items-center">
                 <span>부정 헤드라인</span>
-                <span class="bg-red-200 text-red-800 text-xs px-2 py-0.5 rounded-full">{{ sentiment_data.neg_count
+                <span class="bg-rose-500/20 text-rose-300 text-xs px-2 py-0.5 rounded-full">{{ sentiment_data.neg_count
                     }}건</span>
             </div>
-            <ul class="divide-y divide-red-50 text-sm flex-1 bg-white">
+            <ul class="divide-y divide-rose-500/10 text-sm flex-1">
                 {% for news in sentiment_data.news_list if news.sentiment == 'negative' %}
-                <li class="px-4 py-3 flex items-start gap-3 hover:bg-red-50 transition">
-                    <span class="text-slate-700 leading-snug">{{ news.title }}</span>
+                <li class="px-4 py-3 flex items-start gap-3 hover:bg-rose-500/5 transition">
+                    <span class="text-slate-300 leading-snug">{{ news.title }}</span>
                 </li>
                 {% else %}
-                <li class="px-4 py-6 flex items-center justify-center text-slate-400 text-xs italic bg-slate-50">조회된 부정
+                <li class="px-4 py-6 flex items-center justify-center text-slate-500 text-xs italic bg-[#0B1021]/50">조회된
+                    부정
                     뉴스가 없습니다.</li>
                 {% endfor %}
             </ul>
@@ -320,9 +366,13 @@
 {% endif %}
 
 <!-- AdSense Rich Content Section -->
-<div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
-    <h3 class="text-lg font-bold text-slate-800 mb-3 block">💡 투자 가이드: 기술적 지표(Technical Analysis)와 퀀트 진단의 이해</h3>
-    <p class="text-slate-600 leading-relaxed text-sm">
+<div class="glass-card p-6 rounded-xl border border-indigo-500/20 relative overflow-hidden">
+    <div
+        class="absolute top-0 right-0 -mr-16 -mt-16 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none">
+    </div>
+    <h3 class="text-lg font-bold text-white mb-3 block relative z-10 flex items-center gap-2"><span
+            class="text-amber-400">💡</span> 투자 가이드: 기술적 지표(Technical Analysis)와 퀀트 진단의 이해</h3>
+    <p class="text-slate-400 leading-relaxed text-sm relative z-10">
         주식 시장에서 인간의 감정(탐욕과 공포)을 완전히 배제하고 매매하는 것은 매우 어렵습니다. 기술적 분석(Technical Analysis)은 가격과 거래량이라는 객관적인 데이터를 바탕으로 시장
         참여자들의 심리 상태를 읽어내는 도구입니다. 본 서비스가 제공하는 AI 퀀트 지표는 가장 신뢰도가 높은 3가지 지표(이동평균선의 수렴과 발산, 상대강도지수 RSI의 과매수/과매도, 볼린저 밴드의
         표준편차 이탈 확률)를 복합적으로 연산하여 하나의 '종합 점수(Score)'로 도출한 것입니다. 수만 번의 백테스팅을 거친 로직을 내장하여, 투자자가 감정에 휘둘리지 않고 철저히 통계에 기반한 '시스템
@@ -400,9 +450,10 @@
         const traceRsi = { x: dates, y: rsi, type: 'scatter', mode: 'lines', name: 'RSI(14)', line: { color: '#8b5cf6', width: 1.5 } };
         const layoutRsi = {
             margin: { t: 10, r: 10, b: 20, l: 40 },
-            xaxis: { fixedrange: false },
-            yaxis: { range: [0, 100], fixedrange: true },
+            xaxis: { fixedrange: false, tickfont: { color: '#94a3b8' }, gridcolor: '#334155' },
+            yaxis: { range: [0, 100], fixedrange: true, tickfont: { color: '#94a3b8' }, gridcolor: '#334155' },
             paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+            font: { color: '#cbd5e1' },
             shapes: [
                 { type: 'line', y0: 30, y1: 30, x0: dates[0], x1: dates[dates.length - 1], line: { color: '#ef4444', width: 1, dash: 'dash' } },
                 { type: 'line', y0: 70, y1: 70, x0: dates[0], x1: dates[dates.length - 1], line: { color: '#3b82f6', width: 1, dash: 'dash' } }
@@ -448,9 +499,12 @@
         const layoutFundamental = {
             barmode: 'group',
             margin: { t: 30, r: 10, b: 30, l: 40 },
-            title: { text: '매출액 및 영업이익 추이 (억 원)', font: { size: 14, color: '#334155' } },
+            title: { text: '매출액 및 영업이익 추이 (억 원)', font: { size: 14, color: '#94a3b8' } },
             paper_bgcolor: 'rgba(0,0,0,0)',
             plot_bgcolor: 'rgba(0,0,0,0)',
+            font: { color: '#cbd5e1' },
+            xaxis: { tickfont: { color: '#94a3b8' } },
+            yaxis: { gridcolor: '#334155', tickfont: { color: '#94a3b8' }, zerolinecolor: '#64748b' },
             showlegend: true,
             legend: { orientation: 'h', y: 1.15 }
         };

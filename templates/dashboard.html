@@ -1,48 +1,72 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="mb-8">
-    <h1 class="text-3xl font-bold text-slate-900 mb-2">실시간 자금 흐름 (Money Flow)</h1>
-    <p class="text-slate-600 max-w-3xl">Npay 증권의 투자자별 매매동향을 활용하여 외국인 및 기관의 수급 흐름을 직관적으로 시각화합니다.</p>
+<div class="mb-10 flex flex-col items-center text-center">
+    <div
+        class="inline-block bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 px-4 py-1.5 rounded-full text-sm font-semibold mb-4 drop-shadow-sm">
+        Market Liquidity Analysis</div>
+    <h1 class="text-4xl font-extrabold text-white mb-4 tracking-tight drop-shadow-md">실시간 자금 흐름 다이내믹스</h1>
+    <p class="text-slate-400 max-w-2xl text-lg">외국인과 기관의 실시간 수급 동향을 통해 <br class="hidden sm:block">단기적인 시장의 방향성과 유동성을 가장
+        먼저 포착하세요.</p>
 </div>
 
 <!-- Placeholder for Dashboard UI and Charts. The API will inject data here. -->
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
 
     <!-- Chart Section -->
-    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
-        <h2 class="text-lg font-semibold mb-4">투자자별 순매수 추이 (단위: 억 원)</h2>
-        <div id="plotly-money-flow" class="w-full bg-slate-50 relative rounded border border-dashed border-slate-200"
-            style="height: 350px; overflow: hidden; min-height: 350px;">
-            <div class="absolute inset-0 flex items-center justify-center">
-                <span class="text-slate-400">차트 렌더링 대기 중...</span>
+    <div class="glass-card rounded-2xl p-6 md:p-8 hover-lift">
+        <h2 class="text-xl font-bold mb-6 text-white flex items-center gap-2">
+            <span class="text-indigo-400">📊</span> 투자자별 누적 순매수 추이
+            <span class="text-xs font-medium text-slate-500 font-sans ml-2 mt-1">(단위: 억 원)</span>
+        </h2>
+        <div id="plotly-money-flow"
+            class="w-full bg-[#0B1021]/50 relative rounded-xl border border-slate-700/50 shadow-inner"
+            style="height: 380px; overflow: hidden; min-height: 380px;">
+            <div class="absolute inset-0 flex flex-col items-center justify-center">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500 mb-3"></div>
+                <span class="text-slate-400 font-medium">데이터 프로세싱 중...</span>
             </div>
         </div>
-        <div class="text-right text-xs text-slate-400 mt-2">데이터 제공: 네이버페이 증권 (지연될 수 있음)</div>
+        <div class="text-right text-xs text-slate-500 mt-3 font-medium">Data Source: Npay 증권</div>
     </div>
 
     <!-- Data Table & Insight Section -->
-    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 flex flex-col h-full">
-        <h2 class="text-lg font-semibold mb-4">수급 흐름 원본 표</h2>
-        <div id="flow-table-container" class="overflow-x-auto flex-grow max-h-60 mb-4 border border-slate-200 rounded">
+    <div class="glass-card rounded-2xl p-6 md:p-8 flex flex-col h-full hover-lift">
+        <h2 class="text-xl font-bold mb-6 text-white flex items-center gap-2">
+            <span class="text-emerald-400">📋</span> 수급 원시 데이터 보드
+        </h2>
+        <div id="flow-table-container"
+            class="overflow-x-auto flex-grow max-h-60 mb-4 border border-slate-700/50 rounded-lg custom-scrollbar">
             <!-- Table will be injected dynamically -->
-            <p class="p-4 text-center text-slate-500">데이터 수집 중...</p>
+            <p class="p-4 text-center text-slate-500 animate-pulse">데이터 수집 중...</p>
         </div>
 
-        <div class="bg-indigo-50 border-l-4 border-indigo-500 p-4 rounded-r">
-            <h3 class="font-bold text-indigo-800 mb-1">💡 Today's Flow Insight</h3>
-            <p class="text-sm text-indigo-700" id="insight-text">분석 결과를 로딩 중입니다.</p>
+        <div
+            class="bg-gradient-to-r from-indigo-900/30 to-blue-900/20 border-l-4 border-indigo-500 p-5 rounded-r-xl shadow-inner mt-auto">
+            <h3 class="font-extrabold text-indigo-300 mb-2 flex items-center gap-2">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                        d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z">
+                    </path>
+                </svg>
+                Today's Flow Insight
+            </h3>
+            <p class="text-sm font-medium text-slate-300 leading-relaxed" id="insight-text">분석 결과를 로딩 중입니다.</p>
         </div>
     </div>
 </div>
 
-<!-- AdSense Rich Content Section (Crucial to prevent Thin Content Penalty) -->
-<div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
-    <h3 class="text-lg font-bold text-slate-800 mb-3 block">💡 투자 가이드: 자금 흐름(Money Flow) 분석 100% 활용법</h3>
-    <p class="text-slate-600 leading-relaxed text-sm">
-        자금 흐름 분석은 주식 시장을 움직이는 거대한 '스마트 머니'의 움직임을 추적하는 핵심 기술입니다. 기관 통계학적으로 외인과 기관 수급이 3일 연속 유입되는 종목은 단기적인 슈팅이 나올 확률이 68%
-        이상 상승합니다. 이 표와 차트는 네이버페이 증권 데이터를 기반으로 작성되었으며, 투자자는 이 정보를 통해 현재 시장에서 돈이 어느 섹터로 몰리고 있는지 거시적인 통찰력을 얻을 수 있습니다. 꾸준히
-        자금이 들어오는 우량주를 발굴하여 안전한 가치 투자를 지향해 보세요.
+<!-- AdSense Rich Content Section -->
+<div class="glass-card p-8 rounded-2xl border border-indigo-500/20 hover-lift mb-8 relative overflow-hidden">
+    <div class="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-indigo-500/20 rounded-full blur-3xl">
+    </div>
+    <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2 relative z-10">
+        <span class="text-amber-400">🎓</span> 투자 가이드: 스마트 머니 추적 지침서
+    </h3>
+    <p class="text-slate-400 leading-relaxed text-[15px] relative z-10">
+        자금 흐름 분석은 주식 시장을 움직이는 거대한 <strong>'스마트 머니(Smart Money)'</strong>의 움직임을 추적하는 핵심 퀀트 필터링입니다. 통계적 백테스트에 의하면, 외국인과 기관
+        수급이 3일 연속 강하게 유입되며 개인의 매도 물량을 소화해 내는 주도 테마 섹터는 단기적인 오버슈팅이 나올 확률이 폭발적으로 상승합니다. 이 대시보드가 제공하는 객관적인 유동성 데이터를 통해 군중
+        심리에 휩쓸리지 않고 자본의 파도를 타는 스마트 투자를 지향해 보세요.
     </p>
 </div>
 
@@ -55,13 +79,13 @@
         // 1. Render Table
         const tableContainer = document.getElementById('flow-table-container');
         let tableHTML = `
-            <table class="min-w-full text-sm text-left text-slate-500">
-                <thead class="text-xs text-slate-700 uppercase bg-slate-50 border-b border-slate-200">
+            <table class="min-w-full text-sm text-left text-slate-400">
+                <thead class="text-xs text-slate-400 uppercase bg-slate-800/50 border-b border-slate-700/50 sticky top-0 backdrop-blur-md">
                     <tr>
-                        <th class="px-4 py-3">날짜</th>
-                        <th class="px-4 py-3 text-right">개인</th>
-                        <th class="px-4 py-3 text-right text-red-600">외국인</th>
-                        <th class="px-4 py-3 text-right text-blue-600">기관</th>
+                        <th class="px-5 py-4 font-bold">거래 일자</th>
+                        <th class="px-5 py-4 text-right font-bold">리테일(개인)</th>
+                        <th class="px-5 py-4 text-right font-bold text-rose-400">외국인</th>
+                        <th class="px-5 py-4 text-right font-bold text-indigo-400">기관계</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -69,11 +93,15 @@
 
         flowData.forEach(row => {
             tableHTML += `
-                <tr class="bg-white border-b hover:bg-slate-50 transition">
-                    <td class="px-4 py-3 font-medium text-slate-900">${row.Date}</td>
-                    <td class="px-4 py-3 text-right ${row['개인'] > 0 ? 'text-red-500' : 'text-blue-500'}">${row['개인'].toLocaleString()}</td>
-                    <td class="px-4 py-3 text-right ${row['외국인'] > 0 ? 'text-red-500 font-bold' : 'text-blue-500'}">${row['외국인'].toLocaleString()}</td>
-                    <td class="px-4 py-3 text-right ${row['기관'] > 0 ? 'text-red-500 font-bold' : 'text-blue-500'}">${row['기관'].toLocaleString()}</td>
+                <tr class="bg-transparent border-b border-slate-800 hover:bg-indigo-500/10 transition-colors duration-200">
+                    <td class="px-5 py-3 font-semibold text-slate-200">${row.Date}</td>
+                    <td class="px-5 py-3 text-right font-medium ${row['개인'] > 0 ? 'text-rose-400' : 'text-indigo-400'}">${row['개인'].toLocaleString()}</td>
+                    <td class="px-5 py-3 text-right font-bold">
+                        <span class="${row['외국인'] > 0 ? 'text-rose-400 bg-rose-500/10' : 'text-indigo-400 bg-indigo-500/10'} px-2 py-1 rounded-md inline-block min-w-[60px] text-center">${row['외국인'].toLocaleString()}</span>
+                    </td>
+                    <td class="px-5 py-3 text-right font-bold">
+                        <span class="${row['기관'] > 0 ? 'text-rose-400 bg-rose-500/10' : 'text-indigo-400 bg-indigo-500/10'} px-2 py-1 rounded-md inline-block min-w-[60px] text-center">${row['기관'].toLocaleString()}</span>
+                    </td>
                 </tr>
             `;
         });
@@ -91,15 +119,15 @@
 
         const traceIndividual = {
             x: dates, y: individual,
-            name: '개인', type: 'bar', marker: { color: '#10b981' }
+            name: '개인', type: 'bar', marker: { color: '#10b981' } // Emerald green
         };
         const traceForeign = {
             x: dates, y: foreign,
-            name: '외국인', type: 'bar', marker: { color: '#ef4444' }
+            name: '외국인', type: 'bar', marker: { color: '#fb7185' } // Rose pink
         };
         const traceInstit = {
             x: dates, y: instit,
-            name: '기관', type: 'bar', marker: { color: '#3b82f6' }
+            name: '기관', type: 'bar', marker: { color: '#60a5fa' } // Bright blue
         };
 
         const layout = {
@@ -107,10 +135,11 @@
             margin: { t: 30, r: 10, b: 60, l: 40 },
             paper_bgcolor: 'rgba(0,0,0,0)',
             plot_bgcolor: 'rgba(0,0,0,0)',
-            xaxis: { fixedrange: true, type: 'category' },
-            yaxis: { fixedrange: true, gridcolor: '#f1f5f9', zerolinecolor: '#cbd5e1', zerolinewidth: 1 },
+            font: { color: '#cbd5e1' }, // slate-300
+            xaxis: { fixedrange: true, type: 'category', tickfont: { color: '#94a3b8' } },
+            yaxis: { fixedrange: true, gridcolor: '#334155', zerolinecolor: '#64748b', zerolinewidth: 1, tickfont: { color: '#94a3b8' } },
             showlegend: true,
-            legend: { orientation: 'h', y: -0.2, x: 0.5, xanchor: 'center' }
+            legend: { orientation: 'h', y: -0.2, x: 0.5, xanchor: 'center', font: { color: '#cbd5e1' } }
         };
         const config = { displayModeBar: false, responsive: true };
 

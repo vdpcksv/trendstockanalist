@@ -115,47 +115,60 @@
     </div>
     <p class="text-slate-600 text-sm mb-6">기업의 매출액, 영업이익 성장성과 부채비율 등 안정성 지표, 그리고 향후 컨센서스(E)를 종합적으로 점검합니다.</p>
 
-    <div class="overflow-x-auto pb-4 custom-scrollbar">
-        <table class="min-w-full text-sm text-right text-slate-600 border border-slate-200 whitespace-nowrap">
-            <thead class="bg-slate-50 border-b border-slate-200 text-slate-700">
-                <tr>
-                    <th
-                        class="px-4 py-3 text-left font-semibold border-r border-slate-200 bg-slate-100 sticky left-0 z-10 w-40">
-                        주요 지표</th>
-                    {% for header in fundamentals.headers %}
-                    <th class="px-4 py-3 font-semibold min-w-[100px]">{{ header }}</th>
-                    {% endfor %}
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100">
-                {% set target_keys = [
-                ('매출액', '억 원'),
-                ('영업이익', '억 원'),
-                ('당기순이익', '억 원'),
-                ('부채비율', '%'),
-                ('ROE(지배주주)', '%'),
-                ('PER(배)', '배'),
-                ('PBR(배)', '배')
-                ] %}
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- 1. Fundamental Table (Left) -->
+        <div class="overflow-x-auto pb-4 custom-scrollbar">
+            <table class="min-w-full text-sm text-right text-slate-600 border border-slate-200 whitespace-nowrap">
+                <thead class="bg-slate-50 border-b border-slate-200 text-slate-700">
+                    <tr>
+                        <th
+                            class="px-4 py-3 text-left font-semibold border-r border-slate-200 bg-slate-100 sticky left-0 z-10 w-40">
+                            주요 지표</th>
+                        {% for header in fundamentals.headers %}
+                        <th class="px-4 py-3 font-semibold min-w-[100px]">{{ header }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% set target_keys = [
+                    ('매출액', '억 원'),
+                    ('영업이익', '억 원'),
+                    ('당기순이익', '억 원'),
+                    ('부채비율', '%'),
+                    ('ROE(지배주주)', '%'),
+                    ('PER(배)', '배'),
+                    ('PBR(배)', '배')
+                    ] %}
 
-                {% for key, unit in target_keys %}
-                {% if key in fundamentals.data %}
-                <tr class="hover:bg-slate-50 transition">
-                    <td
-                        class="px-4 py-3 text-left font-medium text-slate-800 bg-slate-50 border-r border-slate-200 sticky left-0 z-10">
-                        {{ key }} <span class="text-xs text-slate-400 font-normal">({{ unit }})</span>
-                    </td>
-                    {% for val in fundamentals.data[key] %}
-                    <td
-                        class="px-4 py-3 {% if val == '' or val == 'N/A' %}text-slate-300{% else %}font-medium{% endif %}">
-                        {{ val if val else '-' }}
-                    </td>
+                    {% for key, unit in target_keys %}
+                    {% if key in fundamentals.data %}
+                    <tr class="hover:bg-slate-50 transition">
+                        <td
+                            class="px-4 py-3 text-left font-medium text-slate-800 bg-slate-50 border-r border-slate-200 sticky left-0 z-10">
+                            {{ key }} <span class="text-xs text-slate-400 font-normal">({{ unit }})</span>
+                        </td>
+                        {% for val in fundamentals.data[key] %}
+                        <td
+                            class="px-4 py-3 {% if val == '' or val == 'N/A' %}text-slate-300{% else %}font-medium{% endif %}">
+                            {{ val if val else '-' }}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endif %}
                     {% endfor %}
-                </tr>
-                {% endif %}
-                {% endfor %}
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 2. Fundamental Chart (Right) -->
+        <div class="h-64 lg:h-auto border border-slate-200 rounded-lg p-2 bg-slate-50 relative">
+            <div id="plotly-fundamental" class="w-full h-full"></div>
+            <!-- Pass Data to JS -->
+            <script>
+                window.FUNDAMENTAL_HEADERS = {{ fundamentals.headers | tojson | safe }};
+                window.FUNDAMENTAL_DATA = {{ fundamentals.data | tojson | safe }};
+            </script>
+        </div>
     </div>
 </div>
 {% endif %}
@@ -358,6 +371,53 @@
             ]
         };
         Plotly.newPlot('plotly-rsi', [traceRsi], layoutRsi, config);
+    });
+
+    // --- 5. Fundamental Chart ---
+    document.addEventListener("DOMContentLoaded", function () {
+        if (!window.FUNDAMENTAL_DATA || !window.FUNDAMENTAL_HEADERS || !document.getElementById('plotly-fundamental')) return;
+
+        const headers = window.FUNDAMENTAL_HEADERS;
+        const data = window.FUNDAMENTAL_DATA;
+
+        const sales = data['매출액'];
+        const opProfit = data['영업이익'];
+
+        if (!sales || !opProfit) return;
+
+        // Convert string formatted numbers (like '1,234') to actual floats, fallback to 0 if 'N/A' or empty
+        const parseNum = (val) => {
+            if (!val || val === '-' || val === 'N/A') return 0;
+            return parseFloat(val.toString().replace(/,/g, ''));
+        };
+
+        const traceSales = {
+            x: headers,
+            y: sales.map(parseNum),
+            name: '매출액',
+            type: 'bar',
+            marker: { color: '#3b82f6' }
+        };
+
+        const traceOpProfit = {
+            x: headers,
+            y: opProfit.map(parseNum),
+            name: '영업이익',
+            type: 'bar',
+            marker: { color: '#10b981' }
+        };
+
+        const layoutFundamental = {
+            barmode: 'group',
+            margin: { t: 30, r: 10, b: 30, l: 40 },
+            title: { text: '매출액 및 영업이익 추이 (억 원)', font: { size: 14, color: '#334155' } },
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            plot_bgcolor: 'rgba(0,0,0,0)',
+            showlegend: true,
+            legend: { orientation: 'h', y: 1.15 }
+        };
+
+        Plotly.newPlot('plotly-fundamental', [traceSales, traceOpProfit], layoutFundamental, { displayModeBar: false, responsive: true });
     });
 </script>
 {% endif %}

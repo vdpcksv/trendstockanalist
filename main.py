@@ -368,21 +368,19 @@ def get_news_sentiment(ticker: str):
     """Fetches recent news from Naver Mobile API and performs keyword-based sentiment analysis."""
     url = f"https://m.stock.naver.com/api/news/stock/{ticker}?pageSize=15"
     
-    # 긍정/부정 키워드 사전
     pos_keywords = ['상승', '급등', '돌파', '흑자', '수주', '호조', 'MOU', '강세', '체결', '최대', '신고가', '성장', '기대', '수혜', '반등']
     neg_keywords = ['하락', '급락', '적자', '우려', '수사', '악재', '약세', '신저가', '미달', '쇼크', '매도', '불안', '위기', '리스크']
     
     try:
         res = requests.get(url, headers=HEADERS, timeout=5)
         res.raise_for_status()
-        data = res.json()
+        data = json.loads(res.content.decode('utf-8', 'ignore'))
         
         headlines = []
         for group in data:
             for item in group.get('items', []):
                 title = item.get('title', '')
                 if title:
-                    # 간단한 HTML 엔티티 제거 (예: &quot;)
                     title = title.replace('&quot;', '"').replace('&lt;', '<').replace('&gt;', '>')
                     headlines.append(title)
                     if len(headlines) >= 15:
@@ -428,6 +426,8 @@ def get_news_sentiment(ticker: str):
     except Exception as e:
         print(f"Error fetching news sentiment: {e}")
         return None
+
+
 
 @app.get("/review", response_class=HTMLResponse)
 async def read_review(request: Request, ticker: str = "005930"): # 기본값: 삼성전자

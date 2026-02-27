@@ -427,6 +427,10 @@ def get_news_sentiment(ticker: str):
         if total == 0:
             return None
             
+        # 긍정 -> 중립 -> 부정 순으로 정렬
+        sentiment_order = {'positive': 0, 'neutral': 1, 'negative': 2}
+        analyzed_news.sort(key=lambda x: sentiment_order.get(x['sentiment'], 3))
+            
         return {
             "total": total,
             "positive_ratio": round((pos_count / total) * 100),

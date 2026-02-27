@@ -84,6 +84,7 @@
                             <th class="px-4 py-3 text-right">매수단가</th>
                             <th class="px-4 py-3 text-right">수량</th>
                             <th class="px-4 py-3 text-right">투자금액</th>
+                            <th class="px-4 py-3 text-center">AI 진단 (계절성)</th>
                             <th class="px-4 py-3 text-center">관리</th>
                         </tr>
                     </thead>
@@ -199,7 +200,7 @@
             const values = [];
 
             if (portfolio.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-400">등록된 종목이 없습니다.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-slate-400">등록된 종목이 없습니다.</td></tr>`;
                 document.getElementById('total-invest').innerText = "0 원";
                 Plotly.newPlot('plotly-pie', [{ values: [1], labels: ['비어있음'], type: 'pie', marker: { colors: ['#f1f5f9'] } }], { margin: { t: 0, b: 0, l: 0, r: 0 } });
                 return;
@@ -221,6 +222,9 @@
                     <td class="px-4 py-3 text-right">${price.toLocaleString()}</td>
                     <td class="px-4 py-3 text-right">${qty.toLocaleString()}</td>
                     <td class="px-4 py-3 text-right font-medium text-indigo-700">${investAmount.toLocaleString()}</td>
+                    <td class="px-4 py-3 text-center" id="ai-diag-${p.id}">
+                        <div class="animate-pulse flex justify-center"><div class="h-4 bg-slate-200 rounded w-16"></div></div>
+                    </td>
                     <td class="px-4 py-3 text-center">
                         <button onclick="deleteItem(${p.id})" class="text-red-500 hover:text-red-700 text-xs">삭제</button>
                     </td>
@@ -229,6 +233,38 @@
             });
 
             document.getElementById('total-invest').innerText = totalInvest.toLocaleString() + " 원";
+
+            // Fetch AI diagnostics for each portfolio item asynchronously
+            portfolio.forEach(p => {
+                fetch(`/api/stock_seasonality/${encodeURIComponent(p.name)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        const diagCell = document.getElementById(`ai-diag-${p.id}`);
+                        if (data.status === 'success' && data.data) {
+                            const currentMonth = new Date().getMonth() + 1;
+                            const monthData = data.data.find(d => d.Month === currentMonth);
+                            if (monthData) {
+                                let badgeHtml = '';
+                                if (monthData.WinRate >= 60) {
+                                    badgeHtml = `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">🔥 ${currentMonth}월 승률 ${monthData.WinRate}%</span>`;
+                                } else if (monthData.WinRate <= 40) {
+                                    badgeHtml = `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">⚠️ ${currentMonth}월 승률 ${monthData.WinRate}%</span>`;
+                                } else {
+                                    badgeHtml = `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-800">${currentMonth}월 승률 ${monthData.WinRate}%</span>`;
+                                }
+                                diagCell.innerHTML = badgeHtml;
+                            } else {
+                                diagCell.innerHTML = '<span class="text-xs text-slate-500">데이터 없음</span>';
+                            }
+                        } else {
+                            diagCell.innerHTML = '<span class="text-xs text-red-500">조회 실패</span>';
+                        }
+                    })
+                    .catch(e => {
+                        const diagCell = document.getElementById(`ai-diag-${p.id}`);
+                        if (diagCell) diagCell.innerHTML = '<span class="text-xs text-red-500">오류</span>';
+                    });
+            });
 
             const pieData = [{
                 values: values,

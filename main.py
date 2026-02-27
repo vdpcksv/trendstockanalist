@@ -504,7 +504,6 @@ async def get_stock_seasonality(ticker: str):
         return {"status": "error", "message": str(e)}
 
 @app.get("/review", response_class=HTMLResponse)
-@cache(expire=600) # 종목별 검색 페이지 10분 캐싱
 async def read_review(request: Request, ticker: str = "005930"): # 기본값: 삼성전자
     search_name = ticker.strip()
     actual_ticker = resolve_ticker(search_name)

@@ -201,28 +201,69 @@
         </div>
     </div>
 
-    <!-- Latest News List -->
-    <div class="mt-6 border border-slate-100 rounded-lg overflow-hidden">
-        <div class="bg-slate-50 px-4 py-2 border-b border-slate-100 font-semibold text-sm text-slate-700">
-            최신 주요 헤드라인 (Top {{ sentiment_data.news_list|length }})
-        </div>
-        <ul class="divide-y divide-slate-100 text-sm">
-            {% for news in sentiment_data.news_list %}
-            <li class="px-4 py-3 flex items-start gap-4 hover:bg-slate-50 transition">
-                {% if news.sentiment == 'positive' %}
-                <span
-                    class="inline-flex shrink-0 items-center justify-center w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 text-xs font-bold">긍정</span>
-                {% elif news.sentiment == 'negative' %}
-                <span
-                    class="inline-flex shrink-0 items-center justify-center w-8 h-8 rounded-full bg-red-100 text-red-600 text-xs font-bold">부정</span>
+    <!-- Latest News 3-Column Grid -->
+    <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+
+        <!-- 긍정 뉴스 -->
+        <div class="border border-emerald-100 rounded-lg overflow-hidden flex flex-col">
+            <div
+                class="bg-emerald-50 px-4 py-2 border-b border-emerald-100 font-bold text-sm text-emerald-700 flex justify-between items-center">
+                <span>긍정 헤드라인</span>
+                <span class="bg-emerald-200 text-emerald-800 text-xs px-2 py-0.5 rounded-full">{{
+                    sentiment_data.pos_count }}건</span>
+            </div>
+            <ul class="divide-y divide-emerald-50 text-sm flex-1 bg-white">
+                {% for news in sentiment_data.news_list if news.sentiment == 'positive' %}
+                <li class="px-4 py-3 flex items-start gap-3 hover:bg-emerald-50 transition">
+                    <span class="text-slate-700 leading-snug">{{ news.title }}</span>
+                </li>
                 {% else %}
-                <span
-                    class="inline-flex shrink-0 items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-slate-500 text-xs font-bold">중립</span>
-                {% endif %}
-                <span class="text-slate-700 mt-1 leading-snug">{{ news.title }}</span>
-            </li>
-            {% endfor %}
-        </ul>
+                <li class="px-4 py-6 flex items-center justify-center text-slate-400 text-xs italic bg-slate-50">조회된 긍정
+                    뉴스가 없습니다.</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- 중립 뉴스 -->
+        <div class="border border-slate-200 rounded-lg overflow-hidden flex flex-col">
+            <div
+                class="bg-slate-100 px-4 py-2 border-b border-slate-200 font-bold text-sm text-slate-700 flex justify-between items-center">
+                <span>중립 헤드라인</span>
+                <span class="bg-slate-200 text-slate-600 text-xs px-2 py-0.5 rounded-full">{{
+                    sentiment_data.neutral_count }}건</span>
+            </div>
+            <ul class="divide-y divide-slate-100 text-sm flex-1 bg-white">
+                {% for news in sentiment_data.news_list if news.sentiment == 'neutral' %}
+                <li class="px-4 py-3 flex items-start gap-3 hover:bg-slate-50 transition">
+                    <span class="text-slate-700 leading-snug">{{ news.title }}</span>
+                </li>
+                {% else %}
+                <li class="px-4 py-6 flex items-center justify-center text-slate-400 text-xs italic bg-slate-50">조회된 중립
+                    뉴스가 없습니다.</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- 부정 뉴스 -->
+        <div class="border border-red-100 rounded-lg overflow-hidden flex flex-col">
+            <div
+                class="bg-red-50 px-4 py-2 border-b border-red-100 font-bold text-sm text-red-700 flex justify-between items-center">
+                <span>부정 헤드라인</span>
+                <span class="bg-red-200 text-red-800 text-xs px-2 py-0.5 rounded-full">{{ sentiment_data.neg_count
+                    }}건</span>
+            </div>
+            <ul class="divide-y divide-red-50 text-sm flex-1 bg-white">
+                {% for news in sentiment_data.news_list if news.sentiment == 'negative' %}
+                <li class="px-4 py-3 flex items-start gap-3 hover:bg-red-50 transition">
+                    <span class="text-slate-700 leading-snug">{{ news.title }}</span>
+                </li>
+                {% else %}
+                <li class="px-4 py-6 flex items-center justify-center text-slate-400 text-xs italic bg-slate-50">조회된 부정
+                    뉴스가 없습니다.</li>
+                {% endfor %}
+            </ul>
+        </div>
+
     </div>
 </div>
 {% endif %}

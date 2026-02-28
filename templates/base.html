@@ -171,34 +171,58 @@
         </p>
     </div>
 
-    <!-- Premium Navigation Bar (Glassmorphism) -->
+    <!-- Premium Navigation Bar (Compact + Hamburger) -->
     <nav class="glass-nav shadow-sm sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4">
             <div class="flex items-center justify-between h-16">
                 <!-- Logo -->
                 <div class="flex-shrink-0 flex items-center gap-2">
-                    <span class="font-extrabold text-2xl tracking-tight text-white outfit-font drop-shadow-md">📉
-                        Alpha<span class="text-indigo-400">Finder</span></span>
+                    <a href="/"
+                        class="font-extrabold text-2xl tracking-tight text-white outfit-font drop-shadow-md no-underline">📉
+                        Alpha<span class="text-indigo-400">Finder</span></a>
                 </div>
 
-                <!-- Desktop Nav Link (Hidden on mobile) -->
-                <div class="hidden md:flex space-x-2 overflow-x-auto whitespace-nowrap scrollbar-hide ml-8">
-                    <a href="/" class="px-3 py-2 rounded-lg font-semibold transition-colors duration-200">💰 자금 흐름</a>
-                    <a href="/seasonality" class="px-3 py-2 rounded-lg font-semibold transition-colors duration-200">🗓️
-                        계절성 트렌드</a>
-                    <a href="/themes" class="px-3 py-2 rounded-lg font-semibold transition-colors duration-200">🎯 테마
-                        분석</a>
-                    <a href="/leaderboard" class="px-3 py-2 rounded-lg font-semibold transition-colors duration-200">🏆
-                        모의 랭킹</a>
-                    <a href="/review" class="px-3 py-2 rounded-lg font-semibold transition-colors duration-200">🤖 AI 매매
+                <!-- Desktop: Main Links (3 core pages only) -->
+                <div class="hidden md:flex items-center space-x-1 ml-8">
+                    <a href="/" class="px-3 py-2 rounded-lg font-semibold transition-colors duration-200 text-sm">💰 자금
+                        흐름</a>
+                    <a href="/review"
+                        class="px-3 py-2 rounded-lg font-semibold transition-colors duration-200 text-sm">🤖 AI 매매
                         복기</a>
-                    <a href="/portfolio" id="nav-portfolio"
-                        class="hidden px-3 py-2 rounded-lg font-semibold transition-colors duration-200">💼 내 자산</a>
-                    <a href="/policies" class="px-3 py-2 rounded-lg font-semibold transition-colors duration-200">📜 필수
-                        정책</a>
+                    <a href="/leaderboard"
+                        class="px-3 py-2 rounded-lg font-semibold transition-colors duration-200 text-sm">🏆 랭킹</a>
+
+                    <!-- More dropdown -->
+                    <div class="relative" id="more-dropdown-wrapper">
+                        <button onclick="toggleMoreMenu()"
+                            class="px-3 py-2 rounded-lg font-semibold transition-colors duration-200 text-sm text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10 flex items-center gap-1">
+                            더보기
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        <div id="more-dropdown"
+                            class="hidden absolute right-0 mt-2 w-48 rounded-xl shadow-2xl border border-white/10 overflow-hidden z-50"
+                            style="background: rgba(15, 23, 50, 0.95); backdrop-filter: blur(20px);">
+                            <a href="/seasonality"
+                                class="block px-4 py-3 text-sm font-medium text-slate-300 hover:bg-indigo-500/10 hover:text-indigo-300 transition-colors">🗓️
+                                계절성 트렌드</a>
+                            <a href="/themes"
+                                class="block px-4 py-3 text-sm font-medium text-slate-300 hover:bg-indigo-500/10 hover:text-indigo-300 transition-colors">🎯
+                                테마 분석</a>
+                            <a href="/portfolio" id="nav-portfolio"
+                                class="hidden px-4 py-3 text-sm font-medium text-slate-300 hover:bg-indigo-500/10 hover:text-indigo-300 transition-colors">💼
+                                내 자산</a>
+                            <div class="border-t border-white/5"></div>
+                            <a href="/policies"
+                                class="block px-4 py-3 text-sm font-medium text-slate-400 hover:bg-indigo-500/10 hover:text-indigo-300 transition-colors">📜
+                                필수 정책</a>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Auth Section -->
+                <!-- Right: Auth + Mobile Menu Button -->
                 <div class="flex items-center space-x-3">
                     <span id="user-greeting" class="text-sm font-semibold text-indigo-300 hidden"></span>
                     <button id="btn-login" onclick="openAuthModal()"
@@ -209,10 +233,63 @@
                         class="hidden bg-slate-800/80 backdrop-blur-sm text-slate-300 px-5 py-2 rounded-full font-bold text-sm hover:text-rose-400 hover:bg-rose-500/10 border border-slate-700 hover:border-rose-500/30 transition-all duration-300">
                         로그아웃
                     </button>
+
+                    <!-- Hamburger (Mobile) -->
+                    <button onclick="toggleMobileMenu()"
+                        class="md:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
                 </div>
+            </div>
+
+            <!-- Mobile Menu (Hidden by default) -->
+            <div id="mobile-menu" class="hidden md:hidden pb-4 border-t border-white/5 mt-2 pt-3 space-y-1">
+                <a href="/"
+                    class="block px-4 py-2.5 rounded-lg font-semibold text-sm text-slate-300 hover:bg-indigo-500/10 hover:text-indigo-300 transition-colors">💰
+                    자금 흐름</a>
+                <a href="/review"
+                    class="block px-4 py-2.5 rounded-lg font-semibold text-sm text-slate-300 hover:bg-indigo-500/10 hover:text-indigo-300 transition-colors">🤖
+                    AI 매매 복기</a>
+                <a href="/leaderboard"
+                    class="block px-4 py-2.5 rounded-lg font-semibold text-sm text-slate-300 hover:bg-indigo-500/10 hover:text-indigo-300 transition-colors">🏆
+                    모의 랭킹</a>
+                <a href="/seasonality"
+                    class="block px-4 py-2.5 rounded-lg font-semibold text-sm text-slate-300 hover:bg-indigo-500/10 hover:text-indigo-300 transition-colors">🗓️
+                    계절성 트렌드</a>
+                <a href="/themes"
+                    class="block px-4 py-2.5 rounded-lg font-semibold text-sm text-slate-300 hover:bg-indigo-500/10 hover:text-indigo-300 transition-colors">🎯
+                    테마 분석</a>
+                <a href="/portfolio" id="nav-portfolio-mobile"
+                    class="hidden px-4 py-2.5 rounded-lg font-semibold text-sm text-slate-300 hover:bg-indigo-500/10 hover:text-indigo-300 transition-colors">💼
+                    내 자산</a>
+                <div class="border-t border-white/5 my-2"></div>
+                <a href="/policies"
+                    class="block px-4 py-2.5 rounded-lg font-semibold text-sm text-slate-400 hover:bg-indigo-500/10 hover:text-indigo-300 transition-colors">📜
+                    필수 정책</a>
             </div>
         </div>
     </nav>
+
+    <script>
+        function toggleMobileMenu() {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        }
+        function toggleMoreMenu() {
+            const dd = document.getElementById('more-dropdown');
+            dd.classList.toggle('hidden');
+        }
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function (e) {
+            const wrapper = document.getElementById('more-dropdown-wrapper');
+            if (wrapper && !wrapper.contains(e.target)) {
+                document.getElementById('more-dropdown').classList.add('hidden');
+            }
+        });
+    </script>
+
 
     <!-- Main Content Injection Zone -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full flex-grow flex flex-col">
@@ -269,11 +346,15 @@
                 pTag.textContent = `${username}님`;
                 pTag.classList.remove('hidden');
                 document.getElementById('nav-portfolio').classList.remove('hidden');
+                const mobilePortfolio = document.getElementById('nav-portfolio-mobile');
+                if (mobilePortfolio) mobilePortfolio.classList.remove('hidden');
             } else {
                 document.getElementById('btn-login').classList.remove('hidden');
                 document.getElementById('btn-logout').classList.add('hidden');
                 document.getElementById('user-greeting').classList.add('hidden');
                 document.getElementById('nav-portfolio').classList.add('hidden');
+                const mobilePortfolio = document.getElementById('nav-portfolio-mobile');
+                if (mobilePortfolio) mobilePortfolio.classList.add('hidden');
             }
         }
 

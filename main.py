@@ -899,7 +899,7 @@ def delete_portfolio_item(item_id: int, db: Session = Depends(get_db), current_u
         db.delete(item)
         db.commit()
         return {"status": "success"}
-    raise HTTPException(status_code=404, detail="Item not found")
+    raise HTTPException(status_code=404, detail="해당 항목을 찾을 수 없습니다.")
 
 # --- Phase 2: Community API (Comments & Votes) ---
 @app.post("/api/comments/{ticker}", response_model=schemas.CommentResponse)
@@ -996,7 +996,7 @@ def create_alert(alert: schemas.AlertCreate, db: Session = Depends(get_db), curr
     """Phase 3: Create a price alert for a stock ticker."""
     # Validate condition_type
     if alert.condition_type not in ('ABOVE', 'BELOW'):
-        raise HTTPException(status_code=400, detail="condition_type must be 'ABOVE' or 'BELOW'")
+        raise HTTPException(status_code=400, detail="조건 유형은 'ABOVE' 또는 'BELOW'만 가능합니다.")
     
     # Limit active alerts per user (prevent spam)
     active_count = db.query(models.Alert).filter(

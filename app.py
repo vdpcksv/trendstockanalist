@@ -136,7 +136,7 @@ def get_theme_top_stocks(theme_url):
 # ==========================================
 
 st.set_page_config(
-    page_title="Trend-Lotto Invest",
+    page_title="AlphaFinder Invest",
     page_icon="📈",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -144,7 +144,7 @@ st.set_page_config(
 
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/3256/3256424.png", width=100) 
-    st.title("Trend-Lotto Invest")
+    st.title("AlphaFinder Invest")
     st.markdown("---")
     st.write("초개인화된 스마트 트렌드 추적 & 자금 흐름 분석 플랫폼 (Naver 연동)")
     
@@ -153,7 +153,7 @@ with st.sidebar:
     st.success("🗓️ **계절성 (Seasonality)**\n장기 시점 주요 테마 상승/하락 섹터 분석")
     st.warning("🎯 **초개인화 시나리오**\n실시간 테마별 대장주 현황 및 인사이트 제공")
 
-st.title("📈 Trend-Lotto Invest Prototype (Real Data)")
+st.title("📈 AlphaFinder Invest Prototype (Real Data)")
 st.markdown("네이버 금융(Naver Finance)의 실시간 지표를 크롤링하여 트렌드를 추적합니다.")
 
 tab1, tab2, tab3 = st.tabs(["💰 실시간 자금 흐름", "🗓️ 계절성 트렌드(Mock+Real)", "🎯 테마별 맞춤형 시나리오"])
@@ -286,4 +286,4 @@ with tab3:
         st.error("테마 리스트 수집에 실패했습니다.")
 
 st.markdown("---")
-st.caption("© 2026 Trend-Lotto Invest (Naver Finance Scraped Data) | *본 정보는 크롤링 기반 데이터로 오차가 있을 수 있으며 실제 투자 결과에 대한 책임은 지지 않습니다.*")
+st.caption("© 2026 AlphaFinder Invest (Naver Finance Scraped Data) | *본 정보는 크롤링 기반 데이터로 오차가 있을 수 있으며 실제 투자 결과에 대한 책임은 지지 않습니다.*")

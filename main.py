@@ -122,7 +122,7 @@ async def lifespan(app: FastAPI):
     # Shutdown: Stop scheduler
     scheduler.shutdown()
 
-app = FastAPI(title="Trend-Lotto Invest", lifespan=lifespan)
+app = FastAPI(title="AlphaFinder Invest", lifespan=lifespan)
 
 # Serve static files (CSS, JS) securely mapped to /static
 app.mount("/static", StaticFiles(directory="static"), name="static")

@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from typing import Optional
+import os
 from jose import JWTError, jwt
 import bcrypt
 from fastapi import Depends, HTTPException, status
@@ -9,9 +10,9 @@ from database import get_db
 import models
 
 # --- Security Config ---
-SECRET_KEY = "super_secret_trend_lotto_key" # In production, set this from env vars
+SECRET_KEY = os.getenv("SECRET_KEY", "super_secret_trend_lotto_key") # MUST change in production!
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7 # 7 days for convenience
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", str(60 * 24 * 7)))
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/token")
 

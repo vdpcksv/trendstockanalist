@@ -1,5 +1,6 @@
 fastapi
 uvicorn
+gunicorn
 jinja2
 pandas
 requests
@@ -7,8 +8,13 @@ beautifulsoup4
 finance-datareader
 apscheduler
 sqlalchemy
+alembic
 python-jose
 bcrypt
 python-multipart
 fastapi-cache2
 psycopg2-binary
+scikit-learn
+prophet
+google-genai
+python-telegram-bot

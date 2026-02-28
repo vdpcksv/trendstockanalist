@@ -16,6 +16,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from sqlalchemy.orm import Session
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.middleware.cors import CORSMiddleware
 
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
@@ -25,6 +26,8 @@ from database import engine, get_db
 import models
 import schemas
 import auth
+import ai_module # Phase 1: AI & ML Integration
+import infra_module # Phase 3: External API & Telegram
 
 # Create all tables in the database (this is safe if they already exist)
 models.Base.metadata.create_all(bind=engine)
@@ -34,6 +37,8 @@ models.Base.metadata.create_all(bind=engine)
 cache_data = {
     "money_flow": [],
     "theme_list": pd.DataFrame(),
+    "prophet_models": {}, # {ticker: forecast_data_list}
+    "llm_sentiment": {}   # {ticker: {"data": dict, "updated_at": datetime}}
 }
 
 
@@ -103,6 +108,117 @@ def fetch_and_cache_data():
     except Exception as e:
         print(f"Background fetch error: {e}")
 
+def train_major_models():
+    """Nightly background task to train Prophet models for major tickers."""
+    major_tickers = ["005930", "000660", "373220"] # 삼성전자, SK하이닉스, LG에너지솔루션 등
+    print(f"[{datetime.now()}] Starting nightly AI model training...")
+    try:
+        end_date = datetime.now()
+        start_date = end_date - pd.DateOffset(years=3) # 학습용 3년치 데이터
+        for ticker in major_tickers:
+            df = fdr.DataReader(ticker, start_date, end_date)
+            if not df.empty:
+                forecast = ai_module.train_prophet_model(ticker, df)
+                if forecast:
+                    cache_data["prophet_models"][ticker] = forecast
+        print(f"[{datetime.now()}] AI model training complete. Cached {len(cache_data['prophet_models'])} models.")
+    except Exception as e:
+        print(f"Background AI training error: {e}")
+
+def calculate_mock_returns():
+    """Phase 2: Nightly background task to calculate mock investment returns for users."""
+    print(f"[{datetime.now()}] Starting mock investment settlement...")
+    db = next(get_db())
+    try:
+        users = db.query(models.User).all()
+        for user in users:
+            total_value = 0.0
+            portfolios = db.query(models.Portfolio).filter(models.Portfolio.user_id == user.id).all()
+            for p in portfolios:
+                if not p.target_price or p.target_price <= 0:
+                    continue
+                try:
+                    df = fdr.DataReader(p.ticker, (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d'))
+                    if not df.empty:
+                        current_price = float(df['Close'].iloc[-1])
+                        # Calculate return percentage for this stock
+                        ret = (current_price - p.target_price) / p.target_price * 100
+                        # Add to user's total return value (simple summation for MVP)
+                        total_value += float(ret * p.qty)
+                except Exception:
+                    pass
+            
+            user.total_return = round(float(total_value), 2)
+        
+        db.commit()
+        print(f"[{datetime.now()}] Mock investment settlement complete for {len(users)} users.")
+    except Exception as e:
+        db.rollback()
+        print(f"Background settlement error: {e}")
+    finally:
+        db.close()
+
+def process_alerts():
+    """Phase 3: Background daemon to check live prices and send Telegram alerts."""
+    print(f"[{datetime.now()}] Checking live prices for active alerts...")
+    db = next(get_db())
+    kis_api = infra_module.KisApiHandler()
+    
+    try:
+        active_alerts = db.query(models.Alert).filter(models.Alert.is_active == 1).all()
+        if not active_alerts:
+            return
+            
+        checked_tickers = {} # Cache prices within this run
+        
+        for alert in active_alerts:
+            user = db.query(models.User).filter(models.User.id == alert.user_id).first()
+            if not user:
+                continue
+                
+            current_price = checked_tickers.get(alert.ticker)
+            
+            if current_price is None:
+                # 1. Try KIS API First
+                try:
+                    # current_price = kis_api.get_current_price(alert.ticker) # In Prod
+                    raise Exception("Mocking KIS Failure to force Fallback")
+                except Exception as e:
+                    # 2. Fallback to scraping/FDR
+                    try:
+                        df = fdr.DataReader(alert.ticker, (datetime.now() - timedelta(days=5)).strftime('%Y-%m-%d'))
+                        if not df.empty:
+                            current_price = float(df['Close'].iloc[-1])
+                    except:
+                        continue # Skip if entirely failed
+                        
+                checked_tickers[alert.ticker] = current_price
+                
+            if current_price is None:
+                continue
+                
+            # Check conditions
+            triggered = False
+            if alert.condition_type == 'ABOVE' and current_price >= alert.target_price:
+                triggered = True
+            elif alert.condition_type == 'BELOW' and current_price <= alert.target_price:
+                triggered = True
+                
+            if triggered:
+                # Send alert!
+                msg = f"🔔 [AlphaFinder 알림]\n{user.username}님, [{alert.ticker}] 종목이 목표가 {alert.target_price:,.0f}원에 도달했습니다! (현재가: {current_price:,.0f}원)"
+                infra_module.send_telegram_sync(msg)
+                
+                # Mark as inactive to avoid spam
+                alert.is_active = 0
+                
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        print(f"Alert processing error: {e}")
+    finally:
+        db.close()
+
 # --- Application Lifespan Events ---
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -115,6 +231,16 @@ async def lifespan(app: FastAPI):
     fetch_and_cache_data() 
     # Schedule to run every 10 minutes
     scheduler.add_job(fetch_and_cache_data, 'interval', minutes=10)
+    
+    # Phase 1: Schedule Nightly Prophet Model Training (e.g., at 2:00 AM)
+    scheduler.add_job(train_major_models, 'cron', hour=2, minute=0)
+    
+    # Phase 2: Schedule Nightly Mock Investment Settlement (Midnight)
+    scheduler.add_job(calculate_mock_returns, 'cron', hour=0, minute=0)
+    
+    # Phase 3: Schedule Alert Processing Daemon (Every 5 minutes)
+    scheduler.add_job(process_alerts, 'interval', minutes=5)
+    
     scheduler.start()
     
     yield # Hand control back to FastAPI
@@ -123,6 +249,42 @@ async def lifespan(app: FastAPI):
     scheduler.shutdown()
 
 app = FastAPI(title="AlphaFinder Invest", lifespan=lifespan)
+
+# Phase 3: Security - CORS Configuration
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], # In production, restrict to actual frontend domains
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_headers=["*"],
+)
+
+# Phase 5: Global Exception Handler
+import logging
+import traceback as tb
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger("alphafinder")
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """Catch-all handler for unhandled exceptions."""
+    logger.error(f"Unhandled error on {request.method} {request.url}: {exc}")
+    logger.error(tb.format_exc())
+    return HTMLResponse(
+        content="<h1>500 Internal Server Error</h1><p>서버 내부 오류가 발생했습니다. 잠시 후 다시 시도해주세요.</p>",
+        status_code=500
+    )
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    """Log all incoming requests for monitoring."""
+    start = datetime.now()
+    response = await call_next(request)
+    duration = (datetime.now() - start).total_seconds()
+    if duration > 2.0:  # Only log slow requests (>2s)
+        logger.warning(f"SLOW: {request.method} {request.url.path} took {duration:.2f}s")
+    return response
 
 # Serve static files (CSS, JS) securely mapped to /static
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -438,6 +600,21 @@ def get_news_sentiment(ticker: str):
         sentiment_order = {'positive': 0, 'neutral': 1, 'negative': 2}
         analyzed_news.sort(key=lambda x: sentiment_order.get(x['sentiment'], 3))
             
+        # Phase 1: LLM 감성 분석 시도 (실패 시 기존 로직 결과만 반환)
+        llm_result = None
+        # 캐시 확인 (1시간 이내)
+        cached_llm = cache_data["llm_sentiment"].get(ticker)
+        if cached_llm and (datetime.now() - cached_llm['updated_at']).total_seconds() < 3600:
+            llm_result = cached_llm['data']
+        else:
+            # LLM 분석 (시간 제한 피하기 위해 headline만 전달)
+            llm_result = ai_module.analyze_news_sentiment_with_llm(ticker, [news['title'] for news in analyzed_news])
+            if llm_result:
+                cache_data["llm_sentiment"][ticker] = {
+                    "data": llm_result,
+                    "updated_at": datetime.now()
+                }
+
         return {
             "total": total,
             "positive_ratio": round((pos_count / total) * 100),
@@ -446,7 +623,8 @@ def get_news_sentiment(ticker: str):
             "pos_count": pos_count,
             "neg_count": neg_count,
             "neutral_count": neutral_count,
-            "news_list": analyzed_news
+            "news_list": analyzed_news,
+            "llm_analysis": llm_result # 프론트엔드에서 활용
         }
     except Exception as e:
         print(f"Error fetching news sentiment: {e}")
@@ -503,6 +681,11 @@ async def get_stock_seasonality(ticker: str):
         print(f"Seasonality API Error: {e}")
         return {"status": "error", "message": str(e)}
 
+@app.get("/leaderboard", response_class=HTMLResponse)
+async def read_leaderboard(request: Request):
+    """Phase 2: Render the mock investment leaderboard page."""
+    return templates.TemplateResponse(request=request, name="leaderboard.html")
+
 @app.get("/review", response_class=HTMLResponse)
 async def read_review(request: Request, ticker: str = "005930"): # 기본값: 삼성전자
     search_name = ticker.strip()
@@ -524,15 +707,25 @@ async def read_review(request: Request, ticker: str = "005930"): # 기본값: �
         df = calculate_technical_indicators(df)
         df = df.dropna() # 지표 계산 후 NaN 제거
         
-        # 날짜 인덱스를 문자열로 변환하여 JSON 직렬화 가능하게 처리
+        # 데이터 프레젠테이션 (수정 불가)
         df.reset_index(inplace=True)
         if 'Date' in df.columns:
             df['Date'] = df['Date'].dt.strftime('%Y-%m-%d')
             
-        # JSON 직렬화를 위한 dict 변환
         records = df.to_dict('records')
         context["chart_data"] = json.dumps(records)
         
+        # Phase 1: Prophet 포캐스트 결합
+        forecast = cache_data["prophet_models"].get(actual_ticker)
+        if not forecast:
+            # 주요 종목이 아니면 실시간으로 예측 (3년치 필요)
+            big_df = fdr.DataReader(actual_ticker, start_date - pd.DateOffset(years=2), end_date)
+            forecast = ai_module.train_prophet_model(actual_ticker, big_df)
+            if forecast:
+                cache_data["prophet_models"][actual_ticker] = forecast
+        
+        context["prophet_forecast"] = json.dumps(forecast) if forecast else None
+
         # --- AI 퀀트 종합 분석 (로직 포팅) ---
         last_row = df.iloc[-1]
         score = 50
@@ -708,11 +901,384 @@ def delete_portfolio_item(item_id: int, db: Session = Depends(get_db), current_u
         return {"status": "success"}
     raise HTTPException(status_code=404, detail="Item not found")
 
+# --- Phase 2: Community API (Comments & Votes) ---
+@app.post("/api/comments/{ticker}", response_model=schemas.CommentResponse)
+def create_comment(ticker: str, comment: schemas.CommentCreate, db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
+    resolved_ticker = resolve_ticker(ticker)
+    db_comment = models.Comment(
+        user_id=current_user.id,
+        ticker=resolved_ticker,
+        content=comment.content
+    )
+    db.add(db_comment)
+    db.commit()
+    db.refresh(db_comment)
+    
+    return schemas.CommentResponse(
+        id=db_comment.id,
+        content=db_comment.content,
+        ticker=db_comment.ticker,
+        user_id=db_comment.user_id,
+        created_at=db_comment.created_at,
+        username=current_user.username
+    )
+
+@app.get("/api/comments/{ticker}")
+def get_comments(ticker: str, db: Session = Depends(get_db)):
+    resolved_ticker = resolve_ticker(ticker)
+    comments = db.query(models.Comment, models.User.username)\
+        .join(models.User, models.Comment.user_id == models.User.id)\
+        .filter(models.Comment.ticker == resolved_ticker)\
+        .order_by(models.Comment.created_at.desc())\
+        .limit(50).all()
+        
+    result = []
+    for c, uname in comments:
+        result.append({
+            "id": c.id,
+            "content": c.content,
+            "ticker": c.ticker,
+            "user_id": c.user_id,
+            "created_at": c.created_at.isoformat(),
+            "username": uname
+        })
+    return result
+
+@app.post("/api/votes/{ticker}")
+def cast_vote(ticker: str, vote: schemas.VoteCreate, db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
+    resolved_ticker = resolve_ticker(ticker)
+    existing_vote = db.query(models.Vote).filter(
+        models.Vote.user_id == current_user.id,
+        models.Vote.ticker == resolved_ticker
+    ).first()
+    
+    if existing_vote:
+        existing_vote.vote_type = vote.vote_type
+    else:
+        new_vote = models.Vote(
+            user_id=current_user.id,
+            ticker=resolved_ticker,
+            vote_type=vote.vote_type
+        )
+        db.add(new_vote)
+        
+    db.commit()
+    return {"status": "success"}
+
+@app.get("/api/votes/{ticker}")
+def get_votes(ticker: str, db: Session = Depends(get_db)):
+    resolved_ticker = resolve_ticker(ticker)
+    bull_count = db.query(models.Vote).filter(models.Vote.ticker == resolved_ticker, models.Vote.vote_type == 'BULL').count()
+    bear_count = db.query(models.Vote).filter(models.Vote.ticker == resolved_ticker, models.Vote.vote_type == 'BEAR').count()
+    total = bull_count + bear_count
+    
+    return {
+        "bull": bull_count,
+        "bear": bear_count,
+        "total": total,
+        "bull_ratio": round(bull_count / total * 100) if total > 0 else 0,
+        "bear_ratio": round(bear_count / total * 100) if total > 0 else 0
+    }
+
+@app.get("/api/leaderboard")
+def get_leaderboard(db: Session = Depends(get_db), limit: int = 10):
+    """Phase 2: Fetch top users ranked by mock investment returns."""
+    top_users = db.query(models.User.username, models.User.total_return)\
+        .filter(models.User.total_return.isnot(None))\
+        .order_by(models.User.total_return.desc())\
+        .limit(limit).all()
+        
+    return [{"rank": i+1, "username": u.username, "return": u.total_return} for i, u in enumerate(top_users)]
+
+# --- Phase 3: Alert CRUD API Endpoints ---
+@app.post("/api/alerts", response_model=schemas.AlertResponse)
+def create_alert(alert: schemas.AlertCreate, db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
+    """Phase 3: Create a price alert for a stock ticker."""
+    # Validate condition_type
+    if alert.condition_type not in ('ABOVE', 'BELOW'):
+        raise HTTPException(status_code=400, detail="condition_type must be 'ABOVE' or 'BELOW'")
+    
+    # Limit active alerts per user (prevent spam)
+    active_count = db.query(models.Alert).filter(
+        models.Alert.user_id == current_user.id,
+        models.Alert.is_active == 1
+    ).count()
+    if active_count >= 10:
+        raise HTTPException(status_code=400, detail="활성 알림은 최대 10개까지 설정할 수 있습니다.")
+    
+    resolved_ticker = resolve_ticker(alert.ticker)
+    
+    db_alert = models.Alert(
+        user_id=current_user.id,
+        ticker=resolved_ticker,
+        target_price=alert.target_price,
+        condition_type=alert.condition_type,
+        is_active=1
+    )
+    db.add(db_alert)
+    db.commit()
+    db.refresh(db_alert)
+    return db_alert
+
+@app.get("/api/alerts")
+def get_my_alerts(db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
+    """Phase 3: Get current user's active alerts."""
+    alerts = db.query(models.Alert).filter(
+        models.Alert.user_id == current_user.id
+    ).order_by(models.Alert.created_at.desc()).all()
+    
+    return [{
+        "id": a.id,
+        "ticker": a.ticker,
+        "target_price": a.target_price,
+        "condition_type": a.condition_type,
+        "is_active": a.is_active,
+        "created_at": str(a.created_at)
+    } for a in alerts]
+
+@app.delete("/api/alerts/{alert_id}")
+def delete_alert(alert_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
+    """Phase 3: Delete a specific alert."""
+    alert = db.query(models.Alert).filter(
+        models.Alert.id == alert_id,
+        models.Alert.user_id == current_user.id
+    ).first()
+    
+    if not alert:
+        raise HTTPException(status_code=404, detail="알림을 찾을 수 없습니다.")
+    
+    db.delete(alert)
+    db.commit()
+    return {"status": "success", "message": "알림이 삭제되었습니다."}
+
 # --- Google AdSense ads.txt 인증 우회 라우트 ---
 @app.get("/ads.txt", response_class=PlainTextResponse)
 async def get_ads_txt():
     # 캡처 화면에서 확인한 본인의 pub ID를 적용한 공식 인증 텍스트
     return "google.com, pub-9065075656013134, DIRECT, f08c47fec0942fa0"
+
+# =====================================================
+# Phase 4: Monetization & Marketing Endpoints
+# =====================================================
+
+# --- 4-1. Freemium Membership API ---
+@app.get("/api/membership")
+def get_membership(current_user: models.User = Depends(auth.get_current_user)):
+    """Check current user's membership status."""
+    return {
+        "username": current_user.username,
+        "membership": current_user.membership or "basic",
+        "features": {
+            "ai_analysis": True,  # Available to all
+            "community": True,    # Available to all
+            "alerts": current_user.membership == "premium",
+            "unlimited_alerts": current_user.membership == "premium",
+            "priority_support": current_user.membership == "premium",
+        }
+    }
+
+@app.post("/api/membership/upgrade")
+def upgrade_membership(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    """
+    Phase 4: Upgrade user to premium.
+    In production, this would be called after payment confirmation webhook.
+    For MVP, this is a direct upgrade endpoint.
+    """
+    current_user.membership = "premium"
+    db.commit()
+    return {"status": "success", "message": "프리미엄 회원으로 업그레이드되었습니다!", "membership": "premium"}
+
+# --- 4-2. Payment Webhook (Toss Payments / PortOne Ready) ---
+@app.post("/api/payment/confirm")
+async def payment_confirm(request: Request, db: Session = Depends(get_db)):
+    """
+    Phase 4: Payment confirmation webhook receiver.
+    In production, verify the payment with Toss/PortOne API before upgrading.
+    """
+    try:
+        body = await request.json()
+        payment_key = body.get("paymentKey", "")
+        order_id = body.get("orderId", "")
+        amount = body.get("amount", 0)
+        
+        # Validate required fields
+        if not payment_key or not order_id or not amount:
+            raise HTTPException(status_code=400, detail="필수 결제 정보(paymentKey, orderId, amount)가 누락되었습니다.")
+        
+        # TODO: In production, verify payment with external API:
+        # POST https://api.tosspayments.com/v1/payments/confirm
+        # with paymentKey, orderId, amount
+        
+        # For MVP, log the payment attempt
+        print(f"[Payment] Received: key={payment_key}, order={order_id}, amount={amount}")
+        
+        return {"status": "success", "message": "결제 확인이 완료되었습니다."}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"결제 처리 중 오류: {str(e)}")
+
+@app.post("/api/membership/downgrade")
+def downgrade_membership(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    """Phase 4: Downgrade user back to basic (cancel premium)."""
+    current_user.membership = "basic"
+    db.commit()
+    return {"status": "success", "message": "기본 회원으로 전환되었습니다.", "membership": "basic"}
+
+# --- 4-3. SEO: Dynamic Sitemap.xml & robots.txt ---
+from fastapi.responses import Response
+
+@app.get("/sitemap.xml")
+async def sitemap():
+    """Phase 4: Generate dynamic sitemap for SEO crawlers."""
+    base_url = "https://alphafinder.kr"
+    today = datetime.now().strftime("%Y-%m-%d")
+    
+    pages = [
+        {"loc": "/", "priority": "1.0", "changefreq": "daily"},
+        {"loc": "/seasonality", "priority": "0.8", "changefreq": "weekly"},
+        {"loc": "/themes", "priority": "0.8", "changefreq": "daily"},
+        {"loc": "/leaderboard", "priority": "0.7", "changefreq": "daily"},
+        {"loc": "/review", "priority": "0.9", "changefreq": "daily"},
+        {"loc": "/policies", "priority": "0.3", "changefreq": "monthly"},
+    ]
+    
+    xml_items = ""
+    for p in pages:
+        xml_items += f"""  <url>
+    <loc>{base_url}{p['loc']}</loc>
+    <lastmod>{today}</lastmod>
+    <changefreq>{p['changefreq']}</changefreq>
+    <priority>{p['priority']}</priority>
+  </url>
+"""
+    
+    sitemap_xml = f"""<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+{xml_items}</urlset>"""
+    
+    return Response(content=sitemap_xml, media_type="application/xml")
+
+@app.get("/robots.txt", response_class=PlainTextResponse)
+async def robots_txt():
+    """Phase 4: SEO robots.txt for search engine crawlers."""
+    return """User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /portfolio
+Sitemap: https://alphafinder.kr/sitemap.xml
+"""
+
+# --- 4-4. Dynamic OG Image API ---
+@app.get("/api/og-image/{ticker}")
+async def generate_og_image(ticker: str, db: Session = Depends(get_db)):
+    """
+    Phase 4: Generate dynamic Open Graph image data for social sharing.
+    Returns JSON with pre-computed OG meta tag values.
+    Frontend uses these values in <meta> tags for KakaoTalk/Twitter/Facebook previews.
+    """
+    resolved_ticker = resolve_ticker(ticker)
+    
+    # Get latest price data
+    try:
+        df = fdr.DataReader(resolved_ticker, (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d'))
+        if not df.empty:
+            current_price = float(df['Close'].iloc[-1])
+            price_30d_ago = float(df['Close'].iloc[0])
+            change_pct = round((current_price - price_30d_ago) / price_30d_ago * 100, 2)
+            if change_pct > 0:
+                trend = "상승"
+            elif change_pct < 0:
+                trend = "하락"
+            else:
+                trend = "보합"
+        else:
+            current_price = 0
+            change_pct = 0
+            trend = "N/A"
+    except:
+        current_price = 0
+        change_pct = 0
+        trend = "N/A"
+    
+    # Vote sentiment
+    bull = db.query(models.Vote).filter(models.Vote.ticker == resolved_ticker, models.Vote.vote_type == 'BULL').count()
+    bear = db.query(models.Vote).filter(models.Vote.ticker == resolved_ticker, models.Vote.vote_type == 'BEAR').count()
+    total = bull + bear
+    sentiment = f"BULL {round(bull/total*100)}%" if total > 0 else "투표 없음"
+    
+    return {
+        "title": f"AlphaFinder | {resolved_ticker} 종목 AI 분석",
+        "description": f"{trend} {change_pct:+.2f}% (30일) | 현재가 {current_price:,.0f}원 | 투자자 심리: {sentiment}",
+        "image_text": f"{resolved_ticker} | {current_price:,.0f}원 | {change_pct:+.2f}%",
+        "ticker": resolved_ticker,
+        "current_price": current_price,
+        "change_pct": change_pct,
+        "sentiment": sentiment
+    }
+
+# --- 4-5. P&L (Profit & Loss) Certificate Image Data API ---
+@app.get("/api/pnl-card")
+def generate_pnl_card(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    """
+    Phase 4: Generate data for a P&L (profit/loss) sharing card.
+    Returns structured data that the frontend renders as a shareable image.
+    """
+    portfolios = db.query(models.Portfolio).filter(
+        models.Portfolio.user_id == current_user.id
+    ).all()
+    
+    holdings = []
+    total_pnl = 0.0
+    
+    for p in portfolios:
+        try:
+            df = fdr.DataReader(p.ticker, (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d'))
+            if not df.empty and p.target_price and p.target_price > 0:
+                current = float(df['Close'].iloc[-1])
+                pnl_pct = round((current - p.target_price) / p.target_price * 100, 2)
+                pnl_value = round((current - p.target_price) * p.qty, 0)
+                total_pnl += pnl_value
+                holdings.append({
+                    "ticker": p.ticker,
+                    "buy_price": p.target_price,
+                    "current_price": current,
+                    "qty": p.qty,
+                    "pnl_pct": pnl_pct,
+                    "pnl_value": pnl_value
+                })
+        except:
+            pass
+    
+    # Determine rank
+    rank_data = db.query(models.User.username, models.User.total_return)\
+        .filter(models.User.total_return.isnot(None))\
+        .order_by(models.User.total_return.desc()).all()
+    
+    user_rank = "N/A"
+    for i, r in enumerate(rank_data):
+        if r.username == current_user.username:
+            user_rank = f"{i + 1}/{len(rank_data)}"
+            break
+    
+    return {
+        "username": current_user.username,
+        "total_return": current_user.total_return or 0.0,
+        "rank": user_rank,
+        "holdings": holdings,
+        "total_pnl_value": total_pnl,
+        "generated_at": datetime.now().isoformat(),
+        "watermark": "AlphaFinder | alphafinder.kr"
+    }
 
 if __name__ == "__main__":
     import uvicorn

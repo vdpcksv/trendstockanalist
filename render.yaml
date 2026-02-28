@@ -1,9 +1,25 @@
 services:
   - type: web
-    name: trendstock-api
-    env: python
+    name: alphafinder-api
+    runtime: python
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "uvicorn main:app --host 0.0.0.0 --port $PORT"
+    startCommand: "gunicorn main:app -c gunicorn_config.py"
     envVars:
       - key: PYTHON_VERSION
-        value: 3.10.13
+        value: "3.10.13"
+      - key: DATABASE_URL
+        sync: false  # Set manually in Render dashboard
+      - key: SECRET_KEY
+        generateValue: true  # Auto-generate a secure random key
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_CHAT_ID
+        sync: false
+      - key: KIS_APP_KEY
+        sync: false
+      - key: KIS_APP_SECRET
+        sync: false
+    healthCheckPath: /ads.txt
+    autoDeploy: true

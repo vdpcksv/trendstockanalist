@@ -4,7 +4,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AlphaFinder Invest Dashboard</title>
+    <title>{% block title %}AlphaFinder - AI 기반 주식 분석 플랫폼{% endblock %}</title>
+
+    <!-- Phase 4: SEO Meta Tags -->
+    <meta name="description"
+        content="{% block meta_description %}AlphaFinder는 AI가 분석하는 실시간 주식 트렌드, 뉴스 감성 분석, 커뮤니티 투표, 모의투자 랭킹을 제공하는 프리미엄 투자 플랫폼입니다.{% endblock %}">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="{% block canonical %}https://alphafinder.kr{% endblock %}">
+
+    <!-- Open Graph (카카오톡, 페이스북) -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="AlphaFinder">
+    <meta property="og:title" content="{% block og_title %}AlphaFinder - AI 주식 분석{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}AI가 분석하는 실시간 주식 트렌드와 커뮤니티 투자 의견{% endblock %}">
+    <meta property="og:image" content="{% block og_image %}https://alphafinder.kr/static/og-default.png{% endblock %}">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{% block twitter_title %}AlphaFinder{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}AI 기반 주식 분석 플랫폼{% endblock %}">
 
     <!-- ✅ Google AdSense Verification Code (Hardcoded here for SEO Bot Crawlability) -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9065075656013134"
@@ -170,6 +188,8 @@
                         계절성 트렌드</a>
                     <a href="/themes" class="px-3 py-2 rounded-lg font-semibold transition-colors duration-200">🎯 테마
                         분석</a>
+                    <a href="/leaderboard" class="px-3 py-2 rounded-lg font-semibold transition-colors duration-200">🏆
+                        모의 랭킹</a>
                     <a href="/review" class="px-3 py-2 rounded-lg font-semibold transition-colors duration-200">🤖 AI 매매
                         복기</a>
                     <a href="/portfolio" id="nav-portfolio"

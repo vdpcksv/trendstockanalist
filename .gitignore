@@ -26,3 +26,22 @@ ENV/
 env.bak/
 venv.bak/
 trendstock.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Alembic
+alembic/versions/__pycache__/
+
+# Test artifacts
+.pytest_cache/
+
+# Docker
+*.log

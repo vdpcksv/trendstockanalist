@@ -1,5 +1,12 @@
 {% extends "base.html" %}
 
+{% block title %}{{ ticker | default('005930') }} AI 분석 | AlphaFinder{% endblock %}
+{% block meta_description %}{{ ticker | default('005930') }} 종목의 AI 기반 퀀트 진단, Prophet 주가 예측, 뉴스 감성 분석, 커뮤니티 투자 의견을
+확인하세요.{% endblock %}
+{% block og_title %}{{ ticker | default('005930') }} 종목 AI 분석 | AlphaFinder{% endblock %}
+{% block og_description %}AI가 분석한 {{ ticker | default('005930') }} 종목의 기술적 지표, 예측 밴드, 감성 분석 결과{% endblock %}
+{% block canonical %}https://alphafinder.kr/review?ticker={{ ticker | default('005930') }}{% endblock %}
+
 {% block content %}
 <div class="mb-10 flex flex-col items-center text-center">
     <div
@@ -67,6 +74,13 @@
                         class="form-checkbox h-4 w-4 text-indigo-500 bg-slate-700 border-slate-600 rounded focus:ring-indigo-500 transition duration-150"
                         checked>
                     <span class="text-slate-300 font-medium select-none">볼린저밴드</span>
+                </label>
+                <label
+                    class="flex items-center space-x-2 cursor-pointer px-3 py-1 rounded-lg hover:bg-slate-800 transition-colors">
+                    <input type="checkbox" id="toggle-ai"
+                        class="form-checkbox h-4 w-4 text-indigo-500 bg-slate-700 border-slate-600 rounded focus:ring-indigo-500 transition duration-150"
+                        checked>
+                    <span class="text-slate-300 font-medium select-none text-emerald-400">AI 예측 밴드</span>
                 </label>
             </div>
         </div>
@@ -260,6 +274,30 @@
             {{ sentiment_data.total }}개 경제 기사 분석</span>
     </div>
 
+    {% if sentiment_data.llm_analysis %}
+    <!-- LLM Sentinel Insights -->
+    <div class="mb-8 border border-indigo-500/30 bg-indigo-500/5 rounded-xl p-5 relative overflow-hidden">
+        <div
+            class="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none">
+        </div>
+        <div class="flex items-start gap-4 relative z-10">
+            <div class="text-3xl">✨</div>
+            <div>
+                <h3 class="text-sm font-bold text-indigo-300 mb-1 flex items-center gap-2">
+                    Gemini AI 뉴스 종합 판독기
+                    <span
+                        class="px-2 py-0.5 rounded text-[10px] font-bold {% if sentiment_data.llm_analysis.sentiment == 'positive' %}bg-emerald-500/20 text-emerald-400{% elif sentiment_data.llm_analysis.sentiment == 'negative' %}bg-rose-500/20 text-rose-400{% else %}bg-slate-500/20 text-slate-400{% endif %} uppercase">
+                        {{ sentiment_data.llm_analysis.sentiment }} (Score: {{ sentiment_data.llm_analysis.score }})
+                    </span>
+                </h3>
+                <p class="text-slate-300 text-base leading-relaxed font-medium">
+                    "{{ sentiment_data.llm_analysis.summary_comment }}"
+                </p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <div class="mb-8">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-4 gap-2">
             <div>
@@ -365,6 +403,172 @@
 </div>
 {% endif %}
 
+<!-- Community Section (Bull & Bear Voting / Comments) -->
+<div class="glass-card rounded-2xl p-6 md:p-8 mb-12 hover-lift">
+    <div class="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-2">
+        <h2 class="text-xl font-bold text-white flex items-center gap-2">
+            <span class="text-purple-400">🔥</span> 주주들의 종토방 (Bull & Bear)
+        </h2>
+        <span
+            class="text-xs font-medium text-slate-400 bg-slate-800/50 px-3 py-1.5 rounded-lg border border-slate-700 whitespace-nowrap">실시간
+            민심 확인</span>
+    </div>
+
+    <!-- Voting -->
+    <div class="mb-8 p-6 bg-slate-800/40 rounded-xl border border-slate-700/50 shadow-inner text-center">
+        <h3 class="text-sm font-bold text-slate-300 mb-4">현재 이 종목의 향후 전망은?</h3>
+        <div class="flex justify-center items-center gap-4 mb-4">
+            <button onclick="castVote('BULL')"
+                class="flex flex-col items-center justify-center p-4 rounded-xl border-2 border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 hover:border-emerald-500 transition-all w-32 group focus:outline-none">
+                <span class="text-3xl mb-1 group-hover:scale-110 transition-transform">📈</span>
+                <span class="text-emerald-400 font-bold text-sm">상승 (BULL)</span>
+            </button>
+            <div class="w-20">
+                <div class="text-xs text-slate-400 mb-1">민심 비율</div>
+                <div class="text-lg font-bold text-white" id="vote-ratio">VS</div>
+            </div>
+            <button onclick="castVote('BEAR')"
+                class="flex flex-col items-center justify-center p-4 rounded-xl border-2 border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 hover:border-rose-500 transition-all w-32 group focus:outline-none">
+                <span class="text-3xl mb-1 group-hover:scale-110 transition-transform">📉</span>
+                <span class="text-rose-400 font-bold text-sm">하락 (BEAR)</span>
+            </button>
+        </div>
+        <div class="w-full max-w-md mx-auto h-2 bg-slate-700 rounded-full overflow-hidden flex">
+            <div id="vote-bull-bar" class="h-full bg-emerald-500 transition-all duration-500" style="width: 50%;"></div>
+            <div id="vote-bear-bar" class="h-full bg-rose-500 transition-all duration-500" style="width: 50%;"></div>
+        </div>
+        <div class="flex justify-between w-full max-w-md mx-auto mt-1 text-xs text-slate-500">
+            <span id="vote-bull-count">0명</span>
+            <span id="vote-bear-count">0명</span>
+        </div>
+    </div>
+
+    <!-- Comments -->
+    <div>
+        <h3 class="text-sm font-bold text-slate-300 mb-3 border-b border-slate-700/50 pb-2">실시간 투자 의견</h3>
+
+        <!-- Comment Form -->
+        <div class="flex gap-2 mb-6">
+            <input type="text" id="comment-input"
+                class="flex-grow pl-4 pr-4 py-3 bg-[#0B1021] border border-slate-700 rounded-xl leading-5 placeholder-slate-500 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm transition-all"
+                placeholder="다양한 의견을 남겨주세요 (욕설 및 비방 금지)">
+            <button onclick="submitComment()"
+                class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-xl text-sm font-bold transition-colors">등록</button>
+        </div>
+
+        <!-- Comment List -->
+        <div id="comments-list" class="space-y-3 max-h-80 overflow-y-auto custom-scrollbar pr-2">
+            <!-- Comments will be injected here via JS -->
+            <div class="text-center text-slate-500 text-xs py-4">의견을 불러오는 중...</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Community Logic
+    document.addEventListener("DOMContentLoaded", function () {
+        const ticker = "{{ ticker }}";
+        if (!ticker || ticker === "None") return;
+
+        loadVotes();
+        loadComments();
+    });
+
+    function loadVotes() {
+        fetch(`/api/votes/{{ ticker }}`)
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('vote-bull-bar').style.width = `${data.bull_ratio}%`;
+                document.getElementById('vote-bear-bar').style.width = `${data.bear_ratio}%`;
+                document.getElementById('vote-bull-count').innerText = `${data.bull}명`;
+                document.getElementById('vote-bear-count').innerText = `${data.bear}명`;
+                document.getElementById('vote-ratio').innerText = data.total > 0 ? `${data.bull_ratio} : ${data.bear_ratio}` : 'VS';
+            }).catch(console.error);
+    }
+
+    function castVote(type) {
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            alert('로그인이 필요한 기능입니다. 오른쪽 상단 지갑/로그인 버튼을 눌러주세요.');
+            return;
+        }
+
+        fetch(`/api/votes/{{ ticker }}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ ticker: "{{ ticker }}", vote_type: type })
+        }).then(res => {
+            if (res.ok) {
+                loadVotes();
+            } else if (res.status === 401) {
+                alert('세션이 만료되었습니다. 다시 로그인해주세요.');
+            }
+        }).catch(console.error);
+    }
+
+    function loadComments() {
+        fetch(`/api/comments/{{ ticker }}`)
+            .then(res => res.json())
+            .then(data => {
+                const list = document.getElementById('comments-list');
+                list.innerHTML = '';
+                if (data.length === 0) {
+                    list.innerHTML = '<div class="text-center text-slate-500 text-xs py-4">첫 번째 의견을 남겨보세요!</div>';
+                    return;
+                }
+
+                data.forEach(c => {
+                    const date = new Date(c.created_at).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                    const div = document.createElement('div');
+                    div.className = "bg-[#0B1021]/50 border border-slate-700/50 p-4 rounded-xl flex flex-col gap-1";
+                    div.innerHTML = `
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="font-bold text-indigo-300">@${c.username || '익명'}</span>
+                            <span class="text-slate-500">${date}</span>
+                        </div>
+                        <p class="text-sm text-slate-300 mt-1 break-words">${escapeHtml(c.content)}</p>
+                    `;
+                    list.appendChild(div);
+                });
+            }).catch(console.error);
+    }
+
+    function submitComment() {
+        const input = document.getElementById('comment-input');
+        const content = input.value.trim();
+        if (!content) return;
+
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            alert('로그인이 필요한 기능입니다.');
+            return;
+        }
+
+        fetch(`/api/comments/{{ ticker }}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ content: content, ticker: "{{ ticker }}" })
+        }).then(res => {
+            if (res.ok) {
+                input.value = '';
+                loadComments();
+            } else if (res.status === 401) {
+                alert('세션이 만료되었습니다. 다시 로그인해주세요.');
+            }
+        }).catch(console.error);
+    }
+
+    function escapeHtml(unsafe) {
+        return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+</script>
+
 <!-- AdSense Rich Content Section -->
 <div class="glass-card p-6 rounded-xl border border-indigo-500/20 relative overflow-hidden">
     <div
@@ -384,8 +588,15 @@
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         const rawJsonData = `{{ chart_data | safe }}`;
+        const rawForecastData = `{{ prophet_forecast | default('null') | safe }}`; // Phase 1: Prophet Forecast
+
         const data = JSON.parse(rawJsonData);
         if (!data || data.length === 0) return;
+
+        let forecastData = null;
+        if (rawForecastData !== 'null' && rawForecastData !== 'None') {
+            try { forecastData = JSON.parse(rawForecastData); } catch (e) { console.error("Forecast Parse Error", e); }
+        }
 
         const dates = data.map(d => d.Date);
         const opens = data.map(d => d.Open);
@@ -431,8 +642,24 @@
         };
         const config = { displayModeBar: false, responsive: true, scrollZoom: true };
 
-        // Initial Plot
+        // --- 3.5 AI Prophet Forecast Band ---
         let mainTraces = [traceCandle, traceMa5, traceMa20, traceMa60, traceBbUpper, traceBbLower];
+        let aiStartIndex = mainTraces.length;
+
+        if (forecastData && forecastData.length > 0) {
+            const fDates = forecastData.map(d => d.date);
+            const fUpper = forecastData.map(d => d.upper);
+            const fLower = forecastData.map(d => d.lower);
+            const fMean = forecastData.map(d => d.predicted);
+
+            const traceForecastUpper = { x: fDates, y: fUpper, type: 'scatter', mode: 'lines', name: 'AI 상단', line: { color: 'rgba(234, 179, 8, 0)', width: 0 }, showlegend: false };
+            const traceForecastLower = { x: fDates, y: fLower, type: 'scatter', mode: 'lines', name: 'AI 예측 밴드', line: { color: 'rgba(234, 179, 8, 0)', width: 0 }, fill: 'tonexty', fillcolor: 'rgba(234, 179, 8, 0.15)' };
+            const traceForecastMean = { x: fDates, y: fMean, type: 'scatter', mode: 'lines', name: 'AI 예측 평균', line: { color: 'rgba(234, 179, 8, 0.8)', width: 2, dash: 'dot' } };
+
+            mainTraces.push(traceForecastUpper, traceForecastLower, traceForecastMean);
+        }
+
+        // Initial Plot
         Plotly.newPlot('plotly-candlestick', mainTraces, layoutMain, config);
 
         // Checkbox Toggle Logic
@@ -445,6 +672,15 @@
             const visibility = e.target.checked ? true : 'legendonly';
             Plotly.restyle('plotly-candlestick', { visible: visibility }, [4, 5]); // BB Upper, Lower index
         });
+
+        const toggleAi = document.getElementById('toggle-ai');
+        if (toggleAi && forecastData && forecastData.length > 0) {
+            toggleAi.addEventListener('change', function (e) {
+                const visibility = e.target.checked ? true : 'legendonly';
+                // Toggle the 3 AI traces
+                Plotly.restyle('plotly-candlestick', { visible: visibility }, [aiStartIndex, aiStartIndex + 1, aiStartIndex + 2]);
+            });
+        }
 
         // --- 4. RSI Chart ---
         const traceRsi = { x: dates, y: rsi, type: 'scatter', mode: 'lines', name: 'RSI(14)', line: { color: '#8b5cf6', width: 1.5 } };

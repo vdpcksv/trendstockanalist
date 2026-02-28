@@ -312,6 +312,10 @@
                 portfolio = await res.json();
                 renderDashboard();
             } else {
+                if (res.status === 401) {
+                    alert("세션이 만료되었거나 서버 데이터베이스가 마이그레이션 되었습니다. 다시 로그인해 주세요.");
+                    logout();
+                }
                 console.log("Not logged in or token expired.");
             }
         } catch (error) {
@@ -346,9 +350,15 @@
             if (res.ok) {
                 await fetchPortfolio();
                 form.reset();
+            } else if (res.status === 401) {
+                alert("로그인 세션이 만료되었습니다. 다시 로그인해 주세요.");
+                logout();
+            } else {
+                alert("종목 등록에 실패했습니다. (서버 오류)");
             }
         } catch (error) {
             console.error("Error saving portfolio:", error);
+            alert("종목 등록 중 네트워크 오류가 발생했습니다.");
         }
     });
 

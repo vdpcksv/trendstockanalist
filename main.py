@@ -633,6 +633,7 @@ def add_portfolio_item(item: schemas.PortfolioCreate, db: Session = Depends(get_
     db_item = models.Portfolio(
         ticker=item.ticker,
         target_price=item.target_price,
+        qty=item.qty,
         user_id=current_user.id
     )
     db.add(db_item)
@@ -658,8 +659,8 @@ def get_portfolio_items(db: Session = Depends(get_db), current_user: models.User
     
     result = []
     for i in items:
-        # DB schema might not have qty yet, default to 1 as per previous mock
-        qty = 1
+        # In case the table was created before qty column, fallback to 1
+        qty = i.qty if hasattr(i, 'qty') and i.qty is not None else 1
         current_price = get_current_price(i.ticker)
         result.append({
             "id": i.id, 

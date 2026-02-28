@@ -21,6 +21,7 @@ class Portfolio(Base):
     user_id = Column(Integer, ForeignKey("users.id"))
     ticker = Column(String, index=True) # Stock code or Theme name
     target_price = Column(Float, nullable=True)
+    qty = Column(Integer, default=1)
     added_at = Column(DateTime, default=datetime.utcnow)
 
     owner = relationship("User", back_populates="portfolios")

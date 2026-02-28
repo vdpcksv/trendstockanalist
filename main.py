@@ -630,16 +630,44 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
 
 @app.post("/api/portfolio", response_model=schemas.Portfolio)
 def add_portfolio_item(item: schemas.PortfolioCreate, db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
-    db_item = models.Portfolio(
-        ticker=item.ticker,
-        target_price=item.target_price,
-        qty=item.qty,
-        user_id=current_user.id
-    )
-    db.add(db_item)
-    db.commit()
-    db.refresh(db_item)
-    return db_item
+    # Check if the user already has this ticker in their portfolio
+    existing_item = db.query(models.Portfolio).filter(
+        models.Portfolio.user_id == current_user.id,
+        models.Portfolio.ticker == item.ticker
+    ).first()
+
+    if existing_item:
+        # Calculate new average target (buy) price
+        old_qty = existing_item.qty or 1
+        old_price = existing_item.target_price or 0.0
+        
+        new_qty = item.qty or 1
+        new_price = item.target_price or 0.0
+
+        total_old_value = old_qty * old_price
+        total_new_value = new_qty * new_price
+        
+        combined_qty = old_qty + new_qty
+        avg_price = (total_old_value + total_new_value) / combined_qty
+
+        # Update the existing record
+        existing_item.qty = combined_qty
+        existing_item.target_price = avg_price
+        db.commit()
+        db.refresh(existing_item)
+        return existing_item
+    else:
+        # Create a new record
+        db_item = models.Portfolio(
+            ticker=item.ticker,
+            target_price=item.target_price,
+            qty=item.qty,
+            user_id=current_user.id
+        )
+        db.add(db_item)
+        db.commit()
+        db.refresh(db_item)
+        return db_item
 
 def get_current_price(stock_name: str) -> float:
     try:

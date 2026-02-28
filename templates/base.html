@@ -78,10 +78,80 @@
             transform: translateY(-2px);
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
         }
+
+        /* Loading Screen Animations */
+        @keyframes rainCoins {
+            0% {
+                transform: translateY(-100px) rotate(0deg);
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 1;
+            }
+
+            90% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .coin {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: radial-gradient(circle, #fbbf24 0%, #d97706 80%, #b45309 100%);
+            border-radius: 50%;
+            border: 2px solid #fcd34d;
+            box-shadow: inset 0 0 5px rgba(255, 255, 255, 0.5), 0 5px 10px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #78350f;
+            font-size: 14px;
+            z-index: 9998;
+            opacity: 0;
+            pointer-events: none;
+        }
     </style>
 </head>
 
 <body class="text-slate-300 overflow-x-hidden min-h-screen flex flex-col selection:bg-indigo-500/30">
+
+    <!-- Global Loading Screen -->
+    <div id="global-loader"
+        class="fixed inset-0 bg-[#0B1021] z-[9999] flex flex-col items-center justify-center transition-opacity duration-500">
+        <!-- Coin Rain Container -->
+        <div id="coin-rain-container" class="absolute inset-0 overflow-hidden pointer-events-none"></div>
+
+        <!-- Piggy Bank Image -->
+        <div class="relative z-10 w-64 h-64 md:w-80 md:h-80 drop-shadow-[0_0_30px_rgba(236,72,153,0.3)] mb-8 animate-bounce"
+            style="animation-duration: 2s;">
+            <img src="/static/img/loading_piggy.png" alt="Loading Piggy Bank"
+                class="w-full h-full object-contain filter drop-shadow-2xl rounded-full">
+            <div
+                class="absolute inset-0 rounded-full border border-pink-500/30 bg-pink-500/10 backdrop-blur-sm -z-10 mix-blend-overlay">
+            </div>
+        </div>
+
+        <h2 class="text-3xl font-extrabold text-white outfit-font tracking-tight drop-shadow-md relative z-10">데이터를 분석
+            중입니다...</h2>
+        <p class="text-indigo-300 font-medium mt-3 relative z-10 flex items-center gap-2">
+            <svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-pink-400" xmlns="http://www.w3.org/2000/svg" fill="none"
+                viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                </path>
+            </svg>
+            스마트 머니를 쫓는 중 💸
+        </p>
+    </div>
 
     <!-- Premium Navigation Bar (Glassmorphism) -->
     <nav class="glass-nav shadow-sm sticky top-0 z-50">
@@ -278,6 +348,63 @@
             checkAuthState();
             window.location.href = '/';
         }
+
+        // Global Loader Logic with Coin Rain
+        function initCoinRain() {
+            const container = document.getElementById('coin-rain-container');
+            if (!container) return;
+
+            setInterval(() => {
+                if (document.getElementById('global-loader').classList.contains('hidden')) return;
+
+                const coin = document.createElement('div');
+                coin.className = 'coin';
+                coin.innerText = '₩';
+
+                // Randomize position, duration, and delay
+                const leftPos = Math.random() * 100;
+                const duration = 2 + Math.random() * 3; // 2~5 seconds
+
+                coin.style.left = `${leftPos}%`;
+                coin.style.animation = `rainCoins ${duration}s linear forwards`;
+
+                container.appendChild(coin);
+
+                // Remove coin after animation
+                setTimeout(() => {
+                    coin.remove();
+                }, duration * 1000);
+            }, 300); // Create a new coin every 300ms
+        }
+
+        window.addEventListener('load', () => {
+            initCoinRain();
+            const loader = document.getElementById('global-loader');
+            // Add a slight delay to show the animation (for MVP demonstration)
+            setTimeout(() => {
+                loader.classList.add('opacity-0');
+                setTimeout(() => {
+                    loader.classList.add('hidden');
+                }, 500);
+            }, 800);
+        });
+
+        // Show loader on navigation
+        document.querySelectorAll('a').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                // Ignore clicks that open in new tabs, or anchor links
+                if (this.target === '_blank' || this.getAttribute('href').startsWith('#')) return;
+
+                // For internal links
+                if (this.getAttribute('href').startsWith('/')) {
+                    const loader = document.getElementById('global-loader');
+                    loader.classList.remove('hidden');
+                    // Force reflow
+                    void loader.offsetWidth;
+                    loader.classList.remove('opacity-0');
+                }
+            });
+        });
 
         // Initialize state
         checkAuthState();

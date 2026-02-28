@@ -11,3 +11,4 @@ python-jose
 bcrypt
 python-multipart
 fastapi-cache2
+psycopg2-binary

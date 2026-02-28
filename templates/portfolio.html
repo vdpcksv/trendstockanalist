@@ -6,309 +6,531 @@
         class="inline-block bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 px-4 py-1.5 rounded-full text-sm font-semibold mb-4 drop-shadow-sm">
         Personal Asset Management</div>
     <h1 class="text-4xl font-extrabold text-white mb-4 tracking-tight drop-shadow-md">내 자산 포트폴리오</h1>
-    <p class="text-slate-400 max-w-2xl text-lg">보유 중인 종목을 등록하여 전체 자산 비중을 시각화하고, <br class="hidden sm:block">AI 기반 계절성 승률
-        진단을 통해 최적의 매도/홀딩 타이밍을 잡아보세요.</p>
+    <p class="text-slate-400 max-w-2xl text-lg">기기를 변경해도 데이터가 유지됩니다.<br class="hidden sm:block"> 안전하게 로그인하고 나의 전체 자산을
+        관리하세요.</p>
 </div>
 
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-    <!-- Form Area -->
-    <div class="glass-card rounded-2xl p-6 md:p-8 hover-lift h-fit sticky top-24">
-        <h2 class="text-xl font-bold mb-6 text-white flex items-center gap-2">
-            <span class="text-indigo-400">➕</span> 신규 자산 등록
-        </h2>
-        <form id="portfolio-form" class="space-y-5">
-            <div>
-                <label for="stock_name" class="block text-sm font-medium text-slate-300 mb-1">종목명</label>
-                <input type="text" id="stock_name" required
-                    class="block w-full bg-[#151b30] border border-slate-700 rounded-lg shadow-inner py-2.5 px-3 text-sm text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none transition-colors"
-                    placeholder="예: 삼성전자">
-            </div>
-            <div>
-                <label for="buy_price" class="block text-sm font-medium text-slate-300 mb-1">매수 단가 (원)</label>
-                <input type="number" id="buy_price" required
-                    class="block w-full bg-[#151b30] border border-slate-700 rounded-lg shadow-inner py-2.5 px-3 text-sm text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none transition-colors"
-                    placeholder="예: 70000">
-            </div>
-            <div>
-                <label for="quantity" class="block text-sm font-medium text-slate-300 mb-1">보유 수량 (주)</label>
-                <input type="number" id="quantity" required
-                    class="block w-full bg-[#151b30] border border-slate-700 rounded-lg shadow-inner py-2.5 px-3 text-sm text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none transition-colors"
-                    placeholder="예: 100">
-            </div>
-            <button type="submit"
-                class="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-lg text-sm font-bold text-white bg-gradient-to-r from-indigo-600 to-indigo-500 hover:shadow-indigo-500/30 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:ring-offset-[#0B1021] mt-2">
-                포트폴리오에 추가하기
-            </button>
-        </form>
-
-        <hr class="my-8 border-slate-700/50">
-
-        <h2 class="text-lg font-bold mb-5 text-white flex items-center gap-2">
-            <span class="text-blue-400">🤖</span> 텔레그램 스텔스 알림
-        </h2>
-        <form id="bot-config-form" class="space-y-4">
-            <div>
-                <label for="bot_token" class="block text-sm font-medium text-slate-300 mb-1">Bot Token</label>
-                <input type="password" id="bot_token"
-                    class="block w-full bg-[#151b30] border border-slate-700 rounded-lg shadow-inner py-2.5 px-3 text-sm text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition-colors"
-                    placeholder="BotFather에서 받은 토큰">
-            </div>
-            <div>
-                <label for="chat_id" class="block text-sm font-medium text-slate-300 mb-1">Chat ID</label>
-                <input type="text" id="chat_id"
-                    class="block w-full bg-[#151b30] border border-slate-700 rounded-lg shadow-inner py-2.5 px-3 text-sm text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition-colors"
-                    placeholder="ID (숫자)">
-            </div>
-            <div>
-                <label for="watch_list" class="block text-sm font-medium text-slate-300 mb-1">스텔스 감시 종목 (콤마 구분)</label>
-                <input type="text" id="watch_list"
-                    class="block w-full bg-[#151b30] border border-slate-700 rounded-lg shadow-inner py-2.5 px-3 text-sm text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition-colors"
-                    placeholder="예: 005930, 000660">
-            </div>
-            <button type="button" onclick="saveBotConfig()"
-                class="w-full flex justify-center py-3 px-4 border border-slate-600 rounded-xl shadow-sm text-sm font-bold text-slate-300 bg-slate-800/80 hover:bg-slate-700 hover:text-white transition-colors duration-200 focus:outline-none mt-2">
-                로컬 브라우저에 연동 저장
-            </button>
-        </form>
+<!-- Authentication Section (Login / Register) -->
+<div id="auth-section" class="max-w-md mx-auto glass-card rounded-2xl p-8 mb-12 hover-lift relative overflow-hidden">
+    <div
+        class="absolute top-0 right-0 -mr-16 -mt-16 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none">
     </div>
 
-    <!-- Dashboard Area -->
-    <div class="lg:col-span-2 space-y-8">
-        <div class="glass-card rounded-2xl p-6 md:p-8 hover-lift">
-            <h2 class="text-xl font-bold mb-6 text-white border-b border-slate-700/50 pb-4 flex items-center gap-2">
-                <span class="text-emerald-400">💼</span> 내 자산 보유 요약
+    <h2 class="text-2xl font-bold text-center mb-6 text-white relative z-10">Trend-Lotto 시스템 접속</h2>
+
+    <div class="flex gap-2 mb-6 bg-[#151b30] p-1.5 rounded-xl border border-slate-700 shadow-inner relative z-10">
+        <button onclick="toggleAuth('login')" id="tab-login"
+            class="flex-1 py-2 rounded-lg font-bold text-sm bg-indigo-600 shadow-lg text-white transition-all">로그인</button>
+        <button onclick="toggleAuth('register')" id="tab-register"
+            class="flex-1 py-2 rounded-lg font-medium text-sm text-slate-400 hover:text-white transition-all">회원가입</button>
+    </div>
+
+    <form id="login-form" onsubmit="handleLogin(event)" class="space-y-5 relative z-10">
+        <div>
+            <input type="text" id="login-username" placeholder="아이디"
+                class="w-full p-3 bg-[#0B1021]/80 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                required>
+        </div>
+        <div>
+            <input type="password" id="login-password" placeholder="비밀번호"
+                class="w-full p-3 bg-[#0B1021]/80 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                required>
+        </div>
+        <button type="submit"
+            class="w-full bg-gradient-to-r from-indigo-600 to-indigo-500 hover:shadow-indigo-500/30 text-white py-3.5 rounded-xl font-bold transition-all shadow-lg mt-2">로그인
+            실행</button>
+    </form>
+
+    <form id="register-form" onsubmit="handleRegister(event)" class="space-y-5 hidden relative z-10">
+        <div>
+            <input type="text" id="reg-username" placeholder="새 아이디"
+                class="w-full p-3 bg-[#0B1021]/80 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                required>
+        </div>
+        <div>
+            <input type="password" id="reg-password" placeholder="새 비밀번호"
+                class="w-full p-3 bg-[#0B1021]/80 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                required>
+        </div>
+        <button type="submit"
+            class="w-full bg-slate-700 hover:bg-slate-600 text-white py-3.5 rounded-xl font-bold transition-all shadow-lg mt-2 border border-slate-600">신규
+            회원가입</button>
+    </form>
+
+    <p id="auth-msg" class="text-center text-sm text-rose-400 mt-5 font-medium relative z-10 h-5"></p>
+</div>
+
+<!-- Dashboard Section (Hidden until logged in) -->
+<div id="dashboard-section" class="hidden">
+    <!-- Welcome Header -->
+    <div
+        class="flex flex-col sm:flex-row justify-between items-center mb-8 bg-gradient-to-r from-[#151b30] to-[#0B1021] border border-slate-700 p-5 rounded-2xl shadow-sm">
+        <div class="flex items-center gap-3 mb-4 sm:mb-0">
+            <span class="text-2xl">⚡</span>
+            <span class="font-bold text-white text-lg">환영합니다, <span id="user-display"
+                    class="text-indigo-400">User</span>님!</span>
+        </div>
+        <button onclick="logout()"
+            class="text-sm font-medium border border-slate-600 text-slate-300 px-5 py-2 rounded-xl hover:bg-rose-500/10 hover:text-rose-400 hover:border-rose-500/30 transition-colors">시스템
+            로그아웃</button>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+        <!-- Form Area -->
+        <div class="glass-card rounded-2xl p-6 md:p-8 hover-lift h-fit sticky top-24">
+            <h2 class="text-xl font-bold mb-6 text-white flex items-center gap-2">
+                <span class="text-indigo-400">➕</span> 신규 자산 등록
             </h2>
-
-            <div class="grid grid-cols-1 mb-8">
-                <div
-                    class="bg-gradient-to-br from-indigo-900/40 to-[#0B1021] p-6 rounded-2xl border border-indigo-500/30 shadow-inner relative overflow-hidden">
-                    <div
-                        class="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 bg-indigo-500/20 opacity-50 rounded-full blur-3xl">
-                    </div>
-                    <p class="text-sm text-indigo-300 font-medium mb-1 relative z-10">총 매수 금액 (투입 원금)</p>
-                    <p class="text-3xl font-extrabold text-white tracking-tight relative z-10" id="total-invest">0 원</p>
+            <form id="portfolio-form" class="space-y-5">
+                <div>
+                    <label for="stock_name" class="block text-sm font-medium text-slate-300 mb-1">종목명</label>
+                    <input type="text" id="stock_name" required
+                        class="block w-full bg-[#151b30] border border-slate-700 rounded-lg shadow-inner py-2.5 px-3 text-sm text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none transition-colors"
+                        placeholder="예: 삼성전자">
                 </div>
-            </div>
+                <div>
+                    <label for="buy_price" class="block text-sm font-medium text-slate-300 mb-1">매수 단가 (원)</label>
+                    <input type="number" id="buy_price" required
+                        class="block w-full bg-[#151b30] border border-slate-700 rounded-lg shadow-inner py-2.5 px-3 text-sm text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none transition-colors"
+                        placeholder="예: 70000">
+                </div>
+                <div>
+                    <label for="quantity" class="block text-sm font-medium text-slate-300 mb-1">보유 수량 (주)</label>
+                    <input type="number" id="quantity" required
+                        class="block w-full bg-[#151b30] border border-slate-700 rounded-lg shadow-inner py-2.5 px-3 text-sm text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none transition-colors"
+                        placeholder="예: 100">
+                </div>
+                <button type="submit"
+                    class="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-lg text-sm font-bold text-white bg-gradient-to-r from-indigo-600 to-indigo-500 hover:shadow-indigo-500/30 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:ring-offset-[#0B1021] mt-2">
+                    포트폴리오에 추가하기
+                </button>
+            </form>
 
-            <div class="overflow-x-auto border border-slate-700/50 rounded-xl shadow-inner custom-scrollbar">
-                <table class="min-w-full text-sm text-left text-slate-400">
-                    <thead class="text-xs text-slate-400 uppercase bg-slate-800/50 border-b border-slate-700/50">
-                        <tr>
-                            <th class="px-5 py-4 font-bold">주식 종목명</th>
-                            <th class="px-5 py-4 text-right font-bold">평균 단가</th>
-                            <th class="px-5 py-4 text-right font-bold">보유 수량</th>
-                            <th class="px-5 py-4 text-right font-bold text-indigo-300">투자 금액</th>
-                            <th class="px-5 py-4 text-center font-bold text-amber-400">💡 AI 계절성 진단</th>
-                            <th class="px-5 py-4 text-center font-bold">비고</th>
-                        </tr>
-                    </thead>
-                    <tbody id="portfolio-tbody" class="divide-y divide-slate-800/50">
-                        <!-- Filled by JS -->
-                    </tbody>
-                </table>
-            </div>
+            <hr class="my-8 border-slate-700/50">
 
+            <h2 class="text-lg font-bold mb-5 text-white flex items-center gap-2">
+                <span class="text-blue-400">🤖</span> 텔레그램 스텔스 알림
+            </h2>
+            <form id="bot-config-form" class="space-y-4">
+                <div>
+                    <label for="bot_token" class="block text-sm font-medium text-slate-300 mb-1">Bot Token</label>
+                    <input type="password" id="bot_token"
+                        class="block w-full bg-[#151b30] border border-slate-700 rounded-lg shadow-inner py-2.5 px-3 text-sm text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition-colors"
+                        placeholder="BotFather에서 받은 토큰">
+                </div>
+                <div>
+                    <label for="chat_id" class="block text-sm font-medium text-slate-300 mb-1">Chat ID</label>
+                    <input type="text" id="chat_id"
+                        class="block w-full bg-[#151b30] border border-slate-700 rounded-lg shadow-inner py-2.5 px-3 text-sm text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition-colors"
+                        placeholder="ID (숫자)">
+                </div>
+                <div>
+                    <label for="watch_list" class="block text-sm font-medium text-slate-300 mb-1">스텔스 감시 종목 (콤마
+                        구분)</label>
+                    <input type="text" id="watch_list"
+                        class="block w-full bg-[#151b30] border border-slate-700 rounded-lg shadow-inner py-2.5 px-3 text-sm text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition-colors"
+                        placeholder="예: 005930, 000660">
+                </div>
+                <button type="button" onclick="saveBotConfig()"
+                    class="w-full flex justify-center py-3 px-4 border border-slate-600 rounded-xl shadow-sm text-sm font-bold text-slate-300 bg-slate-800/80 hover:bg-slate-700 hover:text-white transition-colors duration-200 focus:outline-none mt-2">
+                    로컬 브라우저에 연동 저장
+                </button>
+            </form>
         </div>
 
-        <!-- Plotly Pie Chart -->
-        <div class="glass-card rounded-2xl p-6 md:p-8 hover-lift">
-            <h2 class="text-xl font-bold mb-2 text-white flex items-center gap-2">
-                <span class="text-amber-400">🥧</span> 포트폴리오 자산 비중
-            </h2>
-            <div id="plotly-pie" class="w-full h-80 bg-transparent"></div>
+        <!-- Dashboard Area -->
+        <div class="lg:col-span-2 space-y-8">
+            <div class="glass-card rounded-2xl p-6 md:p-8 hover-lift">
+                <h2 class="text-xl font-bold mb-6 text-white border-b border-slate-700/50 pb-4 flex items-center gap-2">
+                    <span class="text-emerald-400">💼</span> 내 자산 보유 요약
+                </h2>
+
+                <div class="grid grid-cols-1 mb-8">
+                    <div
+                        class="bg-gradient-to-br from-indigo-900/40 to-[#0B1021] p-6 rounded-2xl border border-indigo-500/30 shadow-inner relative overflow-hidden">
+                        <div
+                            class="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 bg-indigo-500/20 opacity-50 rounded-full blur-3xl">
+                        </div>
+                        <p class="text-sm text-indigo-300 font-medium mb-1 relative z-10">총 매수 금액 (투입 원금)</p>
+                        <p class="text-3xl font-extrabold text-white tracking-tight relative z-10" id="total-invest">0 원
+                        </p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 mb-8">
+                    <div
+                        class="bg-gradient-to-br from-indigo-950/60 to-[#0B1021] p-6 rounded-2xl border border-rose-500/30 shadow-inner relative overflow-hidden">
+                        <div
+                            class="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 bg-rose-500/10 opacity-50 rounded-full blur-3xl">
+                        </div>
+                        <p class="text-sm text-rose-300 font-medium mb-1 relative z-10">총 평가 금액 (실시간)</p>
+                        <p class="text-3xl font-extrabold text-white tracking-tight relative z-10 flex items-baseline gap-3"
+                            id="total-eval">
+                            0 원
+                            <span id="total-return" class="text-sm font-medium text-slate-400">0.00%</span>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto border border-slate-700/50 rounded-xl shadow-inner custom-scrollbar">
+                    <table class="min-w-full text-sm text-left text-slate-400">
+                        <thead class="text-xs text-slate-400 uppercase bg-slate-800/50 border-b border-slate-700/50">
+                            <tr>
+                                <th class="px-4 py-4 font-bold">주식 종목명</th>
+                                <th class="px-4 py-4 text-right font-bold">평균 단가</th>
+                                <th class="px-4 py-4 text-right font-bold text-white">현재가</th>
+                                <th class="px-4 py-4 text-right font-bold">보유 수량</th>
+                                <th class="px-4 py-4 text-right font-bold text-indigo-300">투자 금액</th>
+                                <th class="px-4 py-4 text-right font-bold text-rose-300">평가 금액(수익률)</th>
+                                <th class="px-4 py-4 text-center font-bold text-amber-400">💡 AI 계절성 진단</th>
+                                <th class="px-4 py-4 text-center font-bold">비고</th>
+                            </tr>
+                        </thead>
+                        <tbody id="portfolio-tbody" class="divide-y divide-slate-800/50">
+                            <!-- Filled by JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+
+            <!-- Plotly Pie Chart -->
+            <div class="glass-card rounded-2xl p-6 md:p-8 hover-lift">
+                <h2 class="text-xl font-bold mb-2 text-white flex items-center gap-2">
+                    <span class="text-amber-400">🥧</span> 포트폴리오 자산 비중
+                </h2>
+                <div id="plotly-pie" class="w-full h-80 bg-transparent"></div>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    document.addEventListener("DOMContentLoaded", async function () {
-        let portfolio = [];
+    const API_URL = "/api";
+    let token = localStorage.getItem("access_token");
 
-        // Fetch data from DB
-        async function fetchPortfolio() {
-            try {
-                const token = localStorage.getItem('access_token');
-                const res = await fetch('/api/portfolio', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (res.ok) {
-                    portfolio = await res.json();
-                    renderDashboard();
-                } else {
-                    console.log("Not logged in or token expired.");
-                }
-            } catch (error) {
-                console.error("Error fetching portfolio:", error);
+    // SPA Auth Logic
+    document.addEventListener("DOMContentLoaded", function () {
+        if (token) {
+            showDashboard();
+        }
+    });
+
+    window.toggleAuth = function (mode) {
+        const loginForm = document.getElementById('login-form');
+        const regForm = document.getElementById('register-form');
+        const tabLogin = document.getElementById('tab-login');
+        const tabReg = document.getElementById('tab-register');
+        document.getElementById('auth-msg').innerText = "";
+
+        if (mode === 'login') {
+            loginForm.classList.remove('hidden');
+            regForm.classList.add('hidden');
+            tabLogin.className = "flex-1 py-2 rounded-lg font-bold text-sm bg-indigo-600 shadow-lg text-white transition-all";
+            tabReg.className = "flex-1 py-2 rounded-lg font-medium text-sm text-slate-400 hover:text-white transition-all";
+        } else {
+            loginForm.classList.add('hidden');
+            regForm.classList.remove('hidden');
+            tabReg.className = "flex-1 py-2 rounded-lg font-bold text-sm bg-indigo-600 shadow-lg text-white transition-all";
+            tabLogin.className = "flex-1 py-2 rounded-lg font-medium text-sm text-slate-400 hover:text-white transition-all";
+        }
+    }
+
+    window.handleLogin = async function (e) {
+        e.preventDefault();
+        const username = document.getElementById('login-username').value;
+        const password = document.getElementById('login-password').value;
+        const msgEl = document.getElementById('auth-msg');
+        msgEl.innerText = "로그인 중...";
+
+        const formData = new FormData();
+        formData.append('username', username);
+        formData.append('password', password);
+
+        try {
+            const res = await fetch(`${API_URL}/token`, { method: 'POST', body: formData });
+            if (!res.ok) throw new Error("로그인 실패. 아이디 또는 비밀번호를 확인하세요.");
+            const data = await res.json();
+            localStorage.setItem("access_token", data.access_token);
+            localStorage.setItem("username", username);
+            token = data.access_token;
+            msgEl.innerText = "";
+            showDashboard();
+        } catch (err) {
+            msgEl.className = "text-center text-sm text-rose-400 mt-5 font-medium relative z-10 h-5";
+            msgEl.innerText = err.message;
+        }
+    }
+
+    window.handleRegister = async function (e) {
+        e.preventDefault();
+        const username = document.getElementById('reg-username').value;
+        const password = document.getElementById('reg-password').value;
+        const msgEl = document.getElementById('auth-msg');
+        msgEl.innerText = "가입 처리 중...";
+
+        try {
+            const res = await fetch(`${API_URL}/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            if (!res.ok) throw new Error("가입 실패. (이미 존재하는 아이디일 수 있습니다)");
+            msgEl.className = "text-center text-sm text-emerald-400 mt-5 font-medium relative z-10 h-5";
+            msgEl.innerText = "가입 성공! 로그인 탭에서 로그인 해주세요.";
+            alert("회원가입이 완료되었습니다!\n이제 로그인 탭에서 로그인해 주세요.");
+            setTimeout(() => toggleAuth('login'), 2000);
+        } catch (err) {
+            msgEl.className = "text-center text-sm text-rose-400 mt-5 font-medium relative z-10 h-5";
+            msgEl.innerText = err.message;
+        }
+    }
+
+    window.showDashboard = function () {
+        document.getElementById('auth-section').classList.add('hidden');
+        document.getElementById('dashboard-section').classList.remove('hidden');
+        document.getElementById('user-display').innerText = localStorage.getItem("username") || "사용자";
+        fetchPortfolio();
+    }
+
+    window.logout = function () {
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("username");
+        location.reload();
+    }
+
+    let portfolio = [];
+
+    // Dashboard Internal Functions
+    async function fetchPortfolio() {
+        try {
+            const token = localStorage.getItem('access_token');
+            const res = await fetch('/api/portfolio', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                portfolio = await res.json();
+                renderDashboard();
+            } else {
+                console.log("Not logged in or token expired.");
             }
+        } catch (error) {
+            console.error("Error fetching portfolio:", error);
         }
+    }
 
-        const form = document.getElementById('portfolio-form');
-        form.addEventListener('submit', async function (e) {
-            e.preventDefault();
-            const name = document.getElementById('stock_name').value;
-            const target_price = parseFloat(document.getElementById('buy_price').value);
-            const qty = parseInt(document.getElementById('quantity').value) || 1; // Used locally for now
+    const form = document.getElementById('portfolio-form');
+    form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const name = document.getElementById('stock_name').value;
+        const target_price = parseFloat(document.getElementById('buy_price').value);
+        const qty = parseInt(document.getElementById('quantity').value) || 1; // Used locally for now
 
-            try {
-                const token = localStorage.getItem('access_token');
-                if (!token) {
-                    alert("로그인이 필요한 서비스입니다.");
-                    openAuthModal();
-                    return;
-                }
-
-                const res = await fetch('/api/portfolio', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ ticker: name, target_price: target_price, qty: qty })
-                });
-
-                if (res.ok) {
-                    await fetchPortfolio();
-                    form.reset();
-                }
-            } catch (error) {
-                console.error("Error saving portfolio:", error);
-            }
-        });
-
-        window.deleteItem = async function (id) {
-            try {
-                const token = localStorage.getItem('access_token');
-                const res = await fetch(`/api/portfolio/${id}`, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (res.ok) {
-                    portfolio = portfolio.filter(p => p.id !== id);
-                    renderDashboard();
-                }
-            } catch (error) {
-                console.error("Error deleting portfolio:", error);
-            }
-        }
-
-        window.saveBotConfig = function () {
-            const botToken = document.getElementById('bot_token').value;
-            const chatId = document.getElementById('chat_id').value;
-            const watchList = document.getElementById('watch_list').value;
-            localStorage.setItem('trend_bot', JSON.stringify({ token: botToken, chat: chatId, watch: watchList }));
-            alert("백그라운드 알림 봇 설정이 브라우저에 저장되었습니다.");
-        }
-
-        // Load bot config if exists
-        const savedBot = JSON.parse(localStorage.getItem('trend_bot'));
-        if (savedBot) {
-            document.getElementById('bot_token').value = savedBot.token || "";
-            document.getElementById('chat_id').value = savedBot.chat || "";
-            document.getElementById('watch_list').value = savedBot.watch || "";
-        }
-
-        function renderDashboard() {
-            const tbody = document.getElementById('portfolio-tbody');
-            tbody.innerHTML = "";
-            let totalInvest = 0;
-
-            const labels = [];
-            const values = [];
-
-            if (portfolio.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="py-10 text-center text-slate-500 font-medium">등록된 종목이 없습니다.</td></tr>`;
-                document.getElementById('total-invest').innerText = "0 원";
-                Plotly.newPlot('plotly-pie', [{ values: [1], labels: ['비어있음'], type: 'pie', marker: { colors: ['#1e293b'] } }], { margin: { t: 0, b: 0, l: 0, r: 0 }, paper_bgcolor: 'transparent', plot_bgcolor: 'transparent' });
+        try {
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                alert("로그인이 필요한 서비스입니다.");
+                openAuthModal();
                 return;
             }
 
-            portfolio.forEach(p => {
-                const price = p.price || 0;
-                const qty = p.qty || 1;
-                const investAmount = price * qty;
-                totalInvest += investAmount;
-
-                labels.push(p.name);
-                values.push(investAmount);
-
-                const tr = document.createElement('tr');
-                tr.className = "bg-transparent hover:bg-indigo-500/10 transition-colors duration-200 group";
-                tr.innerHTML = `
-                    <td class="px-5 py-4 font-bold text-slate-200">${p.name}</td>
-                    <td class="px-5 py-4 text-right font-medium text-slate-300">${price.toLocaleString()}</td>
-                    <td class="px-5 py-4 text-right font-medium text-slate-300">${qty.toLocaleString()}</td>
-                    <td class="px-5 py-4 text-right font-bold text-indigo-300 bg-indigo-500/5">${investAmount.toLocaleString()}</td>
-                    <td class="px-5 py-4 text-center" id="ai-diag-${p.id}">
-                        <div class="animate-pulse flex justify-center"><div class="h-5 bg-slate-700 rounded pl-4 w-24"></div></div>
-                    </td>
-                    <td class="px-5 py-4 text-center">
-                        <button onclick="deleteItem(${p.id})" class="text-slate-500 hover:text-rose-400 bg-slate-800 hover:bg-rose-500/10 p-2 rounded-lg transition-all opacity-0 group-hover:opacity-100">
-                            <svg class="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
+            const res = await fetch('/api/portfolio', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ ticker: name, target_price: target_price, qty: qty })
             });
 
-            document.getElementById('total-invest').innerText = totalInvest.toLocaleString() + " 원";
+            if (res.ok) {
+                await fetchPortfolio();
+                form.reset();
+            }
+        } catch (error) {
+            console.error("Error saving portfolio:", error);
+        }
+    });
 
-            // Fetch AI diagnostics for each portfolio item asynchronously
-            portfolio.forEach(p => {
-                fetch(`/api/stock_seasonality/${encodeURIComponent(p.name)}`)
-                    .then(res => res.json())
-                    .then(data => {
-                        const diagCell = document.getElementById(`ai-diag-${p.id}`);
-                        if (data.status === 'success' && data.data) {
-                            const currentMonth = new Date().getMonth() + 1;
-                            const monthData = data.data.find(d => d.Month === currentMonth);
-                            if (monthData) {
-                                let badgeHtml = '';
-                                if (monthData.WinRate >= 60) {
-                                    badgeHtml = `<span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30 shadow-[0_0_10px_rgba(244,63,94,0.3)]">🔥 ${currentMonth}월 승률 ${monthData.WinRate}%</span>`;
-                                } else if (monthData.WinRate <= 40) {
-                                    badgeHtml = `<span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 shadow-[0_0_10px_rgba(99,102,241,0.3)]">⚠️ ${currentMonth}월 승률 ${monthData.WinRate}%</span>`;
-                                } else {
-                                    badgeHtml = `<span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-slate-800 text-slate-400 border border-slate-700">${currentMonth}월 승률 ${monthData.WinRate}%</span>`;
-                                }
-                                diagCell.innerHTML = badgeHtml;
-                            } else {
-                                diagCell.innerHTML = '<span class="text-xs text-slate-500">데이터 없음</span>';
-                            }
-                        } else {
-                            diagCell.innerHTML = '<span class="text-xs text-red-500">조회 실패</span>';
-                        }
-                    })
-                    .catch(e => {
-                        const diagCell = document.getElementById(`ai-diag-${p.id}`);
-                        if (diagCell) diagCell.innerHTML = '<span class="text-xs text-red-500">오류</span>';
-                    });
+    window.deleteItem = async function (id) {
+        try {
+            const token = localStorage.getItem('access_token');
+            const res = await fetch(`/api/portfolio/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
             });
+            if (res.ok) {
+                portfolio = portfolio.filter(p => p.id !== id);
+                renderDashboard();
+            }
+        } catch (error) {
+            console.error("Error deleting portfolio:", error);
+        }
+    }
 
-            const pieData = [{
-                values: values,
-                labels: labels,
-                type: 'pie',
-                hole: .4,
-                textposition: 'inside',
-                textinfo: 'percent+label'
-            }];
+    window.saveBotConfig = function () {
+        const botToken = document.getElementById('bot_token').value;
+        const chatId = document.getElementById('chat_id').value;
+        const watchList = document.getElementById('watch_list').value;
+        localStorage.setItem('trend_bot', JSON.stringify({ token: botToken, chat: chatId, watch: watchList }));
+        alert("백그라운드 알림 봇 설정이 브라우저에 저장되었습니다.");
+    }
 
-            const layout = {
-                margin: { t: 20, b: 20, l: 20, r: 20 },
-                showlegend: true,
-                paper_bgcolor: 'rgba(0,0,0,0)',
-                plot_bgcolor: 'rgba(0,0,0,0)',
-                font: { color: '#cbd5e1' },
-                marker: {
-                    line: { color: '#0B1021', width: 2 }
-                }
-            };
+    // Load bot config if exists
+    const savedBot = JSON.parse(localStorage.getItem('trend_bot'));
+    if (savedBot) {
+        document.getElementById('bot_token').value = savedBot.token || "";
+        document.getElementById('chat_id').value = savedBot.chat || "";
+        document.getElementById('watch_list').value = savedBot.watch || "";
+    }
 
-            Plotly.newPlot('plotly-pie', pieData, layout, { displayModeBar: false, responsive: true });
+    function renderDashboard() {
+        const tbody = document.getElementById('portfolio-tbody');
+        tbody.innerHTML = "";
+        let totalInvest = 0;
+        let totalEval = 0;
+
+        const labels = [];
+        const values = [];
+
+        if (portfolio.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="8" class="py-10 text-center text-slate-500 font-medium">등록된 종목이 없습니다.</td></tr>`;
+            document.getElementById('total-invest').innerText = "0 원";
+            document.getElementById('total-eval').innerHTML = `0 원 <span id="total-return" class="text-sm font-medium text-slate-400">0.00%</span>`;
+            Plotly.newPlot('plotly-pie', [{ values: [1], labels: ['비어있음'], type: 'pie', marker: { colors: ['#1e293b'] } }], { margin: { t: 0, b: 0, l: 0, r: 0 }, paper_bgcolor: 'transparent', plot_bgcolor: 'transparent' });
+            return;
         }
 
-        // Initialize Fetch
-        fetchPortfolio();
-    });
+        portfolio.forEach(p => {
+            const price = p.price || 0;
+            const qty = p.qty || 1;
+            const currentPrice = p.current_price || 0;
+
+            const investAmount = price * qty;
+            const evalAmount = currentPrice > 0 ? currentPrice * qty : investAmount;
+
+            totalInvest += investAmount;
+            totalEval += evalAmount;
+
+            let returnRate = 0;
+            let returnClass = "text-slate-400";
+            let returnSign = "";
+
+            if (price > 0 && currentPrice > 0) {
+                returnRate = ((currentPrice - price) / price) * 100;
+                if (returnRate > 0) {
+                    returnClass = "text-rose-400 font-bold bg-rose-500/10 px-2.5 py-1 rounded inline-block mt-1";
+                    returnSign = "+";
+                } else if (returnRate < 0) {
+                    returnClass = "text-indigo-400 font-bold bg-indigo-500/10 px-2.5 py-1 rounded inline-block mt-1";
+                    returnSign = "";
+                } else {
+                    returnClass = "text-slate-400 font-bold bg-slate-700/50 px-2.5 py-1 rounded inline-block mt-1";
+                }
+            }
+
+            labels.push(p.name);
+            values.push(evalAmount > 0 ? evalAmount : investAmount);
+
+            const tr = document.createElement('tr');
+            tr.className = "bg-transparent hover:bg-slate-800/40 transition-colors duration-200 group text-sm";
+            tr.innerHTML = `
+                <td class="px-4 py-4 font-bold text-slate-200">${p.name}</td>
+                <td class="px-4 py-4 text-right font-medium text-slate-400">${price.toLocaleString()}</td>
+                <td class="px-4 py-4 text-right font-bold text-white tracking-wide">${currentPrice > 0 ? currentPrice.toLocaleString() : '-'}</td>
+                <td class="px-4 py-4 text-right font-medium text-slate-400">${qty.toLocaleString()}</td>
+                <td class="px-4 py-4 text-right font-bold text-indigo-300 bg-indigo-500/5">${investAmount.toLocaleString()}</td>
+                <td class="px-4 py-4 text-right text-slate-100">
+                    <div class="font-bold tracking-wide">${evalAmount > 0 ? evalAmount.toLocaleString() : '-'}</div>
+                    <div class="${returnClass}">${returnSign}${returnRate.toFixed(2)}%</div>
+                </td>
+                <td class="px-4 py-4 text-center" id="ai-diag-${p.id}">
+                    <div class="animate-pulse flex justify-center"><div class="h-5 bg-slate-700 rounded pl-4 w-24"></div></div>
+                </td>
+                <td class="px-4 py-4 text-center">
+                    <button onclick="deleteItem(${p.id})" class="text-slate-500 hover:text-rose-400 bg-slate-800 hover:bg-rose-500/10 p-2 rounded-lg transition-all opacity-0 group-hover:opacity-100">
+                        <svg class="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        document.getElementById('total-invest').innerText = totalInvest.toLocaleString() + " 원";
+
+        let totalReturnRate = 0;
+        let totalReturnClass = "text-slate-400";
+        let totalReturnSign = "";
+        if (totalInvest > 0) {
+            totalReturnRate = ((totalEval - totalInvest) / totalInvest) * 100;
+            if (totalReturnRate > 0) {
+                totalReturnClass = "text-rose-400 tracking-wider";
+                totalReturnSign = "+";
+            } else if (totalReturnRate < 0) {
+                totalReturnClass = "text-indigo-400 tracking-wider";
+            }
+        }
+        document.getElementById('total-eval').innerHTML = `
+            ${totalEval.toLocaleString()} 원 
+            <span id="total-return" class="text-sm font-bold ${totalReturnClass} ml-2">${totalReturnSign}${totalReturnRate.toFixed(2)}%</span>
+        `;
+
+        // Fetch AI diagnostics for each portfolio item asynchronously
+        portfolio.forEach(p => {
+            fetch(`/api/stock_seasonality/${encodeURIComponent(p.name)}`)
+                .then(res => res.json())
+                .then(data => {
+                    const diagCell = document.getElementById(`ai-diag-${p.id}`);
+                    if (data.status === 'success' && data.data) {
+                        const currentMonth = new Date().getMonth() + 1;
+                        const monthData = data.data.find(d => d.Month === currentMonth);
+                        if (monthData) {
+                            let badgeHtml = '';
+                            if (monthData.WinRate >= 60) {
+                                badgeHtml = `<span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30 shadow-[0_0_10px_rgba(244,63,94,0.3)]">🔥 ${currentMonth}월 승률 ${monthData.WinRate}%</span>`;
+                            } else if (monthData.WinRate <= 40) {
+                                badgeHtml = `<span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 shadow-[0_0_10px_rgba(99,102,241,0.3)]">⚠️ ${currentMonth}월 승률 ${monthData.WinRate}%</span>`;
+                            } else {
+                                badgeHtml = `<span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-slate-800 text-slate-400 border border-slate-700">${currentMonth}월 승률 ${monthData.WinRate}%</span>`;
+                            }
+                            diagCell.innerHTML = badgeHtml;
+                        } else {
+                            diagCell.innerHTML = '<span class="text-xs text-slate-500">데이터 없음</span>';
+                        }
+                    } else {
+                        diagCell.innerHTML = '<span class="text-xs text-red-500">조회 실패</span>';
+                    }
+                })
+                .catch(e => {
+                    const diagCell = document.getElementById(`ai - diag - ${p.id}`);
+                    if (diagCell) diagCell.innerHTML = '<span class="text-xs text-red-500">오류</span>';
+                });
+        });
+
+        const pieData = [{
+            values: values,
+            labels: labels,
+            type: 'pie',
+            hole: .4,
+            textposition: 'inside',
+            textinfo: 'percent+label'
+        }];
+
+        const layout = {
+            margin: { t: 20, b: 20, l: 20, r: 20 },
+            showlegend: true,
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            plot_bgcolor: 'rgba(0,0,0,0)',
+            font: { color: '#cbd5e1' },
+            marker: {
+                line: { color: '#0B1021', width: 2 }
+            }
+        };
+
+        Plotly.newPlot('plotly-pie', pieData, layout, { displayModeBar: false, responsive: true });
+    }
+
+    // Initialize Fetch
+    fetchPortfolio();
 </script>
 {% endblock %}

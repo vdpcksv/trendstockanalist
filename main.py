@@ -640,11 +640,35 @@ def add_portfolio_item(item: schemas.PortfolioCreate, db: Session = Depends(get_
     db.refresh(db_item)
     return db_item
 
+def get_current_price(stock_name: str) -> float:
+    try:
+        ticker = resolve_ticker(stock_name)
+        # Fetch data for the last 7 days to ensure we get the latest trading day
+        start_date = (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d')
+        df = fdr.DataReader(ticker, start=start_date)
+        if not df.empty:
+            return float(df.iloc[-1]['Close'])
+    except Exception as e:
+        print(f"Error fetching current price for {stock_name}: {e}")
+    return 0.0
+
 @app.get("/api/portfolio")
 def get_portfolio_items(db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
     items = db.query(models.Portfolio).filter(models.Portfolio.user_id == current_user.id).all()
-    # Mocking qty for now in response to match frontend expectations
-    return [{"id": i.id, "name": i.ticker, "price": i.target_price or 0, "qty": 1} for i in items]
+    
+    result = []
+    for i in items:
+        # DB schema might not have qty yet, default to 1 as per previous mock
+        qty = 1
+        current_price = get_current_price(i.ticker)
+        result.append({
+            "id": i.id, 
+            "name": i.ticker, 
+            "price": i.target_price or 0, # This is the buy price
+            "qty": qty,
+            "current_price": current_price
+        })
+    return result
 
 @app.delete("/api/portfolio/{item_id}")
 def delete_portfolio_item(item_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):

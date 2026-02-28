@@ -37,7 +37,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
+        detail="인증 정보가 유효하지 않습니다.",
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
@@ -56,5 +56,5 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
 # Role-based dependency (Paywall)
 def get_current_premium_user(current_user: models.User = Depends(get_current_user)):
     if current_user.membership != "premium":
-        raise HTTPException(status_code=403, detail="Premium membership required")
+        raise HTTPException(status_code=403, detail="프리미엄 회원 전용 기능입니다.")
     return current_user

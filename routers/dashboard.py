@@ -121,12 +121,12 @@ def get_theme_top_stocks(theme_url):
 async def get_seasonality_data():
     """대표 섹터별 최근 10년간(또는 상장 이후)의 월별 승률 데이터를 반환합니다."""
     sectors = {
-        "반도체 (삼성전자)": "005930",
-        "2차전지 (삼성SDI)": "006400",
-        "바이오 (셀트리온)": "068270",
-        "금융 (KB금융)": "105560",
-        "자동차 (현대차)": "005380",
-        "게임/엔터 (엔씨소프트)": "036570"
+        "반도체": "005930",
+        "2차전지": "006400",
+        "바이오": "068270",
+        "금융": "105560",
+        "자동차": "005380",
+        "게임/엔터": "036570"
     }
 
     results = {}
@@ -155,8 +155,8 @@ async def get_seasonality_data():
                 res[name] = month_stats
             return res
         
-        import asyncio
-        results = await asyncio.to_thread(fetch_fdr)
+        import anyio
+        results = await anyio.to_thread.run_sync(fetch_fdr)
 
     except Exception as e:
         logger.error(f"Seasonality calculation failed: {e}")

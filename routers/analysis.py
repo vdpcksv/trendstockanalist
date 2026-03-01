@@ -176,8 +176,8 @@ async def get_stock_seasonality(ticker: str):
                     continue
                 total_years = len(month_data)
                 win_years = len(month_data[month_data['Return'] > 0])
-                win_rate = (win_years / total_years) * 100
-                avg_return = month_data['Return'].mean()
+                win_rate = float((win_years / total_years) * 100)
+                avg_return = float(month_data['Return'].mean() if not pd.isna(month_data['Return'].mean()) else 0.0)
                 seasonality.append({"Month": month, "WinRate": round(win_rate, 1), "AvgReturn": round(avg_return, 2)})
             return {"status": "success", "data": seasonality}
         

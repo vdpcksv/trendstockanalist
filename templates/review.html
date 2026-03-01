@@ -302,14 +302,41 @@
 
         <!-- Upgrade CTA Overlay (Shown for FREE users) -->
         <div id="llm-upgrade-cta"
-            class="absolute inset-0 z-20 flex flex-col items-center justify-center bg-[#0B1021]/60 backdrop-blur-[6px]">
-            <div class="text-3xl mb-2">🔒</div>
-            <h4 class="text-white font-bold mb-1">PRO 멤버십 전용 기능입니다</h4>
-            <p class="text-slate-300 text-xs mb-3">AI가 요약한 핵심 센티멘탈을 확인하세요</p>
-            <button onclick="window.location.href='/payment'"
-                class="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-400 hover:to-purple-400 text-white font-bold py-1.5 px-4 rounded-full text-sm shadow-lg transition-transform hover:scale-105">
-                PRO 업그레이드
-            </button>
+            class="absolute inset-0 z-20 flex flex-col md:flex-row items-center justify-center bg-[#0B1021]/80 backdrop-blur-[6px] p-6 sm:p-10 gap-8">
+            <div class="text-center md:text-left flex-1 max-w-md">
+                <div
+                    class="inline-block bg-indigo-500/20 text-indigo-300 font-bold px-3 py-1 rounded-full text-[11px] mb-4 border border-indigo-500/30 tracking-wider">
+                    AlphaFinder PRO</div>
+                <h4 class="text-xl sm:text-2xl font-extrabold text-white mb-2">프리미엄 AI 분석 잠금 해제</h4>
+                <p class="text-slate-300 text-sm sm:text-base mb-6 leading-relaxed">상위 1% 투자자들의 비밀 무기. 월 9,900원으로 기관 수준의
+                    퀀트 전략을 누리세요.</p>
+
+                <ul class="text-sm text-slate-300 space-y-3 mb-6 md:mb-0 hidden sm:block">
+                    <li class="flex items-center gap-3">
+                        <div class="text-emerald-400 bg-emerald-500/10 p-1 rounded-md">✓</div> <span
+                            class="font-medium">Gemini AI 뉴스 심층 판독기 무제한 열람</span>
+                    </li>
+                    <li class="flex items-center gap-3">
+                        <div class="text-emerald-400 bg-emerald-500/10 p-1 rounded-md">✓</div> <span
+                            class="font-medium">텔레그램 목표가 실시간 알림 (최대 100종목)</span>
+                    </li>
+                    <li class="flex items-center gap-3">
+                        <div class="text-emerald-400 bg-emerald-500/10 p-1 rounded-md">✓</div> <span
+                            class="font-medium">모든 페이지 광고 영구 제거 쾌적한 환경</span>
+                    </li>
+                </ul>
+            </div>
+            <div
+                class="flex flex-col items-center justify-center bg-slate-800/80 p-6 rounded-2xl border border-slate-700 w-full md:w-auto shadow-2xl">
+                <div class="text-4xl mb-4 animate-bounce" style="animation-duration: 2s;">👑</div>
+                <button onclick="window.location.href='/payment'"
+                    class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold py-3.5 px-8 rounded-xl shadow-[0_0_20px_rgba(79,70,229,0.4)] transition-all transform hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(79,70,229,0.6)] flex items-center justify-center gap-2 whitespace-nowrap">
+                    <span>1개월 PRO 업그레이드</span>
+                    <svg class="w-4 h-4 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </button>
+            </div>
         </div>
     </div>
     {% endif %}

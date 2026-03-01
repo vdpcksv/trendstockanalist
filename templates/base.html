@@ -225,12 +225,16 @@
                 <!-- Right: Auth + Mobile Menu Button -->
                 <div class="flex items-center space-x-3">
                     <span id="user-greeting" class="text-sm font-semibold text-indigo-300 hidden"></span>
-                    <button id="btn-login" onclick="openAuthModal()"
+                    <button id="btn-login" onclick="openAuthModal(true)"
                         class="bg-indigo-600/90 backdrop-blur-sm border border-indigo-500/50 text-white px-5 py-2 rounded-full font-bold text-sm hover:bg-indigo-500 hover:shadow-[0_0_15px_rgba(99,102,241,0.5)] transition-all duration-300">
                         로그인
                     </button>
+                    <button id="btn-register" onclick="openAuthModal(false)"
+                        class="bg-slate-700/80 backdrop-blur-sm border border-slate-600 text-white px-5 py-2 rounded-full font-bold text-sm hover:bg-slate-600 hover:shadow-[0_0_15px_rgba(100,116,139,0.5)] transition-all duration-300 ml-2">
+                        회원가입
+                    </button>
                     <button id="btn-logout" onclick="logout()"
-                        class="hidden bg-slate-800/80 backdrop-blur-sm text-slate-300 px-5 py-2 rounded-full font-bold text-sm hover:text-rose-400 hover:bg-rose-500/10 border border-slate-700 hover:border-rose-500/30 transition-all duration-300">
+                        class="hidden bg-slate-800/80 backdrop-blur-sm text-slate-300 px-5 py-2 rounded-full font-bold text-sm hover:text-rose-400 hover:bg-rose-500/10 border border-slate-700 hover:border-rose-500/30 transition-all duration-300 ml-2">
                         로그아웃
                     </button>
 
@@ -341,6 +345,7 @@
 
             if (token && username) {
                 document.getElementById('btn-login').classList.add('hidden');
+                document.getElementById('btn-register').classList.add('hidden');
                 document.getElementById('btn-logout').classList.remove('hidden');
                 const pTag = document.getElementById('user-greeting');
                 pTag.textContent = `${username}님`;
@@ -350,6 +355,7 @@
                 if (mobilePortfolio) mobilePortfolio.classList.remove('hidden');
             } else {
                 document.getElementById('btn-login').classList.remove('hidden');
+                document.getElementById('btn-register').classList.remove('hidden');
                 document.getElementById('btn-logout').classList.add('hidden');
                 document.getElementById('user-greeting').classList.add('hidden');
                 document.getElementById('nav-portfolio').classList.add('hidden');
@@ -358,7 +364,11 @@
             }
         }
 
-        function openAuthModal() {
+        function openAuthModal(isLogin = true) {
+            isLoginMode = isLogin;
+            document.getElementById('auth-title').innerText = isLoginMode ? '로그인' : '회원가입';
+            document.getElementById('auth-submitBtn').innerText = isLoginMode ? '로그인' : '가입하기';
+            document.getElementById('auth-toggleBtn').innerText = isLoginMode ? '계정이 없으신가요? 회원가입' : '이미 계정이 있으신가요? 로그인';
             document.getElementById('auth-modal').classList.remove('hidden');
         }
 

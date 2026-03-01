@@ -201,12 +201,12 @@ def test_monetization():
     test("Downgrade to basic", r.status_code == 200 and r.json()['membership'] == 'basic')
 
     # Payment - empty rejected
-    r = client.post('/api/payment/confirm', json={})
+    r = client.post('/api/payment/confirm', json={}, headers=headers)
     test("Payment empty = 400", r.status_code == 400)
 
-    # Payment - valid
-    r = client.post('/api/payment/confirm', json={'paymentKey': 'pk_test', 'orderId': 'ORD-1', 'amount': 9900})
-    test("Payment valid = 200", r.status_code == 200)
+    # Payment - invalid key to Toss (will fail at Toss server)
+    r = client.post('/api/payment/confirm', json={'paymentKey': 'pk_test', 'orderId': 'ORD-1', 'amount': 9900}, headers=headers)
+    test("Payment valid auth but fake key = 400", r.status_code == 400)
 
     # OG Image
     r = client.get('/api/og-image/005930')

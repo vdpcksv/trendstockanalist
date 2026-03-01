@@ -64,22 +64,40 @@ def get_stock_fundamentals(ticker: str):
         return None
 
 def get_news_sentiment(ticker: str):
-    url = f"https://m.stock.naver.com/api/news/stock/{ticker}?pageSize=15"
+    ticker_name = ""
+    # ticker가 숫자인지 확인하여 종목명을 가져오는 로직 (생략 시 그냥 ticker 사용)
+    try:
+        df = get_krx_stock_listing()
+        matches = df[df['Code'] == ticker]
+        if not matches.empty:
+            ticker_name = matches.iloc[0]['Name']
+    except:
+        pass
+    
+    search_query = f"{ticker_name} 주식" if ticker_name else f"{ticker} 주식"
+    import urllib.parse
+    search_query_encoded = urllib.parse.quote(search_query)
+    
+    url = f"https://news.google.com/rss/search?q={search_query_encoded}&hl=ko&gl=KR&ceid=KR:ko"
+    
     pos_keywords = ['상승', '급등', '돌파', '흑자', '수주', '호조', 'MOU', '강세', '체결', '최대', '신고가', '성장', '기대', '수혜', '반등']
     neg_keywords = ['하락', '급락', '적자', '우려', '수사', '악재', '약세', '신저가', '미달', '쇼크', '매도', '불안', '위기', '리스크']
     try:
         res = requests.get(url, headers=HEADERS, timeout=5)
         res.raise_for_status()
-        data = json.loads(res.content.decode('utf-8', 'ignore'))
+        
+        # Parse XML
+        soup = BeautifulSoup(res.content, 'xml')
+        items = soup.find_all('item')
+        
         headlines = []
-        for group in data:
-            for item in group.get('items', []):
-                title = item.get('title', '')
-                if title:
-                    title = title.replace('&quot;', '"').replace('&lt;', '<').replace('&gt;', '>')
-                    headlines.append(title)
-                    if len(headlines) >= 15: break
-            if len(headlines) >= 15: break
+        for item in items[:15]:
+            title = item.title.text if item.title else ''
+            if title:
+                if " - " in title:
+                    title = " - ".join(title.split(" - ")[:-1])
+                headlines.append(title)
+                
         pos_count = neg_count = neutral_count = 0
         analyzed_news = []
         for title in headlines:

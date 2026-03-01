@@ -17,8 +17,14 @@ def create_alert(alert: schemas.AlertCreate, db: Session = Depends(get_db), curr
         models.Alert.user_id == current_user.id,
         models.Alert.is_active == 1
     ).count()
-    if active_count >= 10:
-        raise HTTPException(status_code=400, detail="활성 알림은 최대 10개까지 설정할 수 있습니다.")
+    
+    max_alerts = 100 if current_user.membership == "premium" else 1
+    
+    if active_count >= max_alerts:
+        raise HTTPException(
+            status_code=403, 
+            detail=f"무료 회원은 알림을 1개까지만 설정할 수 있습니다. (현재 {active_count}개 설정됨)\n우측 상단 '더보기' 메뉴에서 PRO 플랜으로 업그레이드하세요!"
+        )
     
     resolved_ticker = resolve_ticker(alert.ticker)
     

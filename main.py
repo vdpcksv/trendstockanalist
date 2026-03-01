@@ -37,8 +37,26 @@ def fetch_and_cache_data():
         logger.info("Fetching background data...")
         flow_data = get_money_flow_data()
         theme_data = get_theme_list()
+        
+        # Prefetch top stocks for each theme to prevent on-demand scraping
+        theme_stocks = {}
+        if not theme_data.empty:
+            import time
+            from routers.dashboard import get_theme_top_stocks
+            for index, row in theme_data.iterrows():
+                try:
+                    theme_name = row['테마명']
+                    theme_link = row['링크']
+                    stocks_df = get_theme_top_stocks(theme_link)
+                    if not stocks_df.empty:
+                        theme_stocks[theme_name] = stocks_df.to_dict('records')
+                    time.sleep(0.5) # Prevent aggressive scraping
+                except Exception as loop_e:
+                    logger.error(f"Error fetching top stocks for theme {theme_name}: {loop_e}")
+
         cache_data["money_flow"] = flow_data
         cache_data["theme_list"] = theme_data
+        cache_data["theme_stocks"] = theme_stocks
         logger.info("Background data updated successfully.")
     except Exception as e:
         logger.error(f"Background fetch error: {e}")

@@ -232,9 +232,14 @@ async def read_themes(request: Request, theme: str = None):
             selected_info = selected_row.iloc[0]
             context["selected_theme_data"] = selected_info.to_dict()
             
-            df_stocks = get_theme_top_stocks(selected_info['링크'])
-            if not df_stocks.empty:
-                context["stocks_data"] = df_stocks.to_dict('records')
+            cached_stocks = cache_data.get("theme_stocks", {}).get(selected_info['테마명'])
+            if cached_stocks:
+                context["stocks_data"] = cached_stocks
+            else:
+                # 웬만하면 실행되지 않으나, 캐시 누락 시 On-Demand Fallback
+                df_stocks = get_theme_top_stocks(selected_info['링크'])
+                if not df_stocks.empty:
+                    context["stocks_data"] = df_stocks.to_dict('records')
                 
             try:
                 rate_val = float(selected_info['등락률(%)'].replace('+', ''))

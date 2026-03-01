@@ -10,6 +10,7 @@ class User(Base):
     username = Column(String, unique=True, index=True)
     hashed_password = Column(String)
     membership = Column(String, default="basic") # "basic" or "premium"
+    premium_expires_at = Column(DateTime, nullable=True) # Subscription Expiry
     total_return = Column(Float, default=0.0) # Phase 2: Mock investment cache
     created_at = Column(DateTime, default=datetime.utcnow)
 

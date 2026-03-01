@@ -17,13 +17,29 @@ async def read_portfolio(request: Request):
     context = {"error": None}
     return templates.TemplateResponse(request=request, name="portfolio.html", context=context)
 
-def get_current_price(stock_name: str) -> float:
+from infra_module import KisApiHandler
+import asyncio
+
+kis_api = KisApiHandler()
+
+async def get_current_price(stock_name: str) -> float:
     try:
         ticker = resolve_ticker(stock_name)
-        start_date = (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d')
-        df = fdr.DataReader(ticker, start=start_date)
-        if not df.empty:
-            return float(df.iloc[-1]['Close'])
+        # Try KIS API first
+        try:
+            price = await kis_api.get_current_price(ticker)
+            return price
+        except Exception as api_err:
+            print(f"KIS API Fallback trigger for {stock_name}: {api_err}")
+            # Fallback to FDR
+            def fetch_fdr():
+                start_date = (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d')
+                df = fdr.DataReader(ticker, start=start_date)
+                if not df.empty:
+                    return float(df.iloc[-1]['Close'])
+                return 0.0
+            price = await asyncio.to_thread(fetch_fdr)
+            return price
     except Exception as e:
         print(f"Error fetching current price for {stock_name}: {e}")
     return 0.0
@@ -63,12 +79,20 @@ def add_portfolio_item(item: schemas.PortfolioCreate, db: Session = Depends(get_
         return db_item
 
 @router.get("/api/portfolio")
-def get_portfolio_items(db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
+async def get_portfolio_items(db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
     items = db.query(models.Portfolio).filter(models.Portfolio.user_id == current_user.id).all()
     result = []
+    
+    # Run price fetches concurrently for speed
+    tasks = []
     for i in items:
+        tasks.append(get_current_price(i.ticker))
+        
+    prices = await asyncio.gather(*tasks) if items else []
+    
+    for idx, i in enumerate(items):
         qty = i.qty if hasattr(i, 'qty') and i.qty is not None else 1
-        current_price = get_current_price(i.ticker)
+        current_price = prices[idx] if idx < len(prices) else 0.0
         result.append({
             "id": i.id, 
             "name": i.ticker, 

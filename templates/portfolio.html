@@ -111,12 +111,25 @@
             <!-- Removed Dummy Bot Config Form to enforce Cloud Sync priority -->
 
             <!-- Dashboard Area -->
-            <div class="lg:col-span-2 space-y-8">
-                <div class="glass-card rounded-2xl p-6 md:p-8 hover-lift">
-                    <h2
-                        class="text-xl font-bold mb-6 text-white border-b border-slate-700/50 pb-4 flex items-center gap-2">
-                        <span class="text-emerald-400">💼</span> 내 자산 보유 요약
-                    </h2>
+            <div class="lg:col-span-2 space-y-8" id="capture-area">
+                <!-- Watermark (Hidden by default, shown during capture) -->
+                <div id="capture-watermark"
+                    class="hidden absolute bottom-4 right-4 text-xs font-bold text-white/50 z-50 mix-blend-overlay">
+                    Powered by AlphaFinder (alphafinder.kr/portfolio)
+                </div>
+
+                <div class="glass-card rounded-2xl p-6 md:p-8 hover-lift relative bg-[#0B1021]">
+                    <div
+                        class="border-b border-slate-700/50 pb-4 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                            <span class="text-emerald-400">💼</span> 내 자산 보유 요약
+                        </h2>
+                        <!-- P&L Capture Button -->
+                        <button onclick="downloadPnLImage()"
+                            class="flex items-center gap-2 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-400 hover:to-rose-400 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-lg transition-all hover:-translate-y-1">
+                            <span>📸 수익 인증하기</span>
+                        </button>
+                    </div>
 
                     <div class="grid grid-cols-1 mb-8">
                         <div
@@ -147,7 +160,7 @@
                     </div>
 
                     <div class="overflow-x-auto border border-slate-700/50 rounded-xl shadow-inner custom-scrollbar">
-                        <table class="min-w-full text-sm text-left text-slate-400">
+                        <table class="min-w-full text-sm text-left text-slate-400 whitespace-nowrap">
                             <thead
                                 class="text-xs text-slate-400 uppercase bg-slate-800/50 border-b border-slate-700/50">
                                 <tr>
@@ -503,5 +516,51 @@
 
         // Initialize Fetch
         fetchPortfolio();
+
+        // Phase 4: Viral P&L Image Generation
+        async function downloadPnLImage() {
+            const captureArea = document.getElementById('capture-area');
+            const watermark = document.getElementById('capture-watermark');
+
+            // Show watermark for image
+            watermark.classList.remove('hidden');
+
+            // Adding a slight delay to ensure UI updates
+            await new Promise(r => setTimeout(r, 100));
+
+            try {
+                // Ensure html2canvas is loaded
+                if (typeof html2canvas === 'undefined') {
+                    await new Promise((resolve, reject) => {
+                        const script = document.createElement('script');
+                        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+                        script.onload = resolve;
+                        script.onerror = reject;
+                        document.head.appendChild(script);
+                    });
+                }
+
+                const canvas = await html2canvas(captureArea, {
+                    backgroundColor: '#0B1021',
+                    scale: 2, // High resolution
+                    useCORS: true,
+                    logging: false,
+                    windowWidth: captureArea.scrollWidth,
+                    windowHeight: captureArea.scrollHeight
+                });
+
+                // Create download link
+                const link = document.createElement('a');
+                link.download = `AlphaFinder_수익인증_${new Date().toISOString().slice(0, 10)}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            } catch (error) {
+                console.error("Capture Failed:", error);
+                alert("이미지 캡처 중 오류가 발생했습니다.");
+            } finally {
+                // Hide watermark again
+                watermark.classList.add('hidden');
+            }
+        }
     </script>
     {% endblock %}

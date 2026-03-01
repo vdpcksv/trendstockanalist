@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+{% block title %}PRO 멤버십 업그레이드 - AlphaFinder{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
+
+    <!-- Payment Flow Container -->
+    <div id="payment-flow" class="transition-opacity duration-500">
+        <div class="text-center mb-12">
+            <h1
+                class="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 mb-4 animate-gradient">
+                AlphaFinder PRO
+            </h1>
+            <p class="text-slate-400 text-lg max-w-2xl mx-auto">10x AI 투자 비서와 함께 당신의 자산을 기하급수적으로 키우세요.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+
+            <!-- Features & Benefits -->
+            <div
+                class="glass-card rounded-3xl p-8 hover-lift border border-indigo-500/20 bg-gradient-to-br from-[#0B1021]/80 to-indigo-900/10">
+                <div
+                    class="inline-block bg-indigo-500/20 text-indigo-300 font-bold px-3 py-1 rounded-full text-xs mb-6 border border-indigo-500/30">
+                    구독 혜택 안내
+                </div>
+                <h2 class="text-2xl font-bold text-white mb-6">시장을 앞서가는 힘</h2>
+
+                <ul class="space-y-5">
+                    <li class="flex items-start gap-4">
+                        <div
+                            class="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center flex-shrink-0 border border-emerald-500/20">
+                            <span class="text-xl">✨</span>
+                        </div>
+                        <div>
+                            <h4 class="text-white font-bold text-base mb-1">Gemini AI 뉴스 종합 판독기</h4>
+                            <p class="text-slate-400 text-sm leading-relaxed">수많은 경제 기사의 이면을 꿰뚫는 AI 센티멘탈 요약 분석창 무제한 열람
+                            </p>
+                        </div>
+                    </li>
+                    <li class="flex items-start gap-4">
+                        <div
+                            class="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center flex-shrink-0 border border-purple-500/20">
+                            <span class="text-xl">🔔</span>
+                        </div>
+                        <div>
+                            <h4 class="text-white font-bold text-base mb-1">프리미엄 무제한 알림 설정</h4>
+                            <p class="text-slate-400 text-sm leading-relaxed">최대 100개 종목의 목표가 도달 알림을 실시간 텔레그램으로 전송</p>
+                        </div>
+                    </li>
+                    <li class="flex items-start gap-4">
+                        <div
+                            class="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center flex-shrink-0 border border-blue-500/20">
+                            <span class="text-xl">🚀</span>
+                        </div>
+                        <div>
+                            <h4 class="text-white font-bold text-base mb-1">우선 지원 & 베타 테스터 권한</h4>
+                            <p class="text-slate-400 text-sm leading-relaxed">신규 출시 예정인 '포트폴리오 백테스터' 기능 우선 권한 부여</p>
+                        </div>
+                    </li>
+                </ul>
+
+                <div class="mt-8 pt-6 border-t border-slate-700/50 flex justify-between items-end">
+                    <div>
+                        <div class="text-slate-400 text-sm font-medium mb-1 line-through">₩19,900 / 월</div>
+                        <div class="text-3xl font-extrabold text-white">₩9,900 <span
+                                class="text-lg text-slate-400 font-medium">/ 월</span></div>
+                    </div>
+                    <div
+                        class="bg-indigo-600/20 text-indigo-400 text-xs font-bold px-2.5 py-1 rounded-md border border-indigo-500/30">
+                        런칭 특가
+                    </div>
+                </div>
+            </div>
+
+            <!-- Toss Payments Widget Area -->
+            <div class="glass-card rounded-3xl p-6 relative overflow-hidden flex flex-col items-center min-h-[500px]">
+                <div class="w-full h-full flex flex-col justify-center">
+                    <h3 class="text-lg font-bold text-white mb-2 text-center">안전하고 간편한 결제</h3>
+                    <p class="text-slate-400 text-xs text-center mb-6">토스페이먼츠를 통해 모든 결제 정보가 암호화되어 안전하게 처리됩니다.</p>
+
+                    <div class="bg-white rounded-xl overflow-hidden w-full">
+                        <!-- 토스페이먼츠 결제 위젯 렌더링 영역 -->
+                        <div id="payment-method"></div>
+                        <div id="agreement"></div>
+                    </div>
+
+                    <button id="payment-button"
+                        class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(79,70,229,0.4)] transition-all transform hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(79,70,229,0.6)] mt-6 flex justify-center items-center gap-2">
+                        <span>결제하기</span>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Processing Flow Container (Hidden Initially) -->
+    <div id="processing-flow" class="hidden min-h-[60vh] flex-col items-center justify-center text-center">
+        <div class="relative w-24 h-24 mb-8">
+            <div class="absolute inset-0 rounded-full border-t-4 border-indigo-500 border-opacity-30"></div>
+            <div
+                class="absolute inset-0 rounded-full border-t-4 border-indigo-500 border-r-4 border-l-4 animate-spin border-transparent">
+            </div>
+            <div class="absolute inset-0 flex items-center justify-center text-3xl">💳</div>
+        </div>
+        <h2 class="text-2xl font-bold text-white mb-3">결제를 확인하고 있습니다</h2>
+        <p class="text-slate-400">창을 닫거나 새로고침하지 마세요. (약 3초 소요)</p>
+    </div>
+
+    <!-- Success Flow Container (Hidden Initially) -->
+    <div id="success-flow" class="hidden min-h-[60vh] flex-col items-center justify-center text-center">
+        <div
+            class="w-24 h-24 bg-emerald-500/20 rounded-full flex items-center justify-center border-4 border-emerald-500 text-emerald-400 text-5xl mb-6 shadow-[0_0_30px_rgba(16,185,129,0.3)] animate-bounce">
+            ✓
+        </div>
+        <h2 class="text-3xl font-bold text-white mb-4">환영합니다, PRO 회원님!</h2>
+        <p class="text-slate-300 mb-8 max-w-md mx-auto text-lg">결제가 성공적으로 승인되었습니다. 이제 AlphaFinder의 모든 프리미엄 기능을 무제한으로
+            이용하실 수 있습니다.</p>
+        <button onclick="window.location.href='/dashboard'"
+            class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-transform hover:scale-105">
+            대시보드로 돌아가기
+        </button>
+    </div>
+</div>
+
+<!-- Toss Payments JS SDK -->
+<script src="https://js.tosspayments.com/v1/payment-widget"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", async function () {
+        const urlParams = new URLSearchParams(window.location.search);
+        const paymentKey = urlParams.get('paymentKey');
+        const orderId = urlParams.get('orderId');
+        const amount = urlParams.get('amount');
+
+        // 1. 만약 URL 파라미터에 결제 정보가 있다면 (토스 결제 완료 후 Redirection)
+        if (paymentKey && orderId && amount) {
+            document.getElementById('payment-flow').classList.add('hidden');
+            document.getElementById('processing-flow').classList.remove('hidden');
+            document.getElementById('processing-flow').classList.add('flex');
+
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                alert('로그인 세션이 만료되었습니다. 다시 로그인 후 마이페이지에서 확인해주세요.');
+                window.location.href = '/';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/payment/confirm', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ paymentKey, orderId, amount: parseInt(amount) })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // 성공 시 localStorage 업데이트
+                    localStorage.setItem('membership', 'premium');
+
+                    document.getElementById('processing-flow').classList.add('hidden');
+                    document.getElementById('processing-flow').classList.remove('flex');
+
+                    document.getElementById('success-flow').classList.remove('hidden');
+                    document.getElementById('success-flow').classList.add('flex');
+
+                    // URL 파라미터 깔끔하게 제거
+                    window.history.replaceState({}, document.title, "/payment");
+                } else {
+                    throw new Error(data.detail || '결제 승인 중 오류가 발생했습니다.');
+                }
+            } catch (error) {
+                alert('결제 오류: ' + error.message);
+                window.location.href = '/payment';
+            }
+            return; // 결제 렌더링 안 함
+        }
+
+        // 2. 일반 접속 시: 토스페이먼츠 위젯 세팅
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            alert('로그인이 필요한 서비스입니다.');
+            window.location.href = '/';
+            return;
+        }
+
+        try {
+            const clientKey = 'test_ck_D5GePWvyJnrK0W0k6q8gLzN97Eoq';
+            const customerKey = (localStorage.getItem('username') || 'unknown') + '_' + new Date().getTime();
+
+            const paymentWidget = PaymentWidget(clientKey, customerKey);
+
+            const paymentMethodWidget = paymentWidget.renderPaymentMethods(
+                '#payment-method',
+                { value: 9900 },
+                { variantKey: 'DEFAULT' }
+            );
+
+            paymentWidget.renderAgreement(
+                '#agreement',
+                { variantKey: 'AGREEMENT' }
+            );
+
+            const btn = document.getElementById('payment-button');
+            btn.addEventListener('click', function () {
+                // 주문번호 고유한 랜덤문자열 생성
+                const orderIdRandom = 'ORDER_' + Math.random().toString(36).substring(2, 11) + '_' + Date.now();
+
+                paymentWidget.requestPayment({
+                    orderId: orderIdRandom,
+                    orderName: 'AlphaFinder PRO 멤버십 (1개월)',
+                    successUrl: window.location.origin + '/payment',
+                    failUrl: window.location.origin + '/payment',
+                    customerEmail: localStorage.getItem('username') + '@example.com',
+                    customerName: localStorage.getItem('username') || '회원',
+                }).catch(function (error) {
+                    if (error.code === 'USER_CANCEL') {
+                        // 유저가 창을 닫음
+                    } else {
+                        alert(error.message);
+                    }
+                });
+            });
+        } catch (err) {
+            console.error("Toss SDK Load Error:", err);
+        }
+    });
+</script>
+{% endblock %}

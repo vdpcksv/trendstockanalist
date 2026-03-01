@@ -276,11 +276,15 @@
 
     {% if sentiment_data.llm_analysis %}
     <!-- LLM Sentinel Insights -->
-    <div class="mb-8 border border-indigo-500/30 bg-indigo-500/5 rounded-xl p-5 relative overflow-hidden">
+    <div id="llm-insight-container"
+        class="mb-8 border border-indigo-500/30 bg-indigo-500/5 rounded-xl p-5 relative overflow-hidden transition-all duration-300">
         <div
             class="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none">
         </div>
-        <div class="flex items-start gap-4 relative z-10">
+
+        <!-- Premium Content (Hidden for FREE users by JS) -->
+        <div id="llm-premium-content"
+            class="flex items-start gap-4 relative z-10 transition-opacity duration-300 opacity-0 blur-sm">
             <div class="text-3xl">✨</div>
             <div>
                 <h3 class="text-sm font-bold text-indigo-300 mb-1 flex items-center gap-2">
@@ -294,6 +298,18 @@
                     "{{ sentiment_data.llm_analysis.summary_comment }}"
                 </p>
             </div>
+        </div>
+
+        <!-- Upgrade CTA Overlay (Shown for FREE users) -->
+        <div id="llm-upgrade-cta"
+            class="absolute inset-0 z-20 flex flex-col items-center justify-center bg-[#0B1021]/60 backdrop-blur-[6px]">
+            <div class="text-3xl mb-2">🔒</div>
+            <h4 class="text-white font-bold mb-1">PRO 멤버십 전용 기능입니다</h4>
+            <p class="text-slate-300 text-xs mb-3">AI가 요약한 핵심 센티멘탈을 확인하세요</p>
+            <button onclick="window.location.href='/payment'"
+                class="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-400 hover:to-purple-400 text-white font-bold py-1.5 px-4 rounded-full text-sm shadow-lg transition-transform hover:scale-105">
+                PRO 업그레이드
+            </button>
         </div>
     </div>
     {% endif %}
@@ -464,10 +480,38 @@
     </div>
 </div>
 
+<!-- Google AdSense Inline Slot -->
+<div
+    class="ad-slot w-full bg-[#151b30] border border-slate-700/50 rounded-xl relative z-10 overflow-hidden mb-12 flex items-center justify-center p-4">
+    <ins class="adsbygoogle" style="display:block; text-align:center; width: 100%; min-height: 90px;"
+        data-ad-layout="in-article" data-ad-format="fluid" data-ad-client="ca-pub-9065075656013134"
+        data-ad-slot="9876543210"></ins>
+    <script>
+        (adsbygoogle = window.adsbygoogle || []).push({});
+    </script>
+    <!-- Fallback text placeholder -->
+    <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20 select-none">
+        <span class="text-xs text-slate-500 font-bold tracking-[0.2em] uppercase">Advertisement</span>
+    </div>
+</div>
+
 <script>
     // Community Logic
     document.addEventListener("DOMContentLoaded", function () {
         const ticker = "{{ ticker }}";
+
+        // Freemium Logic for LLM Insights
+        const membership = localStorage.getItem('membership');
+        const llmContent = document.getElementById('llm-premium-content');
+        const llmCta = document.getElementById('llm-upgrade-cta');
+        if (llmContent && llmCta) {
+            if (membership === 'premium') {
+                llmContent.classList.remove('opacity-0', 'blur-sm');
+                llmContent.classList.add('opacity-100');
+                llmCta.classList.add('hidden');
+            }
+        }
+
         if (!ticker || ticker === "None") return;
 
         loadVotes();

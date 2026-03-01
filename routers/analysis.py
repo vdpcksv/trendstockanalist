@@ -140,27 +140,36 @@ def calculate_technical_indicators(df):
 async def get_stock_seasonality(ticker: str):
     actual_ticker = resolve_ticker(ticker)
     try:
-        end_date = datetime.now()
-        start_date = end_date - pd.DateOffset(years=10)
-        df = fdr.DataReader(actual_ticker, start_date, end_date)
-        if df.empty:
-            raise HTTPException(status_code=404, detail="종목 데이터를 찾을 수 없습니다.")
-        df['Year'] = df.index.year
-        df['Month'] = df.index.month
-        monthly_data = df.groupby(['Year', 'Month']).agg(Open=('Open', 'first'), Close=('Close', 'last')).reset_index()
-        monthly_data['Return'] = (monthly_data['Close'] - monthly_data['Open']) / monthly_data['Open'] * 100
-        seasonality = []
-        for month in range(1, 13):
-            month_data = monthly_data[monthly_data['Month'] == month]
-            if month_data.empty:
-                seasonality.append({"Month": month, "WinRate": 0, "AvgReturn": 0})
-                continue
-            total_years = len(month_data)
-            win_years = len(month_data[month_data['Return'] > 0])
-            win_rate = (win_years / total_years) * 100
-            avg_return = month_data['Return'].mean()
-            seasonality.append({"Month": month, "WinRate": round(win_rate, 1), "AvgReturn": round(avg_return, 2)})
-        return {"status": "success", "data": seasonality}
+        def fetch_and_calc_seasonality(t: str):
+            end_date = datetime.now()
+            start_date = end_date - pd.DateOffset(years=10)
+            df = fdr.DataReader(t, start_date, end_date)
+            if df.empty:
+                return {"status": "error", "message": "종목 데이터를 찾을 수 없습니다."}
+            df['Year'] = df.index.year
+            df['Month'] = df.index.month
+            monthly_data = df.groupby(['Year', 'Month']).agg(Open=('Open', 'first'), Close=('Close', 'last')).reset_index()
+            monthly_data['Return'] = (monthly_data['Close'] - monthly_data['Open']) / monthly_data['Open'] * 100
+            seasonality = []
+            for month in range(1, 13):
+                month_data = monthly_data[monthly_data['Month'] == month]
+                if month_data.empty:
+                    seasonality.append({"Month": month, "WinRate": 0, "AvgReturn": 0})
+                    continue
+                total_years = len(month_data)
+                win_years = len(month_data[month_data['Return'] > 0])
+                win_rate = (win_years / total_years) * 100
+                avg_return = month_data['Return'].mean()
+                seasonality.append({"Month": month, "WinRate": round(win_rate, 1), "AvgReturn": round(avg_return, 2)})
+            return {"status": "success", "data": seasonality}
+        
+        import asyncio
+        result = await asyncio.to_thread(fetch_and_calc_seasonality, actual_ticker)
+        if result.get("status") == "error":
+            raise HTTPException(status_code=404, detail=result.get("message"))
+        return result
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Seasonality API Error: {e}")
         return {"status": "error", "message": str(e)}

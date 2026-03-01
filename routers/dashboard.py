@@ -154,19 +154,15 @@ async def get_seasonality_data():
                         month_stats.append(50)
                 res[name] = month_stats
             return res
+        
         import asyncio
         results = await asyncio.to_thread(fetch_fdr)
 
     except Exception as e:
-        logger.error(f"Seasonality calculation failed, fallback to mock: {e}")
-        results = {
-            "반도체": [60, 50, 40, 70, 55, 45, 65, 80, 50, 60, 70, 85],
-            "2차전지": [70, 60, 50, 45, 80, 75, 55, 60, 45, 50, 65, 90],
-            "바이오": [40, 45, 55, 60, 50, 65, 70, 45, 80, 75, 60, 55],
-            "금융": [55, 60, 70, 80, 75, 65, 50, 45, 40, 50, 60, 65],
-            "자동차": [50, 55, 65, 70, 60, 50, 45, 55, 65, 80, 75, 70],
-            "게임/엔터": [45, 50, 55, 60, 70, 80, 85, 75, 65, 55, 50, 45]
-        }
+        logger.error(f"Seasonality calculation failed: {e}")
+        # 완전히 실제 데이터만 사용하기 위해 가짜(Mock) 데이터를 제거했습니다.
+        # 실패 시 빈 딕셔너리를 반환하여 프론트엔드에서 데이터 없음을 처리하도록 유도합니다.
+        results = {}
         
     return results
 

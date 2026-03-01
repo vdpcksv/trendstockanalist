@@ -7,7 +7,12 @@ import sys
 import traceback
 from fastapi.testclient import TestClient
 from main import app
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.inmemory import InMemoryBackend
 
+# TestClient doesn't trigger lifespan events automatically unless used in a 'with' block
+# Manually initialize the cache for tests
+FastAPICache.init(InMemoryBackend())
 client = TestClient(app)
 
 PASS = 0

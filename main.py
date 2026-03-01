@@ -322,21 +322,69 @@ async def read_dashboard(request: Request):
         }
     )
 
+@cache(expire=86400) # 하루 한 번만 갱신
 def get_seasonality_data():
-    """대표 섹터별 최근 10년간의 월별 승률 데이터를 반환합니다."""
-    # (실 서버 환경에서는 fdr을 활용해 실시간 연산하지만, 여기선 Prototype 속도를 위해 Mock Data 사용)
-    return {
-        "반도체": [60, 50, 40, 70, 55, 45, 65, 80, 50, 60, 70, 85],
-        "2차전지": [70, 60, 50, 45, 80, 75, 55, 60, 45, 50, 65, 90],
-        "바이오": [40, 45, 55, 60, 50, 65, 70, 45, 80, 75, 60, 55],
-        "금융": [55, 60, 70, 80, 75, 65, 50, 45, 40, 50, 60, 65],
-        "자동차": [50, 55, 65, 70, 60, 50, 45, 55, 65, 80, 75, 70],
-        "게임/엔터": [45, 50, 55, 60, 70, 80, 85, 75, 65, 55, 50, 45]
+    """대표 섹터별 최근 10년간(또는 상장 이후)의 월별 승률 데이터를 반환합니다."""
+    # 각 섹터의 대표 종목 코드 (10년 이상 된 종목들 중심)
+    sectors = {
+        "반도체 (삼성전자)": "005930",
+        "2차전지 (삼성SDI)": "006400",
+        "바이오 (셀트리온)": "068270",
+        "금융 (KB금융)": "105560",
+        "자동차 (현대차)": "005380",
+        "게임/엔터 (엔씨소프트)": "036570"
     }
+
+    results = {}
+    today = datetime.now()
+    start_date = (today - timedelta(days=365 * 10)).strftime('%Y-%m-%d')  # 10년 전
+
+    try:
+        for name, ticker in sectors.items():
+            df = fdr.DataReader(ticker, start=start_date)
+            if df.empty:
+                continue
+            
+            # 월말 종가만 추출
+            df = df.resample('ME').last()
+            # 월별 수익률 계산
+            df['Return'] = df['Close'].pct_change()
+            df = df.dropna()
+            
+            # 월(1~12) 컬럼 추가
+            df['Month'] = df.index.month
+            
+            # 승률 계산: 0초과 이면 1, 아니면 0 -> 평균 * 100
+            df['Win'] = (df['Return'] > 0).astype(int)
+            win_rates = (df.groupby('Month')['Win'].mean() * 100).round().astype(int)
+            
+            # 데이터 채우기 (어떤 월에 데이터가 없을 경우 대비 기본값 50)
+            month_stats = []
+            for m in range(1, 13):
+                if m in win_rates:
+                    month_stats.append(int(win_rates[m]))
+                else:
+                    month_stats.append(50)
+                    
+            results[name] = month_stats
+
+    except Exception as e:
+        logger.error(f"Seasonality calculation failed, fallback to mock: {e}")
+        # 오류 발생 시 Fallback (기존 Mock 데이터)
+        results = {
+            "반도체": [60, 50, 40, 70, 55, 45, 65, 80, 50, 60, 70, 85],
+            "2차전지": [70, 60, 50, 45, 80, 75, 55, 60, 45, 50, 65, 90],
+            "바이오": [40, 45, 55, 60, 50, 65, 70, 45, 80, 75, 60, 55],
+            "금융": [55, 60, 70, 80, 75, 65, 50, 45, 40, 50, 60, 65],
+            "자동차": [50, 55, 65, 70, 60, 50, 45, 55, 65, 80, 75, 70],
+            "게임/엔터": [45, 50, 55, 60, 70, 80, 85, 75, 65, 55, 50, 45]
+        }
+        
+    return results
 
 @app.get("/seasonality", response_class=HTMLResponse)
 async def read_seasonality(request: Request):
-    season_data = get_seasonality_data()
+    season_data = await get_seasonality_data()
     # DataFrame으로 변환 후 Heatmap용 Z(승률), X(월), Y(섹터) 리스트 추출
     df_hm = pd.DataFrame(season_data).T 
     df_hm.columns = [f"{i}월" for i in range(1, 13)]

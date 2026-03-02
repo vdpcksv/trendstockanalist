@@ -22,12 +22,19 @@ HEADERS = {
 }
 
 def _get_mock_flow_data():
-    dates = []
-    current_date = datetime.now()
-    while len(dates) < 5:
-        if current_date.weekday() < 5:  # 월~금
-            dates.append(current_date.strftime("%Y-%m-%d"))
-        current_date -= timedelta(days=1)
+    try:
+        # Get actual trading days from a major stock (Samsung Electronics)
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=20)
+        df = fdr.DataReader('005930', start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d'))
+        dates = reversed(df.index[-5:].strftime('%Y-%m-%d').tolist())
+    except Exception:
+        dates = []
+        current_date = datetime.now()
+        while len(dates) < 5:
+            if current_date.weekday() < 5:  # 월~금
+                dates.append(current_date.strftime("%Y-%m-%d"))
+            current_date -= timedelta(days=1)
         
     flow_data = []
     for d in dates:

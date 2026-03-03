@@ -107,95 +107,91 @@
                     포트폴리오에 추가하기
                 </button>
             </form>
+        </div>
 
-            <!-- Removed Dummy Bot Config Form to enforce Cloud Sync priority -->
+        <!-- Dashboard Area -->
+        <div class="lg:col-span-2 space-y-8" id="capture-area">
+            <!-- Watermark (Hidden by default, shown during capture) -->
+            <div id="capture-watermark"
+                class="hidden absolute bottom-4 right-4 text-xs font-bold text-white/50 z-50 mix-blend-overlay">
+                Powered by AlphaFinder (alphafinder.kr/portfolio)
+            </div>
 
-            <!-- Dashboard Area -->
-            <div class="lg:col-span-2 space-y-8" id="capture-area">
-                <!-- Watermark (Hidden by default, shown during capture) -->
-                <div id="capture-watermark"
-                    class="hidden absolute bottom-4 right-4 text-xs font-bold text-white/50 z-50 mix-blend-overlay">
-                    Powered by AlphaFinder (alphafinder.kr/portfolio)
-                </div>
-
-                <div class="glass-card rounded-2xl p-6 md:p-8 hover-lift relative bg-[#0B1021]">
-                    <div
-                        class="border-b border-slate-700/50 pb-4 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                        <h2 class="text-xl font-bold text-white flex items-center gap-2">
-                            <span class="text-emerald-400">💼</span> 내 자산 보유 요약
-                        </h2>
-                        <!-- P&L Capture Button -->
-                        <button onclick="downloadPnLImage()"
-                            class="flex items-center gap-2 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-400 hover:to-rose-400 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-lg transition-all hover:-translate-y-1">
-                            <span>📸 수익 인증하기</span>
-                        </button>
-                    </div>
-
-                    <div class="grid grid-cols-1 mb-8">
-                        <div
-                            class="bg-gradient-to-br from-indigo-900/40 to-[#0B1021] p-6 rounded-2xl border border-indigo-500/30 shadow-inner relative overflow-hidden">
-                            <div
-                                class="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 bg-indigo-500/20 opacity-50 rounded-full blur-3xl">
-                            </div>
-                            <p class="text-sm text-indigo-300 font-medium mb-1 relative z-10">총 매수 금액 (투입 원금)</p>
-                            <p class="text-3xl font-extrabold text-white tracking-tight relative z-10"
-                                id="total-invest">0 원
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 mb-8">
-                        <div
-                            class="bg-gradient-to-br from-indigo-950/60 to-[#0B1021] p-6 rounded-2xl border border-rose-500/30 shadow-inner relative overflow-hidden">
-                            <div
-                                class="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 bg-rose-500/10 opacity-50 rounded-full blur-3xl">
-                            </div>
-                            <p class="text-sm text-rose-300 font-medium mb-1 relative z-10">총 평가 금액 (실시간)</p>
-                            <p class="text-3xl font-extrabold text-white tracking-tight relative z-10 flex items-baseline gap-3"
-                                id="total-eval">
-                                0 원
-                                <span id="total-return" class="text-sm font-medium text-slate-400">0.00%</span>
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="overflow-x-auto border border-slate-700/50 rounded-xl shadow-inner custom-scrollbar">
-                        <table class="min-w-full text-sm text-left text-slate-400 whitespace-nowrap">
-                            <thead
-                                class="text-xs text-slate-400 uppercase bg-slate-800/50 border-b border-slate-700/50">
-                                <tr>
-                                    <th class="px-4 py-4 font-bold">주식 종목명</th>
-                                    <th class="px-4 py-4 text-right font-bold">평균 단가</th>
-                                    <th class="px-4 py-4 text-right font-bold text-white">현재가</th>
-                                    <th class="px-4 py-4 text-right font-bold">보유 수량</th>
-                                    <th class="px-4 py-4 text-right font-bold text-indigo-300">투자 금액</th>
-                                    <th class="px-4 py-4 text-right font-bold text-rose-300">평가 금액(수익률)</th>
-                                    <th class="px-4 py-4 text-center font-bold text-amber-400">💡 AI 계절성 진단</th>
-                                    <th class="px-4 py-4 text-center font-bold">비고</th>
-                                </tr>
-                            </thead>
-                            <tbody id="portfolio-tbody" class="divide-y divide-slate-800/50">
-                                <!-- Filled by JS -->
-                            </tbody>
-                        </table>
-                    </div>
-
-                </div>
-
-                <!-- Plotly Pie Chart -->
-                <div class="glass-card rounded-2xl p-6 md:p-8 hover-lift">
-                    <h2 class="text-xl font-bold mb-2 text-white flex items-center gap-2">
-                        <span class="text-amber-400">🥧</span> 포트폴리오 자산 비중
+            <div class="glass-card rounded-2xl p-6 md:p-8 hover-lift relative bg-[#0B1021]">
+                <div
+                    class="border-b border-slate-700/50 pb-4 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                        <span class="text-emerald-400">💼</span> 내 자산 보유 요약
                     </h2>
-                    <div id="plotly-pie" class="w-full h-80 bg-transparent"></div>
+                    <!-- P&L Capture Button -->
+                    <button onclick="downloadPnLImage()"
+                        class="flex items-center gap-2 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-400 hover:to-rose-400 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-lg transition-all hover:-translate-y-1">
+                        <span>📸 수익 인증하기</span>
+                    </button>
                 </div>
+
+                <div class="grid grid-cols-1 mb-8">
+                    <div
+                        class="bg-gradient-to-br from-indigo-900/40 to-[#0B1021] p-6 rounded-2xl border border-indigo-500/30 shadow-inner relative overflow-hidden">
+                        <div
+                            class="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 bg-indigo-500/20 opacity-50 rounded-full blur-3xl">
+                        </div>
+                        <p class="text-sm text-indigo-300 font-medium mb-1 relative z-10">총 매수 금액 (투입 원금)</p>
+                        <p class="text-3xl font-extrabold text-white tracking-tight relative z-10" id="total-invest">0 원
+                        </p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 mb-8">
+                    <div
+                        class="bg-gradient-to-br from-indigo-950/60 to-[#0B1021] p-6 rounded-2xl border border-rose-500/30 shadow-inner relative overflow-hidden">
+                        <div
+                            class="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 bg-rose-500/10 opacity-50 rounded-full blur-3xl">
+                        </div>
+                        <p class="text-sm text-rose-300 font-medium mb-1 relative z-10">총 평가 금액 (실시간)</p>
+                        <p class="text-3xl font-extrabold text-white tracking-tight relative z-10 flex items-baseline gap-3"
+                            id="total-eval">
+                            0 원
+                            <span id="total-return" class="text-sm font-medium text-slate-400">0.00%</span>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto border border-slate-700/50 rounded-xl shadow-inner custom-scrollbar">
+                    <table class="min-w-full text-sm text-left text-slate-400 whitespace-nowrap">
+                        <thead class="text-xs text-slate-400 uppercase bg-slate-800/50 border-b border-slate-700/50">
+                            <tr>
+                                <th class="px-4 py-4 font-bold">주식 종목명</th>
+                                <th class="px-4 py-4 text-right font-bold">평균 단가</th>
+                                <th class="px-4 py-4 text-right font-bold text-white">현재가</th>
+                                <th class="px-4 py-4 text-right font-bold">보유 수량</th>
+                                <th class="px-4 py-4 text-right font-bold text-indigo-300">투자 금액</th>
+                                <th class="px-4 py-4 text-right font-bold text-rose-300">평가 금액(수익률)</th>
+                                <th class="px-4 py-4 text-center font-bold text-amber-400">💡 AI 계절성 진단</th>
+                                <th class="px-4 py-4 text-center font-bold">비고</th>
+                            </tr>
+                        </thead>
+                        <tbody id="portfolio-tbody" class="divide-y divide-slate-800/50">
+                            <!-- Filled by JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+
+            <!-- Plotly Pie Chart -->
+            <div class="glass-card rounded-2xl p-6 md:p-8 hover-lift">
+                <h2 class="text-xl font-bold mb-2 text-white flex items-center gap-2">
+                    <span class="text-amber-400">🥧</span> 포트폴리오 자산 비중
+                </h2>
+                <div id="plotly-pie" class="w-full h-80 bg-transparent"></div>
             </div>
         </div>
     </div>
 
     <script>
         const API_URL = "/api";
-        let token = localStorage.getItem("access_token");
+        let token = sessionStorage.getItem("access_token");
 
         // SPA Auth Logic
         document.addEventListener("DOMContentLoaded", function () {
@@ -239,8 +235,8 @@
                 const res = await fetch(`${API_URL}/token`, { method: 'POST', body: formData });
                 if (!res.ok) throw new Error("로그인 실패. 아이디 또는 비밀번호를 확인하세요.");
                 const data = await res.json();
-                localStorage.setItem("access_token", data.access_token);
-                localStorage.setItem("username", username);
+                sessionStorage.setItem("access_token", data.access_token);
+                sessionStorage.setItem("username", username);
                 token = data.access_token;
                 msgEl.innerText = "";
                 showDashboard();
@@ -277,13 +273,13 @@
         window.showDashboard = function () {
             document.getElementById('auth-section').classList.add('hidden');
             document.getElementById('dashboard-section').classList.remove('hidden');
-            document.getElementById('user-display').innerText = localStorage.getItem("username") || "사용자";
+            document.getElementById('user-display').innerText = sessionStorage.getItem("username") || "사용자";
             fetchPortfolio();
         }
 
         window.logout = function () {
-            localStorage.removeItem("access_token");
-            localStorage.removeItem("username");
+            sessionStorage.removeItem("access_token");
+            sessionStorage.removeItem("username");
             location.reload();
         }
 
@@ -292,7 +288,7 @@
         // Dashboard Internal Functions
         async function fetchPortfolio() {
             try {
-                const token = localStorage.getItem('access_token');
+                const token = sessionStorage.getItem('access_token');
                 const res = await fetch('/api/portfolio', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -319,7 +315,7 @@
             const qty = parseInt(document.getElementById('quantity').value) || 1; // Used locally for now
 
             try {
-                const token = localStorage.getItem('access_token');
+                const token = sessionStorage.getItem('access_token');
                 if (!token) {
                     alert("로그인이 필요한 서비스입니다.");
                     openAuthModal();
@@ -352,7 +348,7 @@
 
         window.deleteItem = async function (id) {
             try {
-                const token = localStorage.getItem('access_token');
+                const token = sessionStorage.getItem('access_token');
                 const res = await fetch(`/api/portfolio/${id}`, {
                     method: 'DELETE',
                     headers: { 'Authorization': `Bearer ${token}` }

@@ -153,6 +153,20 @@ def calculate_technical_indicators(df):
     df['RSI'] = 100 - (100 / (1 + rs))
     return df
 
+@router.get("/api/search")
+async def search_stocks(q: str = ""):
+    if not q or len(q) < 1:
+        return []
+    try:
+        df = get_krx_stock_listing()
+        # Find stocks where name contains the query (case insensitive)
+        matches = df[df['Name'].str.contains(q, na=False, case=False)]
+        results = matches.head(10)[['Code', 'Name']].to_dict('records')
+        return results
+    except Exception as e:
+        logger.error(f"Search API Error: {e}")
+        return []
+
 @router.get("/api/stock_seasonality/{ticker}")
 @cache(expire=1800)
 async def get_stock_seasonality(ticker: str):

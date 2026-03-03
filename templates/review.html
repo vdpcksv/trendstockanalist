@@ -29,9 +29,13 @@
                 <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
                     <span class="text-slate-400 text-lg">🔍</span>
                 </div>
-                <input type="text" name="ticker" id="ticker" value="{{ search_name }}"
+                <input type="text" name="ticker" id="ticker" value="{{ search_name }}" autocomplete="off"
                     class="block w-full pl-14 pr-4 py-4 bg-[#151b30] border border-slate-700 rounded-xl leading-5 placeholder-slate-500 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base font-medium transition-all shadow-inner"
                     placeholder="분석할 종목명(예: 삼성전자) 또는 코드(예: 005930)를 입력하세요" required>
+                <!-- Autocomplete Dropdown -->
+                <ul id="autocomplete-results"
+                    class="absolute z-50 w-full mt-2 bg-[#151b30] border border-indigo-500/50 rounded-xl shadow-[0_10px_40px_-10px_rgba(79,70,229,0.3)] max-h-60 overflow-y-auto hidden divide-y divide-slate-700/50">
+                </ul>
             </div>
             <p class="mt-3 text-sm text-slate-400 font-medium pl-2">💡 팁: 정확한 종목명이나 6자리 티커를 입력해 주시면 더 빠릅니다.</p>
         </div>
@@ -912,6 +916,56 @@
                 document.getElementById('seasonality-loading').classList.add('hidden');
                 document.getElementById('seasonality-error').classList.remove('hidden');
             });
+    });
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const searchInput = document.getElementById('ticker');
+        const resultsList = document.getElementById('autocomplete-results');
+        let timeoutId;
+
+        searchInput.addEventListener('input', function () {
+            clearTimeout(timeoutId);
+            const query = this.value.trim();
+
+            if (query.length < 1) {
+                resultsList.classList.add('hidden');
+                return;
+            }
+
+            // Debounce API calls
+            timeoutId = setTimeout(() => {
+                fetch(`/api/search?q=${encodeURIComponent(query)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        resultsList.innerHTML = '';
+                        if (data.length > 0) {
+                            data.forEach(item => {
+                                const li = document.createElement('li');
+                                li.className = 'px-5 py-3 hover:bg-slate-800 cursor-pointer flex justify-between items-center transition-colors';
+                                li.innerHTML = `<span class="font-bold text-white">${item.Name}</span><span class="text-slate-400 text-sm bg-slate-800/50 px-2 py-0.5 rounded">${item.Code}</span>`;
+                                li.addEventListener('click', () => {
+                                    searchInput.value = item.Name;
+                                    resultsList.classList.add('hidden');
+                                });
+                                resultsList.appendChild(li);
+                            });
+                            resultsList.classList.remove('hidden');
+                        } else {
+                            resultsList.classList.add('hidden');
+                        }
+                    })
+                    .catch(err => console.error(err));
+            }, 200);
+        });
+
+        // Hide dropdown when clicking outside
+        document.addEventListener('click', function (e) {
+            if (!searchInput.contains(e.target) && !resultsList.contains(e.target)) {
+                resultsList.classList.add('hidden');
+            }
+        });
     });
 </script>
 {% endif %}

@@ -10,7 +10,12 @@ from database import get_db
 import models
 
 # --- Security Config ---
-SECRET_KEY = os.getenv("SECRET_KEY", "super_secret_trend_lotto_key") # MUST change in production!
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    import secrets
+    print("WARNING: SECRET_KEY not passed via env. Using a random temporary key. Logins will expire on server restart.")
+    SECRET_KEY = secrets.token_urlsafe(32)
+
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", str(60 * 24 * 7)))
 

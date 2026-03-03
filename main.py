@@ -151,13 +151,34 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="AlphaFinder", version="1.0.0", description="10x AI Trading Platform", lifespan=lifespan)
 
+# Restrict CORS to specific production domains
+ALLOWED_ORIGINS = [
+    "http://localhost",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "https://alphafinder.kr",
+    "https://www.alphafinder.kr",
+    "https://trendstockanalist.onrender.com"
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
+
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    raw_response = await call_next(request)
+    # Adding security headers equivalent to Helmet in Node.js
+    raw_response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    raw_response.headers["X-Content-Type-Options"] = "nosniff"
+    raw_response.headers["X-Frame-Options"] = "DENY" # Prevent Clickjacking
+    raw_response.headers["X-XSS-Protection"] = "1; mode=block"
+    raw_response.headers["Content-Security-Policy"] = "upgrade-insecure-requests"
+    return raw_response
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):

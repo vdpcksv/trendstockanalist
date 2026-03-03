@@ -1,78 +1,54 @@
-# AlphaFinder 무결점 고도화 총괄 개발 계획서 (Zero-Defect Development Plan)
+# AlphaFinder 무결점 고도화 총괄 개발 계획서 및 백업 노트 (Zero-Defect Development Plan & Backup)
 
-`skill.md`에 명시된 5단계 고도화 로드맵을 바탕으로, **기존 서비스의 안정성을 해치지 않으면서(Zero-Downtime)** 신규 기능을 안전하게 확장하기 위한 상세 개발, DB 설계 및 예외 처리 계획입니다.
-
----
-
-## 🏗️ 1. 아키텍처 및 인프라 보강 계획
-새로운 기능들이 기존 웹 서버 리소스를 갉아먹거나 병목(Bottleneck)을 일으키지 않도록 분리된 아키텍처를 지향합니다.
-
-*   **의존성(패키지) 관리:** 모델 관리에 필요한 패키지(`scikit-learn`, `prophet`), LLM API 클라이언트(`google-generativeai`, `openai`), 통신(`httpx`, `python-telegram-bot`)을 `requirements.txt`에 버전 고정하여 추가.
-*   **비동기 워커 분리:** AI 학습(`Phase 1`)과 모의투자 수익률 정산(`Phase 2`), 알림 발송(`Phase 3`)은 메인 웹 프로세스가 아닌 독립적인 스케줄러(예: Celery + Redis, 또는 분리된 APScheduler 데몬)에서 실행하여 사용자가 웹페이지를 탐색할 때 느려지지 않도록 합니다.
-*   **외부 API 대비책(Circuit Breaker):** 증권사 API나 LLM API 장애 시 웹앱 전체가 멈추는 것을 방지하기 위해 타임아웃과 캐시 폴백(Cache Fallback) 메커니즘을 둡니다.
+본 문서는 `skill.md`에 명시된 5단계 고도화 로드맵을 바탕으로 수립된 초기 기획안이자, **지금까지 실제 구현된 기능들의 업데이트 및 롤백용 백업 명세서**입니다.
 
 ---
 
-## 🗄️ 2. 데이터베이스 안전 마이그레이션 전략 (DB Schema)
-**[오류 방지 핵심]** 기존 테이블을 코드에서 직접 `DROP` 하거나 강제 `ALTER` 하지 않습니다. **Alembic**과 같은 마이그레이션 툴을 사용하여 버전 관리를 하고 장애 시 즉각 롤백(Rollback)할 수 있는 체계를 잡습니다.
+## 🏗️ 1. 아키텍처 및 인프라 구현 (완료)
+초기 아키텍처에서 계획된 목표들을 달성하였으며, 일부는 성능 향상을 위해 로직이 개선되었습니다.
 
-### 📝 데이터베이스 추가/변경 명세
-1.  **`Users` 테이블 변경 (Phase 2, 4)**
-    *   `ADD total_return FLOAT DEFAULT 0.0;` (모의투자 수익률 캐싱용 - 실시간 계산을 피하기 위함)
-    *   `ADD membership VARCHAR(20) DEFAULT 'free';` (멤버십 등급)
-2.  **`Comments` 테이블 신설 (Phase 2)**
-    *   `id` (PK), `user_id` (FK), `ticker` (종목코드), `content` (VARCHAR), `created_at` (DATETIME)
-    *   종목별 조회가 많으므로 `ticker` 컬럼에 인덱스(Index) 생성.
-3.  **`Votes` 테이블 신설 (Phase 2)**
-    *   `id` (PK), `user_id` (FK), `ticker`, `vote_type` ('BULL' or 'BEAR'), `created_at`
-    *   한 유저가 한 종목에 하루 한 번만 투표하도록 Unique 제약조건 고려.
-4.  **`Alerts` 테이블 신설 (Phase 3)**
-    *   `id` (PK), `user_id` (FK), `ticker`, `target_price`, `condition_type` ('ABOVE', 'BELOW'), `is_active` (BOOLEAN)
+*   **의존성(패키지) 관리:** `FastAPI`, `scikit-learn`, `prophet`, `google-generativeai`, `FinanceDataReader` 등 핵심 패키지 구성 및 버전 고정 완료.
+*   **스케줄러 분리:** `APScheduler`를 통해 메인 스레드와 무관하게 백그라운드에서 AI 학습(Prophet), 데이터 캐싱(테마 및 수급), 모의투자 정산, 알림 발송 데몬이 독립적으로 구동되도록 구현 완료(`main.py`).
+*   **외부 API 대비책(Circuit Breaker):** 증권사 API 연동 대기 중이나, 자체 크롤링 실패나 한국거래소 휴장일(주말/공휴일) 시에 데이터 크래시가 나지 않도록 `mock_data` 로직에 `FinanceDataReader` 검증기능 추가 완료.
 
 ---
 
-## 🚀 3. Phase별 개발 절차 및 안전망(QA) 계획
+## 🗄️ 2. 데이터베이스 및 서버 보안 구조 (완료 및 고도화)
+**[오류 방지 핵심]** Alembic과 같은 툴 적용 전, SQLite를 임시로 사용하다가 현재 **프리 티어용 원격 Supabase PostgreSQL** 클라우드 DB로 이전 성공했습니다.
 
-### Phase 1: AI (The Brain) - 예측 및 감성 분석
-*   **개발 단계:**
-    1. 주가 데이터셋 추출 및 Prophet/LSTM 모델 학습 자동화 배치 스크립트 작성.
-    2. LLM 네이버 뉴스 감성 분석 프롬프트 최적화 및 연동.
-*   **오류 방지 및 QA:**
-    *   **LLM Rate Limit 방어:** API 호출 횟수 초과로 에러 반환 시 프론트에 "현재 AI 분석 요청이 많아 대기 중입니다."와 같은 Graceful(우아한) 에러 메시지 표출. 결과를 Redis 등에 24시간 캐싱하여 API 비용과 호출 빈도 최소화.
-    *   **모델 결과 캐싱:** 주가 예측 추론 결과는 사용자 요청 시마다 돌리지 않고, 매일 밤 생성된 정적 결괏값(JSON 등)을 읽어오는 형태로 속도를 확보.
+### 📝 데이터베이스 테이블 구조 및 보안 반영
+1.  **DB 연결 보안:** 하드코딩된 패스워드를 삭제하고 `os.getenv("DATABASE_URL")` 기반으로 전환 완료하여 소스 코드 탈취 시에도 DB 방어 가능 (`database.py`).
+2.  **`Users` 테이블:** `username`, `hashed_password`, `membership` (멤버십 등급), `total_return` (모의투자 수익률 캐싱용).
+3.  **JWT 토큰 인증 보안:** 암호화 인증 키(`SECRET_KEY`)를 환경 변수화 하였으며, 영구적인 자동 로그인을 방지하기 위해 프론트엔드 캐시를 `localStorage`에서 `sessionStorage`로 전면 교체 (브라우저 종료 시 자동 로그아웃).
+4.  **`Portfolio` 테이블:** 관심/투자 종목 추적.
+5.  **`Alerts` 테이블:** 특정 가격 도달 시 서버 백그라운드 알림을 보내는 데 мон 활용.
 
-### Phase 2: Community (The Heart) - 댓글 및 랭킹
-*   **개발 단계:**
-    1. XSS(크로스 사이트 스크립팅) 및 SQL Injection 필터링이 적용된 댓글 작성/조회 API 구현.
-    2. 자정에 실행될 전 유저 모의투자 수익률 정산 배치 로직 로컬 테스트.
-*   **오류 방지 및 QA:**
-    *   정산 시 DB Deadlock 방지를 위해 유저 데이터를 500명씩 Chunk 단위로 쪼개어 트랜잭션을 처리(`Commit`).
-    *   에러 발생 시 슬랙이나 텔레그램으로 즉각 개발자에게 알림이 오도록 에러 핸들링 부착.
+---
 
-### Phase 3: 인프라 (The Backbone) - API 및 알림
-*   **개발 단계:**
-    1. KIS 개발자 센터 API 연동 클래스 작성 및 실시간 호가/시세 조회 연동.
-    2. 서버 사이드 시세 감시 및 Telegram 알림 발송 데몬 제작.
-*   **오류 방지 및 QA:**
-    *   **Fallback 구조:** KIS API가 주말 점검 등으로 통신 불능 상태가 될 경우를 대비해, 예외(`Exception`) 캐치 시 기존 네이버 금융 크롤링 모듈이 작동하는 비상 루틴 1단계 마련.
-    *   알림 중복 발생 억제 로직 추가 (한 번 가격에 도달하여 알림이 간 후에는 며칠간 휴지기 설정 등).
+## 🚀 3. Phase별 개발 완료 내역 및 추가 구현 현황
 
-### Phase 4 & 5: 수익화 및 홍보 (Monetization & Marketing)
-*   **개발 단계:** 페이먼트 모듈(토스 페이먼츠/포트원 등) 연동, SEO 적용(Sitemap, MetaOG 생성기).
-*   **오류 방지 및 QA:**
-    *   결제 모듈은 무조건 테스트 환경(Sandbox)에서 "통장 잔고 부족", "결제 중 브라우저 종료", "네트워크 에러" 시나리오를 100% 재현하여 트랜잭션 정상 롤백 확인.
+### Phase 1: AI (The Brain) - 예측 및 감성 분석 ✅
+- **기술적 지표 및 Prophet:** `FastAPI` 라우터(`/analysis/{ticker}`) 내부에서 매일 밤 학습된 모델 데이터를 읽어와 Plotly 캔들스틱/밴드 차트 렌더링.
+- **퀀트 점수(AI Score) 및 계절성(Seasonality):** 10년 치 주가 데이터의 달력 기반 수익성을 분석하는 हीट맵(Heatmap) 구현. 휴장일 제외 조건 및 `Numpy JSON Serialization` 에러 완벽 해결.
+
+### Phase 2: Community & UI (The Heart) - 댓글 및 레이아웃 ✅
+- **UI 레이아웃 교정:** 내 자산(Portfolio) 페이지가 왼쪽으로 쏠리는 레이아웃 붕괴 현상 수정 (Grid Layout 정상화). 데이터 보드 시인성 강화를 위해 '일자별 외국인/기관 순매수' 명칭으로 교체 및 설명 추가.
+- **종목 검색 자동완성(Auto-Complete):** 사용자가 검색창에 '삼성'만 쳐도 관련 종목과 티커 코드가 드롭다운으로 조회되는 편의성 API(`/api/search`) 구현 및 JS 부착 완료.
+
+### Phase 3: 인프라 (The Backbone) - API 및 보안(Security) ✅
+- **서버사이드 시세 감시:** `FastAPI` 백그라운드 탭에서 가격 체크.
+- **치명적 웹 공격 방어:** `main.py`에 CORS 화이트리스트 도입(지정된 도메인만 허용). 또한 Clickjacking, XSS를 막는 보안 HTTP 통신 헤더 주입 완료.
+
+### Phase 4 & 5: 수익화 및 마케팅 (Monetization & Marketing) 🔄 (진행 중)
+- **개발 계획 확정:** SEO를 위한 동적 메타 태그 최적화, `ads.txt` 삽입 등 애드센스 준비 로직 및 캡처 이미지를 활용한 '바이럴 전략' 등 마케팅 인프라 구성 준비 단계.
 
 ---
 
 ## 🛡️ 4. 배포(Deployment) 가이드라인
 
-상태를 예측할 수 없는 에러를 방지하기 위해 **반드시 3단계 배포 프로세스**를 도입합니다.
-
-1.  **Dev (로컬 개발 환경):** IDE 내부에서 모든 기능 및 예외상황 점검.
-2.  **Staging (테스트 서버):** 실제 DB의 최근 백업본을 복사해둔 환경. 여기서 Alembic 마이그레이션이 정상 작동하는지, 크롤링 IP가 차단되지 않는지 테스트합니다.
-3.  **Production (운영 서버):** 심야 코어 타임 이외의 시간(예: 새벽 3시)에 배포. 배포 직전 반드시 기존 DB 풀 백업 수행.
+현재 Render.com을 통한 환경이며, GitHub `main` 릴리즈 푸시될 때 원격 서버로 CI/CD 배포되도록 구성되어 있습니다.
 
 ## 📝 다음 단계 액션 플랜
 이 계획서를 바탕으로 당장 착수해야 할 작업은 다음과 같습니다.
-1.  프로젝트 내 `requirements.txt` 점검 및 마이그레이션 툴(`alembic`) 도입.
-2.  **Phase 3의 인프라(KIS API 연동 등)**을 먼저 적용하여 크롤링으로 인한 에러 불안정성을 원천적으로 제거한 뒤, AI 및 커뮤니티 기능을 얹는 상향식 개발 순서를 권장합니다.
+1. 승인된 [수익화 파이프라인(광고 삽입 및 바이럴 공유 기능)] 개발 착수.
+2. 커뮤니티 평판 시스템 및 유료 프리미엄 멤버십 권한 세분화 개발.

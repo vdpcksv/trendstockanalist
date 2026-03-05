@@ -5,11 +5,17 @@ import os
 
 # Supabase PostgreSQL Connection String
 # In production, set DATABASE_URL as an environment variable.
-SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
+SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./trendstock.db")
 
-if not SQLALCHEMY_DATABASE_URL:
-    raise ValueError("ERROR: DATABASE_URL environment variable is not set. Please configure your database connection.")
-engine = create_engine(SQLALCHEMY_DATABASE_URL, pool_pre_ping=True, pool_size=5, max_overflow=10)
+# Render의 경우 postgres:// 형식으로 URL을 제공할 수 있으므로 SQLAlchemy 1.4+ 에 맞게 수정합니다.
+if SQLALCHEMY_DATABASE_URL.startswith("postgres://"):
+    SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+if SQLALCHEMY_DATABASE_URL.startswith("sqlite"):
+    engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
+else:
+    engine = create_engine(SQLALCHEMY_DATABASE_URL, pool_pre_ping=True, pool_size=5, max_overflow=10)
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()

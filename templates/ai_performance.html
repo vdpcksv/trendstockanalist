@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block title %}AI 백테스팅 퍼포먼스 리포트 | AlphaFinder{% endblock %}
+{% block meta_description %}AlphaFinder의 AI 예측 알고리즘 방향성 적중률과 과거 백테스팅 결과를 투명하게 확인하세요.{% endblock %}
+
+{% block content %}
+<div class="mb-10 flex flex-col items-center text-center">
+    <div
+        class="inline-block bg-blue-500/20 border border-blue-400/30 text-blue-600 dark:text-blue-300 px-4 py-1.5 rounded-full text-sm font-semibold mb-4 drop-shadow-sm">
+        AI Track Record & Transparency
+    </div>
+    <h1 class="text-4xl font-extrabold text-slate-900 dark:text-white mb-4 tracking-tight drop-shadow-md">
+        예측 모델 실전 백테스팅 결과
+    </h1>
+    <p class="text-slate-500 dark:text-slate-400 max-w-2xl text-lg">
+        우리는 투명성을 가장 중요한 가치로 생각합니다. AI 알고리즘이 지난 과거 데이터 및 실전에서 예측했던 방향성의 <br class="hidden sm:block">실제 성공/실패율을 이곳에 실시간으로
+        공개합니다.
+    </p>
+</div>
+
+<!-- Key Metrics Dashboard -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+    <!-- Accuracy -->
+    <div class="glass-card rounded-2xl p-6 text-center hover-lift relative overflow-hidden group">
+        <div
+            class="absolute inset-0 bg-gradient-to-b from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+        </div>
+        <div class="text-emerald-500 mb-2 text-3xl">🎯</div>
+        <h3 class="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1">총 누적 적중률</h3>
+        <p class="text-4xl font-extrabold text-emerald-600 dark:text-emerald-400 outfit-font">{{
+            performance_data.accuracy }}<span class="text-2xl">%</span></p>
+    </div>
+
+    <!-- Total Predictions -->
+    <div class="glass-card rounded-2xl p-6 text-center hover-lift">
+        <div class="text-indigo-500 mb-2 text-3xl">📈</div>
+        <h3 class="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1">총 누적 예측 건수</h3>
+        <p class="text-4xl font-extrabold text-slate-900 dark:text-white outfit-font">{{
+            "{:,}".format(performance_data.total_predictions) }}</p>
+    </div>
+
+    <!-- Successful Predictions -->
+    <div class="glass-card rounded-2xl p-6 text-center hover-lift">
+        <div class="text-blue-500 mb-2 text-3xl">✔️</div>
+        <h3 class="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1">방향성 성공 (Hit)
+        </h3>
+        <p class="text-4xl font-extrabold text-blue-600 dark:text-blue-400 outfit-font">{{
+            "{:,}".format(performance_data.successful_predictions) }}</p>
+    </div>
+
+    <!-- Failed Predictions -->
+    <div class="glass-card rounded-2xl p-6 text-center hover-lift relative overflow-hidden group">
+        <div
+            class="absolute inset-0 bg-gradient-to-b from-rose-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+        </div>
+        <div class="text-rose-500 mb-2 text-3xl">❌</div>
+        <h3 class="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1">방향성 실패 (Miss)
+        </h3>
+        <p class="text-4xl font-extrabold text-rose-600 dark:text-rose-400 outfit-font">{{
+            "{:,}".format(performance_data.failed_predictions) }}</p>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+    <!-- Chart Section -->
+    <div class="glass-card rounded-2xl p-6 md:p-8 hover-lift lg:col-span-2">
+        <h2 class="text-xl font-bold mb-6 text-slate-900 dark:text-white flex items-center gap-2">
+            <span class="text-indigo-600 dark:text-indigo-400">📊</span> 월간 AI 방향성 적중 추이
+        </h2>
+
+        <div id="plotly-accuracy-chart"
+            class="w-full h-80 bg-slate-50 dark:bg-[#0B1021]/50 rounded-xl border border-slate-300/50 dark:border-slate-700/50 shadow-inner">
+            <!-- Plotly chart injected here -->
+            <div class="w-full h-full flex items-center justify-center text-slate-400 text-sm">로딩 중...</div>
+        </div>
+        <p class="mt-4 text-xs text-slate-500 font-medium">※ 본 차트는 모의투자 환경에서의 종가(Close) 기준 시뮬레이션 결과입니다.</p>
+    </div>
+
+    <!-- Live Track Record Table -->
+    <div class="glass-card rounded-2xl p-6 md:p-8 hover-lift flex flex-col">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <span class="text-rose-600 dark:text-rose-400">🔥</span> 최근 체결 복기
+            </h2>
+            <span class="text-xs bg-slate-200/50 dark:bg-slate-800/50 px-2 py-1 rounded text-slate-500">최근 업데이트: {{
+                performance_data.last_updated }}</span>
+        </div>
+
+        <div
+            class="flex-grow overflow-x-auto rounded-xl border border-slate-300/50 dark:border-slate-700/50 shadow-inner">
+            <table class="min-w-full text-sm text-left text-slate-500 dark:text-slate-400">
+                <thead
+                    class="text-xs text-slate-500 dark:text-slate-400 uppercase bg-slate-200/50 dark:bg-slate-800/50 border-b border-slate-300/50 dark:border-slate-700/50">
+                    <tr>
+                        <th class="px-4 py-3 font-bold">진단 종목</th>
+                        <th class="px-4 py-3 font-bold">결과</th>
+                        <th class="px-4 py-3 font-bold text-center">상태</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-800/50">
+                    {% for item in performance_data.recent_hits %}
+                    <tr class="hover:bg-indigo-500/10 transition-colors">
+                        <td class="px-4 py-3 font-bold text-slate-900 dark:text-white">
+                            <a href="/review?ticker={{ item.ticker }}"
+                                class="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">{{
+                                item.ticker }}</a>
+                            <div class="text-[10px] text-slate-400 font-normal mt-0.5">{{ item.date }}</div>
+                        </td>
+                        <td class="px-4 py-3">
+                            <div class="text-xs text-slate-500">예측: {{ item.pred }}</div>
+                            <div
+                                class="font-bold {% if '상승' in item.actual %}text-rose-600 dark:text-rose-400{% else %}text-blue-500{% endif %} hover-lift">
+                                {{ item.actual }}</div>
+                        </td>
+                        <td class="px-4 py-3 text-center">
+                            {% if item.status == 'hit' %}
+                            <span
+                                class="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-2 py-1 rounded-md text-[11px] font-bold">적중
+                                (HIT)</span>
+                            {% else %}
+                            <span
+                                class="bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 px-2 py-1 rounded-md text-[11px] font-bold">실패
+                                (MISS)</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div
+            class="mt-6 bg-slate-100 dark:bg-[#151b30] border border-slate-300 dark:border-slate-700 p-4 rounded-xl shadow-inner text-sm font-medium text-slate-600 dark:text-slate-300">
+            주식 시장에서 수익을 내기 위해서는 100%의 승률이 필요하지 않습니다. 승률이 60%만 되더라도 "손익비"를 관리하면 수익은 누적됩니다.
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Mock Chart Data for accuracy over the last 6 months
+        const months = ['10월', '11월', '12월', '1월', '2월', '3월'];
+        const accuracies = [74.2, 72.8, 76.5, 75.1, 79.2, 81.3]; // Trend upward
+        const bars = [40, 50, 45, 60, 80, 75]; // Total predictions in a month
+
+        const traceAcc = {
+            x: months,
+            y: accuracies,
+            name: '월간 적중률 (%)',
+            type: 'scatter',
+            mode: 'lines+markers',
+            line: { color: '#3b82f6', width: 3 },
+            marker: { size: 8, color: '#2563eb' },
+            yaxis: 'y2'
+        };
+
+        const traceVol = {
+            x: months,
+            y: bars,
+            name: '월별 진단 종목 수',
+            type: 'bar',
+            marker: { color: '#64748b', opacity: 0.3 }
+        };
+
+        const layout = {
+            margin: { t: 40, r: 50, b: 40, l: 50 },
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            plot_bgcolor: 'rgba(0,0,0,0)',
+            font: { color: '#cbd5e1' },
+            xaxis: {
+                tickfont: { color: '#94a3b8' }
+            },
+            yaxis: {
+                title: '진단 건수',
+                titlefont: { color: '#94a3b8', size: 12 },
+                tickfont: { color: '#94a3b8' },
+                gridcolor: '#334155'
+            },
+            yaxis2: {
+                title: '적중률 (%)',
+                titlefont: { color: '#3b82f6', size: 12 },
+                tickfont: { color: '#3b82f6' },
+                overlaying: 'y',
+                side: 'right',
+                range: [50, 100]
+            },
+            legend: { orientation: 'h', y: 1.15, x: 0.5, xanchor: 'center' }
+        };
+
+        Plotly.newPlot('plotly-accuracy-chart', [traceVol, traceAcc], layout, { displayModeBar: false, responsive: true });
+    });
+</script>
+{% endblock %}

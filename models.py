@@ -15,6 +15,7 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     portfolios = relationship("Portfolio", back_populates="owner")
+    watchlists = relationship("Watchlist", back_populates="user")
     comments = relationship("Comment", back_populates="user")
     votes = relationship("Vote", back_populates="user")
     alerts = relationship("Alert", back_populates="user")
@@ -27,6 +28,7 @@ class Portfolio(Base):
     ticker = Column(String, index=True) # Stock code or Theme name
     target_price = Column(Float, nullable=True)
     qty = Column(Integer, default=1)
+    memo = Column(String, nullable=True) # Phase 2: Trading Journal
     added_at = Column(DateTime, default=datetime.utcnow)
 
     owner = relationship("User", back_populates="portfolios")
@@ -65,3 +67,14 @@ class Alert(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     user = relationship("User", back_populates="alerts")
+
+class Watchlist(Base):
+    __tablename__ = "watchlists"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    name = Column(String) # Group name, e.g., 'Tech Stocks', 'Dividends'
+    ticker = Column(String, index=True)
+    added_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("User", back_populates="watchlists")

@@ -30,6 +30,19 @@
 
     <!-- Tailwind CSS (CDN for Premium Aesthetic) -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <!-- Prevent FOUC for Dark Mode -->
+    <script>
+        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark')
+        }
+    </script>
 
     <!-- Plotly JS (To replace Streamlit charts) -->
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
@@ -42,10 +55,17 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #0B1021 0%, #17203B 50%, #0B1021 100%);
             background-attachment: fixed;
+        }
+
+        html.dark body {
+            background: linear-gradient(135deg, #0B1021 0%, #17203B 50%, #0B1021 100%);
             color: #cbd5e1;
-            /* slate-300 */
+        }
+
+        html:not(.dark) body {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f1f5f9 100%);
+            color: #334155;
         }
 
         h1,
@@ -59,30 +79,48 @@
             letter-spacing: -0.025em;
         }
 
-        /* Glassmorphism utility - Dark Theme */
+        /* Glassmorphism utility */
         .glass-nav {
-            background: rgba(11, 16, 33, 0.65);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        html.dark .glass-nav {
+            background: rgba(11, 16, 33, 0.65);
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         }
 
         .glass-nav a {
+            color: #64748b;
+        }
+
+        html.dark .glass-nav a {
             color: #94a3b8;
-            /* slate-400 */
         }
 
         .glass-nav a:hover {
+            color: #4f46e5;
+            background: rgba(79, 70, 229, 0.1);
+        }
+
+        html.dark .glass-nav a:hover {
             color: #818cf8;
-            /* indigo-400 */
             background: rgba(129, 140, 248, 0.1);
         }
 
         /* Glass Card Utility */
         .glass-card {
-            background: rgba(255, 255, 255, 0.03);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+        }
+
+        html.dark .glass-card {
+            background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.08);
             box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
         }
@@ -139,11 +177,12 @@
     </style>
 </head>
 
-<body class="text-slate-300 overflow-x-hidden min-h-screen flex flex-col selection:bg-indigo-500/30">
+<body
+    class="text-slate-600 dark:text-slate-300 overflow-x-hidden min-h-screen flex flex-col selection:bg-indigo-500/30">
 
     <!-- Global Loading Screen -->
     <div id="global-loader"
-        class="fixed inset-0 bg-[#0B1021] z-[9999] flex flex-col items-center justify-center transition-opacity duration-500">
+        class="fixed inset-0 bg-slate-50 dark:bg-[#0B1021] z-[9999] flex flex-col items-center justify-center transition-opacity duration-500">
         <!-- Coin Rain Container -->
         <div id="coin-rain-container" class="absolute inset-0 overflow-hidden pointer-events-none"></div>
 
@@ -157,9 +196,11 @@
             </div>
         </div>
 
-        <h2 class="text-3xl font-extrabold text-white outfit-font tracking-tight drop-shadow-md relative z-10">데이터를 분석
+        <h2
+            class="text-3xl font-extrabold text-slate-900 dark:text-white outfit-font tracking-tight drop-shadow-md relative z-10">
+            데이터를 분석
             중입니다...</h2>
-        <p class="text-indigo-300 font-medium mt-3 relative z-10 flex items-center gap-2">
+        <p class="text-indigo-600 dark:text-indigo-300 font-medium mt-3 relative z-10 flex items-center gap-2">
             <svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-pink-400" xmlns="http://www.w3.org/2000/svg" fill="none"
                 viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -178,8 +219,28 @@
                 <!-- Logo -->
                 <div class="flex-shrink-0 flex items-center gap-2">
                     <a href="/"
-                        class="font-extrabold text-2xl tracking-tight text-white outfit-font drop-shadow-md no-underline">📉
-                        Alpha<span class="text-indigo-400">Finder</span></a>
+                        class="font-extrabold text-2xl tracking-tight text-slate-900 dark:text-white outfit-font drop-shadow-md no-underline">📉
+                        Alpha<span class="text-indigo-600 dark:text-indigo-400">Finder</span></a>
+
+                    <!-- Server Status Indicator -->
+                    <div
+                        class="hidden sm:flex items-center gap-1.5 ml-3 px-2.5 py-1 bg-amber-500/10 border border-amber-500/20 rounded-lg cursor-help group relative">
+                        <span class="relative flex h-2 w-2">
+                            <span
+                                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                        </span>
+                        <span
+                            class="text-[10px] font-extrabold text-amber-600 dark:text-amber-400 tracking-widest uppercase">데이터
+                            지연</span>
+                        <!-- Tooltip -->
+                        <div
+                            class="absolute top-full left-0 mt-2 w-56 p-3 bg-slate-900/95 backdrop-blur-md text-slate-300 text-xs rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 shadow-2xl border border-slate-700 leading-relaxed font-medium">
+                            현재 거래소 규정에 의해 데이터가 <strong>최대 20분 지연</strong> 수신될 수 있습니다.<br /><br /><span
+                                class="text-indigo-300 font-bold">PRO 버전 업그레이드 시</span> KIS API 기반 100% 실시간 주문/호가 연동이
+                            제공됩니다.
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Desktop: Main Links (3 core pages only) -->
@@ -193,7 +254,7 @@
                         class="px-3 py-2 rounded-lg font-semibold transition-colors duration-200 text-sm">🏆 랭킹</a>
 
                     <a href="/payment"
-                        class="px-3 py-2 rounded-lg font-bold transition-all duration-300 text-sm text-pink-400 hover:text-pink-300 hover:bg-pink-500/10 flex items-center gap-1 border border-pink-500/30 shadow-[0_0_15px_rgba(236,72,153,0.15)] ml-2 bg-[#0B1021]/50">
+                        class="px-3 py-2 rounded-lg font-bold transition-all duration-300 text-sm text-pink-400 hover:text-pink-300 hover:bg-pink-500/10 flex items-center gap-1 border border-pink-500/30 shadow-[0_0_15px_rgba(236,72,153,0.15)] ml-2 bg-slate-50 dark:bg-[#0B1021]/50">
                         <span class="text-base leading-none tracking-tighter">👑</span> <span class="tracking-wide">PRO
                             혜택</span>
                     </a>
@@ -201,7 +262,7 @@
                     <!-- More dropdown -->
                     <div class="relative" id="more-dropdown-wrapper">
                         <button onclick="toggleMoreMenu()"
-                            class="px-3 py-2 rounded-lg font-semibold transition-colors duration-200 text-sm text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10 flex items-center gap-1">
+                            class="px-3 py-2 rounded-lg font-semibold transition-colors duration-200 text-sm text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/10 flex items-center gap-1">
                             더보기
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -212,17 +273,20 @@
                             class="hidden absolute right-0 mt-2 w-48 rounded-xl shadow-2xl border border-white/10 overflow-hidden z-50"
                             style="background: rgba(15, 23, 50, 0.95); backdrop-filter: blur(20px);">
                             <a href="/seasonality"
-                                class="block px-4 py-3 text-sm font-medium text-slate-300 hover:bg-indigo-500/10 hover:text-indigo-300 transition-colors">🗓️
+                                class="block px-4 py-3 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-indigo-500/10 hover:text-indigo-600 dark:text-indigo-300 transition-colors">🗓️
                                 계절성 트렌드</a>
                             <a href="/themes"
-                                class="block px-4 py-3 text-sm font-medium text-slate-300 hover:bg-indigo-500/10 hover:text-indigo-300 transition-colors">🎯
+                                class="block px-4 py-3 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-indigo-500/10 hover:text-indigo-600 dark:text-indigo-300 transition-colors">🎯
                                 테마 분석</a>
+                            <a href="/ai-performance"
+                                class="block px-4 py-3 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-indigo-500/10 hover:text-indigo-600 dark:text-indigo-300 transition-colors">📊
+                                AI 백테스팅 리포트</a>
                             <a href="/portfolio" id="nav-portfolio"
-                                class="hidden px-4 py-3 text-sm font-medium text-slate-300 hover:bg-indigo-500/10 hover:text-indigo-300 transition-colors">💼
+                                class="hidden px-4 py-3 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-indigo-500/10 hover:text-indigo-600 dark:text-indigo-300 transition-colors">💼
                                 내 자산</a>
                             <div class="border-t border-white/5"></div>
                             <a href="/policies"
-                                class="block px-4 py-3 text-sm font-medium text-slate-400 hover:bg-indigo-500/10 hover:text-indigo-300 transition-colors">📜
+                                class="block px-4 py-3 text-sm font-medium text-slate-500 dark:text-slate-400 hover:bg-indigo-500/10 hover:text-indigo-600 dark:text-indigo-300 transition-colors">📜
                                 필수 정책</a>
                         </div>
                     </div>
@@ -230,23 +294,39 @@
 
                 <!-- Right: Auth + Mobile Menu Button -->
                 <div class="flex items-center space-x-3">
-                    <span id="user-greeting" class="text-sm font-semibold text-indigo-300 hidden"></span>
+                    <!-- Theme Toggle -->
+                    <button id="theme-toggle"
+                        class="p-2 mr-1 rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors focus:outline-none"
+                        aria-label="Toggle Dark Mode">
+                        <svg id="theme-toggle-dark-icon" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+                        </svg>
+                        <svg id="theme-toggle-light-icon" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4.22 4.22a1 1 0 011.415 0l.708.708a1 1 0 01-1.414 1.414l-.708-.708a1 1 0 010-1.414zM16 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zm-4.22 4.22a1 1 0 010 1.415l-.708.708a1 1 0 01-1.414-1.414l.708.708a1 1 0 011.415 0zM10 16a1 1 0 01-1-1v-1a1 1 0 112 0v1a1 1 0 01-1 1zm-4.22-4.22a1 1 0 01-1.415 0l-.708-.708a1 1 0 011.414-1.414l.708.708a1 1 0 010 1.414zM4 10a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm4.22-4.22a1 1 0 010-1.415l.708-.708a1 1 0 011.414 1.414l-.708.708a1 1 0 01-1.415 0zM10 6a4 4 0 100 8 4 4 0 000-8z"
+                                fill-rule="evenodd" clip-rule="evenodd"></path>
+                        </svg>
+                    </button>
+                    <span id="user-greeting"
+                        class="text-sm font-semibold text-indigo-600 dark:text-indigo-300 hidden"></span>
                     <button id="btn-login" onclick="openAuthModal(true)"
-                        class="bg-indigo-600/90 backdrop-blur-sm border border-indigo-500/50 text-white px-5 py-2 rounded-full font-bold text-sm hover:bg-indigo-500 hover:shadow-[0_0_15px_rgba(99,102,241,0.5)] transition-all duration-300">
+                        class="bg-indigo-600/90 backdrop-blur-sm border border-indigo-300/50 dark:border-indigo-500/50 text-slate-900 dark:text-white px-5 py-2 rounded-full font-bold text-sm hover:bg-indigo-500 hover:shadow-[0_0_15px_rgba(99,102,241,0.5)] transition-all duration-300">
                         로그인
                     </button>
                     <button id="btn-register" onclick="openAuthModal(false)"
-                        class="bg-slate-700/80 backdrop-blur-sm border border-slate-600 text-white px-5 py-2 rounded-full font-bold text-sm hover:bg-slate-600 hover:shadow-[0_0_15px_rgba(100,116,139,0.5)] transition-all duration-300 ml-2">
+                        class="bg-slate-300/80 dark:bg-slate-700/80 backdrop-blur-sm border border-slate-600 text-slate-900 dark:text-white px-5 py-2 rounded-full font-bold text-sm hover:bg-slate-600 hover:shadow-[0_0_15px_rgba(100,116,139,0.5)] transition-all duration-300 ml-2">
                         회원가입
                     </button>
                     <button id="btn-logout" onclick="logout()"
-                        class="hidden bg-slate-800/80 backdrop-blur-sm text-slate-300 px-5 py-2 rounded-full font-bold text-sm hover:text-rose-400 hover:bg-rose-500/10 border border-slate-700 hover:border-rose-500/30 transition-all duration-300 ml-2">
+                        class="hidden bg-slate-200/80 dark:bg-slate-800/80 backdrop-blur-sm text-slate-600 dark:text-slate-300 px-5 py-2 rounded-full font-bold text-sm hover:text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 border border-slate-300 dark:border-slate-700 hover:border-rose-500/30 transition-all duration-300 ml-2">
                         로그아웃
                     </button>
 
                     <!-- Hamburger (Mobile) -->
                     <button onclick="toggleMobileMenu()"
-                        class="md:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
+                        class="md:hidden p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-white/10 transition-colors">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M4 6h16M4 12h16M4 18h16" />
@@ -258,29 +338,29 @@
             <!-- Mobile Menu (Hidden by default) -->
             <div id="mobile-menu" class="hidden md:hidden pb-4 border-t border-white/5 mt-2 pt-3 space-y-1">
                 <a href="/"
-                    class="block px-4 py-2.5 rounded-lg font-semibold text-sm text-slate-300 hover:bg-indigo-500/10 hover:text-indigo-300 transition-colors">💰
+                    class="block px-4 py-2.5 rounded-lg font-semibold text-sm text-slate-600 dark:text-slate-300 hover:bg-indigo-500/10 hover:text-indigo-600 dark:text-indigo-300 transition-colors">💰
                     자금 흐름</a>
                 <a href="/review"
-                    class="block px-4 py-2.5 rounded-lg font-semibold text-sm text-slate-300 hover:bg-indigo-500/10 hover:text-indigo-300 transition-colors">🤖
+                    class="block px-4 py-2.5 rounded-lg font-semibold text-sm text-slate-600 dark:text-slate-300 hover:bg-indigo-500/10 hover:text-indigo-600 dark:text-indigo-300 transition-colors">🤖
                     AI 매매 복기</a>
                 <a href="/leaderboard"
-                    class="block px-4 py-2.5 rounded-lg font-semibold text-sm text-slate-300 hover:bg-indigo-500/10 hover:text-indigo-300 transition-colors">🏆
+                    class="block px-4 py-2.5 rounded-lg font-semibold text-sm text-slate-600 dark:text-slate-300 hover:bg-indigo-500/10 hover:text-indigo-600 dark:text-indigo-300 transition-colors">🏆
                     모의 랭킹</a>
                 <a href="/payment"
                     class="block px-4 py-2.5 rounded-lg font-bold text-sm text-pink-400 bg-pink-500/10 hover:bg-pink-500/20 hover:text-pink-300 transition-colors border border-pink-500/20 my-1 shadow-inner flex items-center gap-2">👑
                     PRO 혜택 알아보기</a>
                 <a href="/seasonality"
-                    class="block px-4 py-2.5 rounded-lg font-semibold text-sm text-slate-300 hover:bg-indigo-500/10 hover:text-indigo-300 transition-colors">🗓️
+                    class="block px-4 py-2.5 rounded-lg font-semibold text-sm text-slate-600 dark:text-slate-300 hover:bg-indigo-500/10 hover:text-indigo-600 dark:text-indigo-300 transition-colors">🗓️
                     계절성 트렌드</a>
                 <a href="/themes"
-                    class="block px-4 py-2.5 rounded-lg font-semibold text-sm text-slate-300 hover:bg-indigo-500/10 hover:text-indigo-300 transition-colors">🎯
+                    class="block px-4 py-2.5 rounded-lg font-semibold text-sm text-slate-600 dark:text-slate-300 hover:bg-indigo-500/10 hover:text-indigo-600 dark:text-indigo-300 transition-colors">🎯
                     테마 분석</a>
                 <a href="/portfolio" id="nav-portfolio-mobile"
-                    class="hidden px-4 py-2.5 rounded-lg font-semibold text-sm text-slate-300 hover:bg-indigo-500/10 hover:text-indigo-300 transition-colors">💼
+                    class="hidden px-4 py-2.5 rounded-lg font-semibold text-sm text-slate-600 dark:text-slate-300 hover:bg-indigo-500/10 hover:text-indigo-600 dark:text-indigo-300 transition-colors">💼
                     내 자산</a>
                 <div class="border-t border-white/5 my-2"></div>
                 <a href="/policies"
-                    class="block px-4 py-2.5 rounded-lg font-semibold text-sm text-slate-400 hover:bg-indigo-500/10 hover:text-indigo-300 transition-colors">📜
+                    class="block px-4 py-2.5 rounded-lg font-semibold text-sm text-slate-500 dark:text-slate-400 hover:bg-indigo-500/10 hover:text-indigo-600 dark:text-indigo-300 transition-colors">📜
                     필수 정책</a>
             </div>
         </div>
@@ -310,37 +390,41 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-[#0B1021]/80 backdrop-blur-md border-t border-white/10 mt-auto py-8 text-center text-slate-400">
-        <p class="text-sm font-medium text-slate-300">© 2026 AlphaFinder Executive Terminal. All rights reserved.</p>
+    <footer
+        class="bg-slate-50 dark:bg-[#0B1021]/80 backdrop-blur-md border-t border-white/10 mt-auto py-8 text-center text-slate-500 dark:text-slate-400">
+        <p class="text-sm font-medium text-slate-600 dark:text-slate-300">© 2026 AlphaFinder Executive Terminal. All
+            rights reserved.</p>
         <p class="text-xs text-slate-500 mt-2">본 정보는 퀀트 기반 알고리즘에 의해 자동 추출된 데이터이며, 투자의 최종 책임은 본인에게 있습니다.</p>
     </footer>
 
     <!-- Auth Modal -->
     <div id="auth-modal"
-        class="hidden fixed inset-0 bg-[#0B1021]/80 backdrop-blur-sm z-50 flex items-center justify-center">
-        <div class="glass-card p-8 rounded-2xl shadow-2xl w-full max-w-sm border border-indigo-500/20">
-            <h2 id="auth-title" class="text-2xl font-bold mb-6 text-white text-center">로그인</h2>
+        class="hidden fixed inset-0 bg-slate-50 dark:bg-[#0B1021]/80 backdrop-blur-sm z-50 flex items-center justify-center">
+        <div
+            class="glass-card p-8 rounded-2xl shadow-2xl w-full max-w-sm border border-indigo-300/20 dark:border-indigo-500/20">
+            <h2 id="auth-title" class="text-2xl font-bold mb-6 text-slate-900 dark:text-white text-center">로그인</h2>
             <form id="auth-form" class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-slate-300 mb-1">아이디</label>
+                    <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">아이디</label>
                     <input type="text" id="auth-username" required
-                        class="block w-full bg-[#151b30] border border-slate-700 rounded-lg shadow-inner py-2.5 px-3 text-sm text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none transition-colors">
+                        class="block w-full bg-white dark:bg-[#151b30] border border-slate-300 dark:border-slate-700 rounded-lg shadow-inner py-2.5 px-3 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-300 dark:border-indigo-500 focus:outline-none transition-colors">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-slate-300 mb-1">비밀번호</label>
+                    <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">비밀번호</label>
                     <input type="password" id="auth-password" required
-                        class="block w-full bg-[#151b30] border border-slate-700 rounded-lg shadow-inner py-2.5 px-3 text-sm text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none transition-colors">
+                        class="block w-full bg-white dark:bg-[#151b30] border border-slate-300 dark:border-slate-700 rounded-lg shadow-inner py-2.5 px-3 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-300 dark:border-indigo-500 focus:outline-none transition-colors">
                 </div>
                 <button type="submit"
-                    class="w-full bg-gradient-to-r from-indigo-600 to-indigo-500 text-white font-bold py-3 px-4 rounded-lg shadow-lg hover:shadow-indigo-500/30 transition-all duration-300 mt-2"
+                    class="w-full bg-gradient-to-r from-indigo-600 to-indigo-500 text-slate-900 dark:text-white font-bold py-3 px-4 rounded-lg shadow-lg hover:shadow-indigo-500/30 transition-all duration-300 mt-2"
                     id="auth-submitBtn">로그인</button>
             </form>
             <div class="mt-5 text-center text-sm">
                 <button onclick="toggleAuthMode()" id="auth-toggleBtn"
-                    class="text-indigo-400 font-medium hover:text-indigo-300 transition-colors">계정이 없으신가요? 회원가입</button>
+                    class="text-indigo-600 dark:text-indigo-400 font-medium hover:text-indigo-600 dark:text-indigo-300 transition-colors">계정이
+                    없으신가요? 회원가입</button>
             </div>
             <button onclick="closeAuthModal()"
-                class="mt-4 w-full border border-slate-700 text-slate-300 font-bold py-2.5 px-4 rounded-lg hover:bg-slate-800 transition-colors">닫기</button>
+                class="mt-4 w-full border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold py-2.5 px-4 rounded-lg hover:bg-slate-200 dark:bg-slate-800 transition-colors">닫기</button>
         </div>
     </div>
 
@@ -528,6 +612,42 @@
 
         // Initialize state
         checkAuthState();
+
+        // Theme Toggle Logic
+        var themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+        var themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+
+        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            themeToggleLightIcon.classList.remove('hidden');
+        } else {
+            themeToggleDarkIcon.classList.remove('hidden');
+        }
+
+        var themeToggleBtn = document.getElementById('theme-toggle');
+        if (themeToggleBtn) {
+            themeToggleBtn.addEventListener('click', function () {
+                themeToggleDarkIcon.classList.toggle('hidden');
+                themeToggleLightIcon.classList.toggle('hidden');
+
+                if (localStorage.getItem('color-theme')) {
+                    if (localStorage.getItem('color-theme') === 'light') {
+                        document.documentElement.classList.add('dark');
+                        localStorage.setItem('color-theme', 'dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                        localStorage.setItem('color-theme', 'light');
+                    }
+                } else {
+                    if (document.documentElement.classList.contains('dark')) {
+                        document.documentElement.classList.remove('dark');
+                        localStorage.setItem('color-theme', 'light');
+                    } else {
+                        document.documentElement.classList.add('dark');
+                        localStorage.setItem('color-theme', 'dark');
+                    }
+                }
+            });
+        }
     </script>
 </body>
 

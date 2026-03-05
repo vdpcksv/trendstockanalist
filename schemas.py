@@ -5,6 +5,7 @@ class PortfolioBase(BaseModel):
     ticker: str
     target_price: Optional[float] = None
     qty: Optional[int] = 1
+    memo: Optional[str] = None
 
 class PortfolioCreate(PortfolioBase):
     pass
@@ -69,6 +70,22 @@ class AlertResponse(AlertBase):
     user_id: int
     is_active: int
     created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+# --- Phase 2: Watchlist Schemas ---
+class WatchlistBase(BaseModel):
+    name: str
+    ticker: str
+
+class WatchlistCreate(WatchlistBase):
+    pass
+
+class WatchlistResponse(WatchlistBase):
+    id: int
+    user_id: int
+    added_at: datetime
 
     class Config:
         from_attributes = True

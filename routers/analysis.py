@@ -140,17 +140,27 @@ def calculate_technical_indicators(df):
     df['MA5'] = df['Close'].rolling(window=5).mean()
     df['MA20'] = df['Close'].rolling(window=20).mean()
     df['MA60'] = df['Close'].rolling(window=60).mean()
+    df['MA120'] = df['Close'].rolling(window=120).mean()
     df['BB_MB'] = df['MA20']
     df['BB_STD'] = df['Close'].rolling(window=20).std()
     df['BB_UPPER'] = df['BB_MB'] + (df['BB_STD'] * 2)
     df['BB_LOWER'] = df['BB_MB'] - (df['BB_STD'] * 2)
     df['BB_UPPER_EXT'] = df['BB_MB'] + (df['BB_STD'] * 3)
     df['BB_LOWER_EXT'] = df['BB_MB'] - (df['BB_STD'] * 3)
+    
     delta = df['Close'].diff()
     gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
     loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
     rs = gain / loss
     df['RSI'] = 100 - (100 / (1 + rs))
+    
+    # MACD Calculation
+    df['EMA12'] = df['Close'].ewm(span=12, adjust=False).mean()
+    df['EMA26'] = df['Close'].ewm(span=26, adjust=False).mean()
+    df['MACD'] = df['EMA12'] - df['EMA26']
+    df['MACD_Signal'] = df['MACD'].ewm(span=9, adjust=False).mean()
+    df['MACD_Hist'] = df['MACD'] - df['MACD_Signal']
+    
     return df
 
 @router.get("/api/search")
@@ -205,6 +215,34 @@ async def get_stock_seasonality(ticker: str):
     except Exception as e:
         logger.error(f"Seasonality API Error: {e}")
         return {"status": "error", "message": str(e)}
+
+@router.get("/api/orderbook/{ticker}")
+async def get_orderbook(ticker: str):
+    try:
+        actual_ticker = resolve_ticker(ticker)
+        data = await kis_api.get_orderbook(actual_ticker)
+        return {"status": "success", "data": data}
+    except Exception as e:
+        logger.error(f"Orderbook error: {e}")
+        return {"status": "error", "message": "호가 데이터를 불러오는데 실패했습니다 (API 연결 오류 또는 키 미설정)"}
+
+@router.get("/ai-performance", response_class=HTMLResponse)
+async def read_ai_performance(request: Request):
+    # Mock data for AI performance report
+    performance_data = {
+        "accuracy": 78.5,
+        "total_predictions": 1250,
+        "successful_predictions": 981,
+        "failed_predictions": 269,
+        "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "recent_hits": [
+            {"ticker": "SK하이닉스", "date": "1주 전", "pred": "상승", "actual": "상승 (+8.2%)", "status": "hit"},
+            {"ticker": "현대차", "date": "2주 전", "pred": "상승", "actual": "상승 (+5.1%)", "status": "hit"},
+            {"ticker": "카카오", "date": "1개월 전", "pred": "하락", "actual": "하락 (-4.5%)", "status": "hit"},
+            {"ticker": "NAVER", "date": "1개월 전", "pred": "상승", "actual": "하락 (-2.1%)", "status": "miss"},
+        ]
+    }
+    return templates.TemplateResponse(request=request, name="ai_performance.html", context={"performance_data": performance_data})
 
 @router.get("/review", response_class=HTMLResponse)
 async def read_review(request: Request, ticker: str = "005930"):

@@ -114,6 +114,65 @@ class KisApiHandler:
             logger.error(f"Failed to fetch price for {ticker}: {e}")
             raise
 
+    async def get_orderbook(self, ticker: str):
+        """
+        KIS API 실시간 호가잔량 (5단계) 통신 함수
+        """
+        if not self._get_access_token():
+            raise Exception("KIS API Config Missing or Token Failed.")
+            
+        await self._rate_limit()
+            
+        headers = {
+            "content-type": "application/json",
+            "authorization": f"Bearer {self.access_token}",
+            "appkey": self.app_key,
+            "appsecret": self.app_secret,
+            "tr_id": "FHKST01010200" # 주식호가예상체결
+        }
+        
+        url = f"{self.domain}/uapi/domestic-stock/v1/quotations/inquire-asking-price-exp-ccn"
+        params = {
+            "FID_COND_MRKT_DIV_CODE": "J",
+            "FID_INPUT_ISCD": ticker
+        }
+        
+        try:
+            def fetch():
+                res = requests.get(url, headers=headers, params=params, timeout=5)
+                res.raise_for_status()
+                return res.json()
+                
+            data = await asyncio.to_thread(fetch)
+            if data["rt_cd"] == "0":
+                output1 = data["output1"] # 호가 data
+                
+                # Parse 5 levels of Ask/Bid
+                asks = []
+                bids = []
+                for i in range(1, 6):
+                    ask_price = output1.get(f"askp{i}", "0")
+                    ask_qty = output1.get(f"askp_rsqn{i}", "0")
+                    bid_price = output1.get(f"bidp{i}", "0")
+                    bid_qty = output1.get(f"bidp_rsqn{i}", "0")
+                    
+                    if ask_price != "0":
+                        asks.append({"price": float(ask_price), "qty": int(ask_qty)})
+                    if bid_price != "0":
+                        bids.append({"price": float(bid_price), "qty": int(bid_qty)})
+                
+                return {
+                    "asks": asks,
+                    "bids": bids,
+                    "total_ask_qty": int(output1.get("total_askp_rsqn", "0")),
+                    "total_bid_qty": int(output1.get("total_bidp_rsqn", "0"))
+                }
+            else:
+                raise Exception(f"KIS API Error: {data['msg1']}")
+        except Exception as e:
+            logger.error(f"Failed to fetch orderbook for {ticker}: {e}")
+            raise
+
 
 # --- Phase 3: Telegram Alert Bot ---
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")

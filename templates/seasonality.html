@@ -5,17 +5,17 @@
     <div
         class="inline-block bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 px-4 py-1.5 rounded-full text-sm font-semibold mb-4 drop-shadow-sm">
         Quantitative Analysis</div>
-    <h1 class="text-4xl font-extrabold text-white mb-4 tracking-tight drop-shadow-md">수십 년의 데이터가 증명하는 통계적 계절성 트렌드
+    <h1 class="text-4xl font-extrabold text-slate-900 dark:text-white mb-4 tracking-tight drop-shadow-md">수십 년의 데이터가 증명하는 통계적 계절성 트렌드
     </h1>
-    <p class="text-slate-400 max-w-2xl text-lg">최근 10년간 코스피/코스닥 주요 대표 종목들의 월별 상승 확률(승률)을 <br
+    <p class="text-slate-500 dark:text-slate-400 max-w-2xl text-lg">최근 10년간 코스피/코스닥 주요 대표 종목들의 월별 상승 확률(승률)을 <br
             class="hidden sm:block">정밀하게 백테스팅하여 시각화한 퀀트 기반 히트맵입니다.</p>
 </div>
 
 <!-- Help Expander styled with Tailwind details/summary -->
 <details class="mb-10 glass-card rounded-2xl group overflow-hidden" open>
     <summary
-        class="font-bold text-slate-200 cursor-pointer list-none flex items-center justify-between p-6 bg-indigo-500/10 hover:bg-indigo-500/20 transition-colors border-b border-slate-700/50">
-        <span class="flex items-center gap-2"><span class="text-blue-400">💡</span> 차트 데이터 해석 가이드 (클릭하여 접기/펼치기)</span>
+        class="font-bold text-slate-200 cursor-pointer list-none flex items-center justify-between p-6 bg-indigo-500/10 hover:bg-indigo-500/20 transition-colors border-b border-slate-300/50 dark:border-slate-700/50">
+        <span class="flex items-center gap-2"><span class="text-blue-600 dark:text-blue-400">💡</span> 차트 데이터 해석 가이드 (클릭하여 접기/펼치기)</span>
         <span class="transition-transform duration-300 group-open:rotate-180 text-slate-500">
             <svg fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
                 stroke-width="2" viewBox="0 0 24 24" width="24">
@@ -23,7 +23,7 @@
             </svg>
         </span>
     </summary>
-    <div class="p-6 text-slate-400 text-sm md:text-base space-y-4 bg-[#0B1021]/50 backdrop-blur-sm">
+    <div class="p-6 text-slate-500 dark:text-slate-400 text-sm md:text-base space-y-4 bg-slate-50 dark:bg-[#0B1021]/50 backdrop-blur-sm">
         <div>
             <p class="font-bold text-slate-200 mb-2">📌 '승률(Win Rate)'이란 무엇인가요?</p>
             <ul class="list-disc pl-6 space-y-1">
@@ -35,9 +35,9 @@
         <div class="pt-2">
             <p class="font-bold text-slate-200 mb-2">🎨 색상은 어떤 의미인가요?</p>
             <ul class="list-disc pl-6 space-y-1">
-                <li><span class="font-bold text-emerald-400 bg-emerald-500/20 px-1 rounded">초록색이 진할수록</span> : 역사적으로 주가가
+                <li><span class="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/20 px-1 rounded">초록색이 진할수록</span> : 역사적으로 주가가
                     상승했던 빈도(확률)가 압도적으로 높음. (적극적인 매수 관점)</li>
-                <li><span class="font-bold text-rose-400 bg-rose-500/20 px-1 rounded">빨간색이 진할수록</span> : 역사적으로 주가가 하락했던
+                <li><span class="font-bold text-rose-600 dark:text-rose-400 bg-rose-500/20 px-1 rounded">빨간색이 진할수록</span> : 역사적으로 주가가 하락했던
                     빈도가
                     높음. (보수적인 리스크 관리가 필요한 달)</li>
             </ul>
@@ -48,14 +48,14 @@
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
     <!-- Heatmap Chart -->
     <div class="glass-card rounded-2xl p-6 md:p-8 hover-lift lg:col-span-2">
-        <div class="flex items-center justify-between border-b border-slate-700/50 pb-4 mb-6">
-            <h2 class="text-xl font-bold text-white flex items-center gap-2"><span class="text-indigo-400">📊</span>
+        <div class="flex items-center justify-between border-b border-slate-300/50 dark:border-slate-700/50 pb-4 mb-6">
+            <h2 class="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2"><span class="text-indigo-600 dark:text-indigo-400">📊</span>
                 월별/섹터별 평균 승률 히트맵</h2>
             <span
-                class="text-xs font-medium text-slate-400 bg-slate-800/50 border border-slate-700 px-3 py-1.5 rounded-lg whitespace-nowrap">과거
+                class="text-xs font-medium text-slate-500 dark:text-slate-400 bg-slate-200/50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 px-3 py-1.5 rounded-lg whitespace-nowrap">과거
                 10년 누적</span>
         </div>
-        <div id="plotly-heatmap" class="w-full bg-[#0B1021]/50 rounded-xl border border-slate-700/50"
+        <div id="plotly-heatmap" class="w-full bg-slate-50 dark:bg-[#0B1021]/50 rounded-xl border border-slate-300/50 dark:border-slate-700/50"
             style="height: 400px; overflow: hidden; min-height: 400px;"></div>
         <div class="text-right text-xs text-slate-500 mt-3 font-medium">데이터 출처: Npay 증권 기반 자체 백테스팅 연산</div>
     </div>
@@ -66,34 +66,34 @@
             class="absolute -top-10 -right-10 w-32 h-32 bg-indigo-500/20 rounded-full mix-blend-screen filter blur-3xl pacity-60">
         </div>
         <h2
-            class="text-xl font-bold mb-6 text-white flex items-center gap-2 border-b border-slate-700/50 pb-4 relative z-10">
-            <span class="text-amber-400">💡</span> 금월 AI 핵심 인사이트
+            class="text-xl font-bold mb-6 text-slate-900 dark:text-white flex items-center gap-2 border-b border-slate-300/50 dark:border-slate-700/50 pb-4 relative z-10">
+            <span class="text-amber-600 dark:text-amber-400">💡</span> 금월 AI 핵심 인사이트
         </h2>
 
         <div id="insight-box"
-            class="bg-indigo-900/40 border border-indigo-500/30 p-5 rounded-xl mb-8 shadow-inner relative z-10">
+            class="bg-indigo-900/40 border border-indigo-300/30 dark:border-indigo-500/30 p-5 rounded-xl mb-8 shadow-inner relative z-10">
             <p class="text-[15px] font-medium text-indigo-100 leading-relaxed" id="best-sector-text">
                 <span class="animate-pulse">데이터 실시간 분석 중...</span>
             </p>
         </div>
 
         <div class="flex-grow relative z-10">
-            <h3 class="font-extrabold text-white mb-4 flex items-center gap-2">
-                <span class="text-rose-400">📅</span> 캘린더/이벤트 기반 체크 포인트
+            <h3 class="font-extrabold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                <span class="text-rose-600 dark:text-rose-400">📅</span> 캘린더/이벤트 기반 체크 포인트
             </h3>
-            <ul class="space-y-4 text-[14px] text-slate-400 font-medium">
-                <li class="flex items-start bg-slate-800/40 p-3 rounded-lg border border-slate-700/50">
-                    <span class="mr-3 text-indigo-400 mt-0.5">✔️</span>
+            <ul class="space-y-4 text-[14px] text-slate-500 dark:text-slate-400 font-medium">
+                <li class="flex items-start bg-slate-200/40 dark:bg-slate-800/40 p-3 rounded-lg border border-slate-300/50 dark:border-slate-700/50">
+                    <span class="mr-3 text-indigo-600 dark:text-indigo-400 mt-0.5">✔️</span>
                     <span><strong class="text-slate-200">2~3월</strong>: 감사보고서 제출 및 4분기 실적 시즌, 배당락 이후 가치주 및 중소형주 재평가
                         장세</span>
                 </li>
-                <li class="flex items-start bg-slate-800/40 p-3 rounded-lg border border-slate-700/50">
-                    <span class="mr-3 text-indigo-400 mt-0.5">✔️</span>
+                <li class="flex items-start bg-slate-200/40 dark:bg-slate-800/40 p-3 rounded-lg border border-slate-300/50 dark:border-slate-700/50">
+                    <span class="mr-3 text-indigo-600 dark:text-indigo-400 mt-0.5">✔️</span>
                     <span><strong class="text-slate-200">4월 & 10월</strong>: 1분기 및 3분기 실적 발표(어닝시즌)에 따른 종목별 극심한 차별화
                         장세</span>
                 </li>
-                <li class="flex items-start bg-slate-800/40 p-3 rounded-lg border border-slate-700/50">
-                    <span class="mr-3 text-indigo-400 mt-0.5">✔️</span>
+                <li class="flex items-start bg-slate-200/40 dark:bg-slate-800/40 p-3 rounded-lg border border-slate-300/50 dark:border-slate-700/50">
+                    <span class="mr-3 text-indigo-600 dark:text-indigo-400 mt-0.5">✔️</span>
                     <span><strong class="text-slate-200">11~12월</strong>: 연말 고배당 기대감 및 연말 소비 시즌 진입, 유통/엔터/배당주 계절적
                         강세</span>
                 </li>
@@ -103,14 +103,14 @@
 </div>
 
 <!-- AdSense Rich Content Section -->
-<div class="glass-card p-8 rounded-2xl border border-indigo-500/20 hover-lift mb-8 relative overflow-hidden">
+<div class="glass-card p-8 rounded-2xl border border-indigo-300/20 dark:border-indigo-500/20 hover-lift mb-8 relative overflow-hidden">
     <div
         class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-full blur-3xl pointer-events-none">
     </div>
-    <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2 relative z-10">
-        <span class="text-emerald-400">🎯</span> 스마트한 투자 가이드: 극대화된 확률에 베팅하는 'Seasonality 매집 전략'
+    <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2 relative z-10">
+        <span class="text-emerald-600 dark:text-emerald-400">🎯</span> 스마트한 투자 가이드: 극대화된 확률에 베팅하는 'Seasonality 매집 전략'
     </h3>
-    <p class="text-slate-400 leading-relaxed text-[15px] relative z-10">
+    <p class="text-slate-500 dark:text-slate-400 leading-relaxed text-[15px] relative z-10">
         인간의 심리와 거시 경제의 사이클이 결합된 주식 시장은 생각보다 일정한 패턴(Pattern)을 강력하게 반복합니다. 매년 특정한 시기마다 반복되는 실적 발표, 배당 기일, 정부 정책 발표 주기, 기후
         변화에 따라 본능적으로 '계절적 수혜주'로 몰리는 자금의 흐름이 존재하기 때문입니다. 위 히트맵 차트는 최근 10년간 주요 섹터에 편입된 주도주들의 월별 누적 데이터(승률)를 시각화한 것입니다.
         <strong>과거 특정 월에 승률(Win Rate)이 70~80% 이상을 꾸준히 기록해 온 섹터를 한 달 전에 미리 매집(Pre-Accumulation)하는 퀀트 기반의 전략</strong>을
@@ -168,7 +168,7 @@
         }
 
         document.getElementById('best-sector-text').innerHTML =
-            `과거 10년 데이터를 분석한 결과, <strong>${currentMonthIdx + 1}월에는 <span class='text-amber-400'>'${bestSector}'</span></strong> 섹터가 상승할 확률이 <strong class='text-emerald-400'>${maxVal}%</strong>로 가장 높았습니다.`;
+            `과거 10년 데이터를 분석한 결과, <strong>${currentMonthIdx + 1}월에는 <span class='text-amber-600 dark:text-amber-400'>'${bestSector}'</span></strong> 섹터가 상승할 확률이 <strong class='text-emerald-600 dark:text-emerald-400'>${maxVal}%</strong>로 가장 높았습니다.`;
     });
 </script>
 {% endblock %}

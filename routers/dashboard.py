@@ -62,6 +62,24 @@ def get_money_flow_data():
         logger.error(f"Flow data error: {e}")
         return _get_mock_flow_data()
 
+def get_mock_net_buying_stocks():
+    # 3일 연속 기관/외국인 순매수 (Mock)
+    return [
+        {"종목명": "SK하이닉스", "현재가": "164,000", "등락률": "+2.50%", "외국인_누적": "1,200억", "기관_누적": "850억"},
+        {"종목명": "현대차", "현재가": "245,000", "등락률": "+1.80%", "외국인_누적": "950억", "기관_누적": "620억"},
+        {"종목명": "알테오젠", "현재가": "182,500", "등락률": "+4.10%", "외국인_누적": "450억", "기관_누적": "310억"},
+        {"종목명": "한미반도체", "현재가": "134,100", "등락률": "+3.20%", "외국인_누적": "380억", "기관_누적": "190억"},
+        {"종목명": "기아", "현재가": "118,500", "등락률": "+1.10%", "외국인_누적": "320억", "기관_누적": "150억"}
+    ]
+
+def get_mock_theme_rotation():
+    # 어제 vs 오늘 테마 순환 (Mock)
+    return {
+        "yesterday": ["2차전지 소재", "지능형 로봇", "제약/바이오"],
+        "today": ["반도체 장비", "저PBR/금융", "자동차 부품"],
+        "insight": "어제 시장을 주도했던 2차전지 및 로봇 섹터에서 차익 실현 매물이 출회되며, 반도체 및 저PBR 가치주(금융/자동차)로 자금 이동(Rotation)이 강하게 포착되고 있습니다."
+    }
+
 def get_theme_list():
     url = "https://finance.naver.com/sise/theme.naver"
     try:
@@ -197,7 +215,9 @@ async def read_dashboard(request: Request):
         context={
             "flow_data_json": json.dumps(flow_data),
             "flow_data": flow_data,
-            "insight": insight
+            "insight": insight,
+            "net_buy_stocks": get_mock_net_buying_stocks(),
+            "theme_rotation": get_mock_theme_rotation()
         }
     )
 

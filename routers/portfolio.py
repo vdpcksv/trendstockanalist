@@ -63,6 +63,8 @@ def add_portfolio_item(item: schemas.PortfolioCreate, db: Session = Depends(get_
 
         existing_item.qty = combined_qty
         existing_item.target_price = avg_price
+        if item.memo:
+            existing_item.memo = item.memo
         db.commit()
         db.refresh(existing_item)
         return existing_item
@@ -71,6 +73,7 @@ def add_portfolio_item(item: schemas.PortfolioCreate, db: Session = Depends(get_
             ticker=item.ticker,
             target_price=item.target_price,
             qty=item.qty,
+            memo=item.memo,
             user_id=current_user.id
         )
         db.add(db_item)
@@ -98,13 +101,64 @@ async def get_portfolio_items(db: Session = Depends(get_db), current_user: model
             "name": i.ticker, 
             "price": i.target_price or 0,
             "qty": qty,
-            "current_price": current_price
+            "current_price": current_price,
+            "memo": i.memo or ""
         })
     return result
 
 @router.delete("/api/portfolio/{item_id}")
 def delete_portfolio_item(item_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
     item = db.query(models.Portfolio).filter(models.Portfolio.id == item_id, models.Portfolio.user_id == current_user.id).first()
+    if item:
+        db.delete(item)
+        db.commit()
+        return {"status": "success"}
+    raise HTTPException(status_code=404, detail="해당 항목을 찾을 수 없습니다.")
+
+@router.put("/api/portfolio/{item_id}")
+def update_portfolio_item(item_id: int, item: schemas.PortfolioCreate, db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
+    db_item = db.query(models.Portfolio).filter(models.Portfolio.id == item_id, models.Portfolio.user_id == current_user.id).first()
+    if not db_item:
+        raise HTTPException(status_code=404, detail="해당 항목을 찾을 수 없습니다.")
+    
+    db_item.target_price = item.target_price
+    db_item.qty = item.qty
+    db_item.memo = item.memo
+    db.commit()
+    db.refresh(db_item)
+    return db_item
+
+# --- Watchlist API ---
+@router.post("/api/watchlist", response_model=schemas.WatchlistResponse)
+def add_watchlist_item(item: schemas.WatchlistCreate, db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
+    existing_item = db.query(models.Watchlist).filter(
+        models.Watchlist.user_id == current_user.id,
+        models.Watchlist.name == item.name,
+        models.Watchlist.ticker == item.ticker
+    ).first()
+    
+    if existing_item:
+        return existing_item
+        
+    db_item = models.Watchlist(
+        name=item.name,
+        ticker=item.ticker,
+        user_id=current_user.id
+    )
+    db.add(db_item)
+    db.commit()
+    db.refresh(db_item)
+    return db_item
+
+@router.get("/api/watchlist")
+def get_watchlist_items(db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
+    items = db.query(models.Watchlist).filter(models.Watchlist.user_id == current_user.id).all()
+    # Return directly, let frontend group by name
+    return items
+
+@router.delete("/api/watchlist/{item_id}")
+def delete_watchlist_item(item_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
+    item = db.query(models.Watchlist).filter(models.Watchlist.id == item_id, models.Watchlist.user_id == current_user.id).first()
     if item:
         db.delete(item)
         db.commit()

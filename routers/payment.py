@@ -86,6 +86,14 @@ async def payment_confirm(request: Request, db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"결제 처리 중 서버 에러: {str(e)}")
 
+@router.post("/api/membership/upgrade")
+def upgrade_membership_mock(db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
+    """Mock upgrade endpoint for testing/admin purposes"""
+    current_user.membership = "premium"
+    current_user.premium_expires_at = datetime.utcnow() + timedelta(days=30)
+    db.commit()
+    return {"status": "success", "message": "프리미엄 회원으로 업그레이드 조치되었습니다.", "membership": "premium"}
+
 @router.post("/api/membership/downgrade")
 def downgrade_membership(db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
     current_user.membership = "basic"

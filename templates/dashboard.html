@@ -50,8 +50,8 @@
         </div>
 
         <div
-            class="bg-gradient-to-r from-indigo-900/30 to-blue-900/20 border-l-4 border-indigo-300 dark:border-indigo-500 p-5 rounded-r-xl shadow-inner mt-auto">
-            <h3 class="font-extrabold text-indigo-600 dark:text-indigo-300 mb-2 flex items-center gap-2">
+            class="bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-900/30 dark:to-blue-900/20 border-l-4 border-indigo-400 dark:border-indigo-500 p-5 rounded-r-xl shadow-inner mt-auto">
+            <h3 class="font-extrabold text-indigo-700 dark:text-indigo-300 mb-2 flex items-center gap-2">
                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                     <path
                         d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z">
@@ -59,7 +59,7 @@
                 </svg>
                 Today's Flow Insight
             </h3>
-            <p class="text-sm font-medium text-slate-600 dark:text-slate-300 leading-relaxed" id="insight-text">분석 결과를
+            <p class="text-[14px] font-bold text-slate-700 dark:text-slate-300 leading-relaxed" id="insight-text">분석 결과를
                 로딩 중입니다.</p>
         </div>
     </div>
@@ -132,7 +132,8 @@
                 class="flex-1 bg-white dark:bg-[#151b30] border border-slate-300/50 dark:border-slate-700/50 rounded-xl p-5 shadow-inner">
                 <h3
                     class="text-sm font-bold text-slate-500 dark:text-slate-400 mb-4 uppercase tracking-wide flex items-center gap-2">
-                    <span class="text-lg">📅</span> 어제 주도 테마</h3>
+                    <span class="text-lg">📅</span> 어제 주도 테마
+                </h3>
                 <div class="flex flex-wrap gap-2">
                     {% for theme in theme_rotation.yesterday %}
                     <a href="/themes?theme={{ theme }}"
@@ -157,7 +158,8 @@
                 <div class="absolute inset-0 bg-gradient-to-r from-rose-500/5 to-transparent pointer-events-none"></div>
                 <h3
                     class="text-sm font-bold text-rose-600 dark:text-rose-400 mb-4 uppercase tracking-wide flex items-center gap-2 relative z-10">
-                    <span class="text-lg">🔥</span> 오늘 자금 유입 테마</h3>
+                    <span class="text-lg">🔥</span> 오늘 자금 유입 테마
+                </h3>
                 <div class="flex flex-wrap gap-2 relative z-10">
                     {% for theme in theme_rotation.today %}
                     <a href="/themes?theme={{ theme }}"
@@ -285,13 +287,13 @@
         // 1. Render Table
         const tableContainer = document.getElementById('flow-table-container');
         let tableHTML = `
-            <table class="min-w-full text-sm text-left text-slate-500 dark:text-slate-400">
-                <thead class="text-xs text-slate-500 dark:text-slate-400 uppercase bg-slate-200/50 dark:bg-slate-800/50 border-b border-slate-300/50 dark:border-slate-700/50 sticky top-0 backdrop-blur-md">
+            <table class="min-w-full text-sm text-left text-slate-700 dark:text-slate-300">
+                <thead class="text-xs text-slate-600 dark:text-slate-400 uppercase bg-slate-100 dark:bg-slate-800/50 border-b border-slate-300/50 dark:border-slate-700/50 sticky top-0 backdrop-blur-md">
                     <tr>
                         <th class="px-5 py-4 font-bold">거래 일자</th>
                         <th class="px-5 py-4 text-right font-bold">리테일(개인)</th>
                         <th class="px-5 py-4 text-right font-bold text-rose-600 dark:text-rose-400">외국인</th>
-                        <th class="px-5 py-4 text-right font-bold text-indigo-600 dark:text-indigo-400">기관계</th>
+                        <th class="px-5 py-4 text-right font-bold text-blue-600 dark:text-blue-400">기관계</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -299,14 +301,14 @@
 
         flowData.forEach(row => {
             tableHTML += `
-                <tr class="bg-transparent border-b border-slate-300 dark:border-slate-800 hover:bg-indigo-500/10 transition-colors duration-200">
-                    <td class="px-5 py-3 font-semibold text-slate-200">${row.Date}</td>
-                    <td class="px-5 py-3 text-right font-medium ${row['개인'] > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-indigo-600 dark:text-indigo-400'}">${row['개인'].toLocaleString()}</td>
+                <tr class="bg-transparent border-b border-slate-200 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors duration-200">
+                    <td class="px-5 py-3 font-bold text-slate-800 dark:text-slate-200">${row.Date}</td>
+                    <td class="px-5 py-3 text-right font-bold ${row['개인'] > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-blue-600 dark:text-blue-400'}">${row['개인'].toLocaleString()}</td>
                     <td class="px-5 py-3 text-right font-bold">
-                        <span class="${row['외국인'] > 0 ? 'text-rose-600 dark:text-rose-400 bg-rose-500/10' : 'text-indigo-600 dark:text-indigo-400 bg-indigo-500/10'} px-2 py-1 rounded-md inline-block min-w-[60px] text-center">${row['외국인'].toLocaleString()}</span>
+                        <span class="${row['외국인'] > 0 ? 'text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10' : 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10'} px-2 py-1 rounded-md inline-block min-w-[60px] text-center">${row['외국인'].toLocaleString()}</span>
                     </td>
                     <td class="px-5 py-3 text-right font-bold">
-                        <span class="${row['기관'] > 0 ? 'text-rose-600 dark:text-rose-400 bg-rose-500/10' : 'text-indigo-600 dark:text-indigo-400 bg-indigo-500/10'} px-2 py-1 rounded-md inline-block min-w-[60px] text-center">${row['기관'].toLocaleString()}</span>
+                        <span class="${row['기관'] > 0 ? 'text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10' : 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10'} px-2 py-1 rounded-md inline-block min-w-[60px] text-center">${row['기관'].toLocaleString()}</span>
                     </td>
                 </tr>
             `;

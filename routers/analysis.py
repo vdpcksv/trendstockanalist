@@ -169,8 +169,10 @@ async def search_stocks(q: str = ""):
         return []
     try:
         df = get_krx_stock_listing()
-        # Find stocks where name contains the query (case insensitive)
-        matches = df[df['Name'].str.contains(q, na=False, case=False)]
+        # Find stocks where name starts with query first, then those containing it
+        starts_with = df[df['Name'].str.startswith(q, na=False)]
+        contains = df[df['Name'].str.contains(q, na=False, case=False) & ~df['Name'].str.startswith(q, na=False)]
+        matches = pd.concat([starts_with, contains])
         results = matches.head(10)[['Code', 'Name']].to_dict('records')
         return results
     except Exception as e:
@@ -251,16 +253,21 @@ async def read_review(request: Request, ticker: str = "005930"):
     context = {"ticker": actual_ticker, "search_name": search_name, "error": None, "chart_data": None, "ai_score": None, "fundamentals": None, "sentiment_data": None}
     try:
         end_date = datetime.now()
-        start_date = end_date - pd.DateOffset(months=6)
+        start_date = end_date - pd.DateOffset(years=1)
         df = fdr.DataReader(actual_ticker, start_date, end_date)
         if df.empty:
             context["error"] = "데이터를 불러올 수 없습니다. 종목 코드를 확인해 주세요."
             return templates.TemplateResponse(request=request, name="review.html", context=context)
         df = calculate_technical_indicators(df)
         df = df.dropna()
+        # Only keep the last 6 months (approx 120 trading days) for chart rendering speed
+        df = df.tail(120)
         df.reset_index(inplace=True)
         if 'Date' in df.columns: df['Date'] = df['Date'].dt.strftime('%Y-%m-%d')
         records = df.to_dict('records')
+        if not records:
+            context["error"] = "기술적 지표 계산을 위한 충분한 과거 데이터가 없습니다."
+            return templates.TemplateResponse(request=request, name="review.html", context=context)
         context["chart_data"] = json.dumps(records)
         
         forecast = cache_data["prophet_models"].get(actual_ticker)

@@ -226,7 +226,7 @@ async def get_orderbook(ticker: str):
         return {"status": "success", "data": data}
     except Exception as e:
         logger.error(f"Orderbook error: {e}")
-        return {"status": "error", "message": "호가 데이터를 불러오는데 실패했습니다 (API 연결 오류 또는 키 미설정)"}
+        return {"status": "error", "message": f"API 오류 상세 내용: {str(e)}"}
 
 @router.get("/ai-performance", response_class=HTMLResponse)
 async def read_ai_performance(request: Request):

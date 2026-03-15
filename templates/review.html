@@ -120,12 +120,13 @@
     </div>
 
     <!-- AI Score Dashboard -->
+    <!-- AI Score Dashboard -->
     <div
-        class="bg-gradient-to-br from-indigo-900 to-slate-900 rounded-2xl shadow-lg border border-slate-300 dark:border-slate-800 p-8 flex flex-col items-center justify-center text-center relative overflow-hidden hover-lift">
-        <div class="absolute top-0 right-0 -mr-10 -mt-10 w-40 h-40 bg-indigo-500 opacity-20 rounded-full blur-3xl">
+        class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 p-8 flex flex-col items-center justify-center text-center relative overflow-hidden hover-lift">
+        <div class="absolute top-0 right-0 -mr-10 -mt-10 w-40 h-40 bg-indigo-500 opacity-10 dark:opacity-20 rounded-full blur-3xl">
         </div>
         <h2
-            class="text-xl font-bold mb-8 text-slate-900 dark:text-white w-full border-b border-slate-300/50 dark:border-slate-700/50 pb-4 flex justify-center items-center gap-2">
+            class="text-xl font-bold mb-8 text-slate-800 dark:text-white w-full border-b border-slate-200 dark:border-slate-700/50 pb-4 flex justify-center items-center gap-2">
             <span class="text-2xl">🤖</span> AI 퀀트 종합 스코어
         </h2>
 
@@ -812,7 +813,7 @@
         const gridColor = isDark ? '#334155' : '#e2e8f0';
 
         const layoutMain = {
-            margin: { t: 10, r: 10, b: 30, l: 40 },
+            margin: { t: 40, r: 10, b: 30, l: 40 },
             xaxis: { rangeslider: { visible: false }, fixedrange: false },
             yaxis: { domain: [0, 0.2], fixedrange: true, showticklabels: false, gridcolor: gridColor }, // Volume Y-Axis
             yaxis2: { domain: [0.25, 1], fixedrange: false, autorange: true, gridcolor: gridColor, tickfont: { color: textColor } }, // Candlestick Y-Axis
@@ -844,7 +845,7 @@
 
         // Mobile plot uses identical traces but different layout (shorter height, etc.)
         const layoutMobile = Object.assign({}, layoutMain, {
-            margin: { t: 10, r: 0, b: 30, l: 5 },
+            margin: { t: 40, r: 0, b: 30, l: 5 },
             yaxis2: { domain: [0.25, 1], fixedrange: false, autorange: true, gridcolor: gridColor, tickfont: { size: 10, color: textColor }, side: 'right' }
         });
         Plotly.newPlot('plotly-candlestick-mobile', mainTraces, layoutMobile, config);
@@ -949,7 +950,7 @@
 
         const layoutFundamental = {
             barmode: 'group',
-            margin: { t: 30, r: 10, b: 30, l: 40 },
+            margin: { t: 50, r: 10, b: 30, l: 40 },
             title: { text: '매출액 및 영업이익 추이 (억 원)', font: { size: 14, color: textColor } },
             paper_bgcolor: 'rgba(0,0,0,0)',
             plot_bgcolor: 'rgba(0,0,0,0)',

@@ -163,9 +163,11 @@
                 <div class="flex items-center justify-between">
                     <span class="text-3xl font-extrabold text-slate-900 dark:text-white outfit-font">{{ ai_score.rsi
                         }}</span>
-                    <span class="text-xs font-bold text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-md shadow-sm border border-slate-200 dark:border-slate-700">
-                        {% if ai_score.rsi < 30 %}🟢 과매도 (반등 대비){% elif ai_score.rsi> 70 %}🔴 과매수 (차익 실현){% else %}⚪ 추세
-                            안정형{% endif %}
+                    <span class="text-[10px] md:text-xs font-bold text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 px-2 md:px-3 py-1.5 rounded-md shadow-sm border border-slate-200 dark:border-slate-700 whitespace-nowrap text-center">
+                        {% if ai_score.rsi < 30 %}🟢 과매도 (반등 대비)
+                        {% elif ai_score.rsi > 70 %}🔴 과매수 (차익 실현)
+                        {% else %}⚪ 추세 안정형
+                        {% endif %}
                     </span>
                 </div>
             </div>
@@ -270,7 +272,7 @@
         </div>
 
         <!-- 2. Fundamental Chart (Right) -->
-        <div class="h-64 lg:h-auto border border-slate-100 shadow-inner rounded-xl p-3 bg-slate-50 relative">
+        <div class="h-64 lg:h-auto border border-slate-300/50 dark:border-slate-700/50 shadow-inner rounded-xl p-3 bg-slate-50 dark:bg-[#0B1021]/80 relative overflow-hidden">
             <div id="plotly-fundamental" class="w-full h-full"></div>
             <!-- Pass Data to JS -->
             <script>
@@ -805,14 +807,18 @@
         const traceBbUpper = { x: dates, y: bbUpper, type: 'scatter', mode: 'lines', name: 'BB 상단', line: { color: '#94a3b8', width: 1, dash: 'dot' }, yaxis: 'y2' };
         const traceBbLower = { x: dates, y: bbLower, type: 'scatter', mode: 'lines', name: 'BB 하단', line: { color: '#94a3b8', width: 1, dash: 'dot' }, fill: 'tonexty', fillcolor: 'rgba(148, 163, 184, 0.1)', yaxis: 'y2' };
 
+        const isDark = document.documentElement.classList.contains('dark');
+        const textColor = isDark ? '#cbd5e1' : '#475569';
+        const gridColor = isDark ? '#334155' : '#e2e8f0';
+
         const layoutMain = {
             margin: { t: 10, r: 10, b: 30, l: 40 },
             xaxis: { rangeslider: { visible: false }, fixedrange: false },
-            yaxis: { domain: [0, 0.2], fixedrange: true, showticklabels: false, gridcolor: '#334155' }, // Volume Y-Axis
-            yaxis2: { domain: [0.25, 1], fixedrange: false, autorange: true, gridcolor: '#334155', tickfont: { color: '#94a3b8' } }, // Candlestick Y-Axis
+            yaxis: { domain: [0, 0.2], fixedrange: true, showticklabels: false, gridcolor: gridColor }, // Volume Y-Axis
+            yaxis2: { domain: [0.25, 1], fixedrange: false, autorange: true, gridcolor: gridColor, tickfont: { color: textColor } }, // Candlestick Y-Axis
             paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
             showlegend: true, legend: { orientation: 'h', y: 1.05 },
-            font: { color: '#cbd5e1' }
+            font: { color: textColor }
         };
         const config = { displayModeBar: false, responsive: true, scrollZoom: true };
 
@@ -839,7 +845,7 @@
         // Mobile plot uses identical traces but different layout (shorter height, etc.)
         const layoutMobile = Object.assign({}, layoutMain, {
             margin: { t: 10, r: 0, b: 30, l: 5 },
-            yaxis2: { domain: [0.25, 1], fixedrange: false, autorange: true, gridcolor: '#334155', tickfont: { size: 10, color: '#94a3b8' }, side: 'right' }
+            yaxis2: { domain: [0.25, 1], fixedrange: false, autorange: true, gridcolor: gridColor, tickfont: { size: 10, color: textColor }, side: 'right' }
         });
         Plotly.newPlot('plotly-candlestick-mobile', mainTraces, layoutMobile, config);
 
@@ -879,10 +885,10 @@
 
         const layoutMacd = {
             margin: { t: 10, r: 10, b: 20, l: 40 },
-            xaxis: { fixedrange: false, tickfont: { color: '#94a3b8' }, gridcolor: '#334155' },
-            yaxis: { fixedrange: true, tickfont: { color: '#94a3b8' }, gridcolor: '#334155' },
+            xaxis: { fixedrange: false, tickfont: { color: textColor }, gridcolor: gridColor },
+            yaxis: { fixedrange: true, tickfont: { color: textColor }, gridcolor: gridColor },
             paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
-            font: { color: '#cbd5e1' },
+            font: { color: textColor },
             showlegend: true, legend: { orientation: 'h', y: 1.15 }
         };
         Plotly.newPlot('plotly-macd', [traceMacdHist, traceMacd, traceMacdSignal], layoutMacd, config);
@@ -891,10 +897,10 @@
         const traceRsi = { x: dates, y: rsi, type: 'scatter', mode: 'lines', name: 'RSI(14)', line: { color: '#8b5cf6', width: 1.5 } };
         const layoutRsi = {
             margin: { t: 10, r: 10, b: 20, l: 40 },
-            xaxis: { fixedrange: false, tickfont: { color: '#94a3b8' }, gridcolor: '#334155' },
-            yaxis: { range: [0, 100], fixedrange: true, tickfont: { color: '#94a3b8' }, gridcolor: '#334155' },
+            xaxis: { fixedrange: false, tickfont: { color: textColor }, gridcolor: gridColor },
+            yaxis: { range: [0, 100], fixedrange: true, tickfont: { color: textColor }, gridcolor: gridColor },
             paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
-            font: { color: '#cbd5e1' },
+            font: { color: textColor },
             shapes: [
                 { type: 'line', y0: 30, y1: 30, x0: dates[0], x1: dates[dates.length - 1], line: { color: '#ef4444', width: 1, dash: 'dash' } },
                 { type: 'line', y0: 70, y1: 70, x0: dates[0], x1: dates[dates.length - 1], line: { color: '#3b82f6', width: 1, dash: 'dash' } }
@@ -937,15 +943,19 @@
             marker: { color: '#10b981' }
         };
 
+        const isDark = document.documentElement.classList.contains('dark');
+        const textColor = isDark ? '#cbd5e1' : '#475569';
+        const gridColor = isDark ? '#334155' : '#e2e8f0';
+
         const layoutFundamental = {
             barmode: 'group',
             margin: { t: 30, r: 10, b: 30, l: 40 },
-            title: { text: '매출액 및 영업이익 추이 (억 원)', font: { size: 14, color: '#94a3b8' } },
+            title: { text: '매출액 및 영업이익 추이 (억 원)', font: { size: 14, color: textColor } },
             paper_bgcolor: 'rgba(0,0,0,0)',
             plot_bgcolor: 'rgba(0,0,0,0)',
-            font: { color: '#cbd5e1' },
-            xaxis: { tickfont: { color: '#94a3b8' } },
-            yaxis: { gridcolor: '#334155', tickfont: { color: '#94a3b8' }, zerolinecolor: '#64748b' },
+            font: { color: textColor },
+            xaxis: { tickfont: { color: textColor } },
+            yaxis: { gridcolor: gridColor, tickfont: { color: textColor }, zerolinecolor: gridColor },
             showlegend: true,
             legend: { orientation: 'h', y: 1.15 }
         };
@@ -975,6 +985,9 @@
                 const winRates = data.map(d => d.WinRate);
                 const avgReturns = data.map(d => d.AvgReturn);
 
+                const isDark = document.documentElement.classList.contains('dark');
+                const textColor = isDark ? '#cbd5e1' : '#475569';
+
                 // Win Rate Heatmap
                 Plotly.newPlot('plotly-seasonality-winrate', [{
                     z: [winRates],
@@ -989,10 +1002,11 @@
                     hoverinfo: 'x+y+z'
                 }], {
                     margin: { t: 10, r: 20, b: 20, l: 80 },
-                    xaxis: { fixedrange: true },
-                    yaxis: { fixedrange: true },
+                    xaxis: { fixedrange: true, tickfont: { color: textColor } },
+                    yaxis: { fixedrange: true, tickfont: { color: textColor } },
                     paper_bgcolor: 'rgba(0,0,0,0)',
                     plot_bgcolor: 'rgba(0,0,0,0)',
+                    font: { color: textColor }
                 }, { displayModeBar: false, responsive: true });
 
                 // Avg Return Heatmap
@@ -1012,10 +1026,11 @@
                     hoverinfo: 'x+y+z'
                 }], {
                     margin: { t: 10, r: 20, b: 20, l: 80 },
-                    xaxis: { fixedrange: true },
-                    yaxis: { fixedrange: true },
+                    xaxis: { fixedrange: true, tickfont: { color: textColor } },
+                    yaxis: { fixedrange: true, tickfont: { color: textColor } },
                     paper_bgcolor: 'rgba(0,0,0,0)',
                     plot_bgcolor: 'rgba(0,0,0,0)',
+                    font: { color: textColor }
                 }, { displayModeBar: false, responsive: true });
 
                 let bestMonthIdx = 0;

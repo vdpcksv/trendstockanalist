@@ -12,6 +12,29 @@
         먼저 포착하세요.</p>
 </div>
 
+<!-- SEO Content: Service Introduction -->
+<section class="mb-12 glass-card rounded-2xl p-8 max-w-4xl mx-auto shadow-sm">
+    <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">🤖 AlphaFinder(알파파인더)란 무엇인가요?</h2>
+    <p class="text-slate-600 dark:text-slate-300 leading-relaxed mb-4">
+        <strong>알파파인더(AlphaFinder)</strong>는 인공지능(AI) 기반의 주식 퀀트 분석 및 실시간 시장 데이터 모니터링 플랫폼입니다. 
+        개인 투자자들이 주식 시장에서 흔히 겪는 정보의 비대칭성을 해소하기 위해, 방대한 금융 기관 데이터를 수집하고 머신러닝 기술과 
+        검증된 기술적 분석(Technical Analysis) 기법을 결합하여 누구에게나 평등한 파워풀한 투자 솔루션을 제공합니다.
+    </p>
+    <p class="text-slate-600 dark:text-slate-300 leading-relaxed mb-4">
+        특히 한국 주식 시장(KOSPI/KOSDAQ)의 단기 주도 트렌드를 움직이는 가장 핵심적인 스마트 머니(Smart Money) 지표인 <strong>'외국인과 기관의 실시간 순매수 동향'</strong>을 
+        추적하여 유동성이 집중되는 종목과 테마를 실시간으로 포착합니다. 또한, 매일 업데이트되는 방대한 과거 10년치 계절성 매매 통계 데이터(Seasonality Data)를 바탕으로, 
+        감정에 휘둘리지 않고 통계적 확률에만 기반한 <strong>시스템 트레이딩(System Trading)</strong> 지표를 생성하여 객관적인 의사 결정을 지원합니다.
+    </p>
+    <div class="mt-6 border-t border-slate-200 dark:border-slate-700/50 pt-4">
+        <h3 class="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-2">핵심 분석 모듈 (Core Modules)</h3>
+        <ul class="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-2">
+            <li><strong>AI 퀀트 스코어 (AI Quant Score):</strong> 단기 모멘텀 지표인 상대강도지수(RSI), 이동평균선의 추세, 그리고 볼린저밴드 이탈률 등을 복합 연산하여 100점 만점 수치화.</li>
+            <li><strong>실시간 수급 추적 (Money Flow Tracker):</strong> 당일 장중 메이저 자금(기관, 외국인 대량 거래원)의 매수/매도 현황을 실시간 필터링.</li>
+            <li><strong>시장 뉴스 감성 분석 (NLP Sentiment Analysis):</strong> 최신 투자 뉴스 및 금융 헤드라인을 자연어 처리 모델로 분석하여 시장의 긍정/부정 분위기 진단.</li>
+        </ul>
+    </div>
+</section>
+
 <!-- Placeholder for Dashboard UI and Charts. The API will inject data here. -->
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
 
@@ -247,6 +270,44 @@
         </div>
     </div>
 </div>
+
+<!-- SEO Content: FAQ Section for AdSense -->
+<section class="max-w-5xl mx-auto mb-12">
+    <div class="glass-card rounded-2xl p-8 hover-lift">
+        <h2 class="text-xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+            <span class="text-indigo-600 dark:text-indigo-400">❓</span> 자주 묻는 질문 (FAQ)
+        </h2>
+        <div class="space-y-4">
+            <details class="group bg-slate-50 dark:bg-[#0B1021]/50 p-4 rounded-xl cursor-pointer border border-slate-200 dark:border-slate-800">
+                <summary class="font-bold text-slate-800 dark:text-slate-200 flex justify-between items-center list-none outline-none">
+                    <span>Q. 데이터는 얼마나 자주 최신화 및 업데이트되나요?</span>
+                    <span class="transition group-open:rotate-180 text-indigo-500">▼</span>
+                </summary>
+                <p class="text-slate-600 dark:text-slate-400 mt-4 leading-relaxed text-sm border-t border-slate-200 dark:border-slate-700/50 pt-3">
+                    증권사 오픈 API 및 주요 금융 포털의 서버와 직접 연동하여 기본적으로 장중(오전 9시 ~ 오후 3시 30분)에는 실시간으로 데이터가 갱신됩니다. 다만, 과거 통계 백테스팅 연산 결과나 AI 구글 뉴스 자연어 감성 분석 데이터 모델 연산에는 대규모 컴퓨팅 파워가 요구되므로, 일 단위 주기 배치(Batch) 스케줄을 통해 매일 심야 시간에 전일자 마감 데이터로 업데이트됩니다.
+                </p>
+            </details>
+            <details class="group bg-slate-50 dark:bg-[#0B1021]/50 p-4 rounded-xl cursor-pointer border border-slate-200 dark:border-slate-800">
+                <summary class="font-bold text-slate-800 dark:text-slate-200 flex justify-between items-center list-none outline-none">
+                    <span>Q. 알파파인더에서 제공하는 AI 퀀트 종합 스코어는 100% 신뢰할 수 있나요?</span>
+                    <span class="transition group-open:rotate-180 text-indigo-500">▼</span>
+                </summary>
+                <p class="text-slate-600 dark:text-slate-400 mt-4 leading-relaxed text-sm border-t border-slate-200 dark:border-slate-700/50 pt-3">
+                    아닙니다. 주식 및 금융 시장은 통제할 수 없는 수많은 대외 변수가 존재하는 복잡계 영역이므로, 100% 미래 주가를 정확히 예측하는 인공지능이나 퀀트 모델은 현재 존재하지 않습니다. 알파파인더의 지표들은 과거 수만 번의 백테스팅 통계를 근거로, 유리한 시점(진입과 청산)에 대한 확률적 엣지(Edge)를 제공하는 강력한 보조 지표 역할을 수행합니다. 모든 거래 및 투자 손실 리스크 관리의 궁극적인 책임은 투자자 본인에게 있습니다.
+                </p>
+            </details>
+            <details class="group bg-slate-50 dark:bg-[#0B1021]/50 p-4 rounded-xl cursor-pointer border border-slate-200 dark:border-slate-800">
+                <summary class="font-bold text-slate-800 dark:text-slate-200 flex justify-between items-center list-none outline-none">
+                    <span>Q. 모든 솔루션과 서비스를 완전 무료로 제한 없이 이용할 수 있나요?</span>
+                    <span class="transition group-open:rotate-180 text-indigo-500">▼</span>
+                </summary>
+                <p class="text-slate-600 dark:text-slate-400 mt-4 leading-relaxed text-sm border-t border-slate-200 dark:border-slate-700/50 pt-3">
+                    개인 투자자의 정보 비대칭성 해소라는 서비스 설립 철학에 맞추어, 메인 서비스(종목별 기술적 차트, 수급 추적 현황, 계절성 수익률 평가, 커뮤니티 투표 등)는 기본적으로 누구나 무료로 제약 없이 이용 가능합니다. 안정적인 대규모 크롤링 서버 트래픽 비용 및 인프라 유지 보수비 충당을 위해 일부 화면에 구글 애드센스 등 최소한의 디스플레이 배너 광고가 노출될 수 있습니다. 텔레그램 봇 실시간 알림 연동 등은 향후 PRO 멤버십 구독자에게만 서비스될 예정입니다.
+                </p>
+            </details>
+        </div>
+    </div>
+</section>
 
 <!-- AdSense Rich Content Section & Ad Slot -->
 <div

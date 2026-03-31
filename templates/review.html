@@ -175,8 +175,39 @@
         </div>
 
         <p class="mt-6 text-[11px] text-slate-500 dark:text-slate-400 text-left leading-relaxed z-10 opacity-80">
+        <p class="mt-6 text-[11px] text-slate-500 dark:text-slate-400 text-left leading-relaxed z-10 opacity-80">
             * 본 AI 진단 Score는 가격 단기 모멘텀과 기술적 지표의 이격도를 수학적으로 연산한 퀀트 결과입니다. 맹신은 금물이며, 리스크 조절의 보조 지표로만 활용하십시오. 내부 전략의 코어
             알고리즘은 공개되지 않습니다.
+        </p>
+    </div>
+</div>
+
+<!-- SEO Content: Dynamic AI Prose Summary -->
+<div class="glass-card rounded-2xl p-6 md:p-8 mb-12 shadow-sm border border-indigo-300/20 dark:border-indigo-500/20">
+    <h2 class="text-xl font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+        <span class="text-indigo-600 dark:text-indigo-400">📝</span> AI 퀀트 종합 리포트
+    </h2>
+    <div class="text-[15px] text-slate-700 dark:text-slate-300 leading-relaxed space-y-3 bg-slate-50 dark:bg-[#12182B] p-5 rounded-xl border border-slate-200 dark:border-slate-800">
+        <p>
+            알파파인더(AlphaFinder)의 자체 퀀트 알고리즘 분석 결과, <strong>{{ ticker }}</strong>의 현재 통합 AI 스코어는 <strong><span class="text-indigo-600 dark:text-indigo-400 font-bold">{{ '%d' | format(ai_score.score) }}점</span></strong>으로 산출되었습니다. 
+            이는 단기 모멘텀, 기술적 이동평균선의 현재 이격도, 그리고 볼린저밴드 상/하단 수렴도를 종합적으로 고려한 수치입니다.
+        </p>
+        <p>
+            현재 기술적 지표 측면에서 해당 종목은 <strong>
+            {% if ai_score.score >= 80 %}초강세(과매수 진입 가능성)
+            {% elif ai_score.score >= 60 %}강세(상승 추세)
+            {% elif ai_score.score >= 40 %}중립(횡보)
+            {% elif ai_score.score >= 20 %}약세(하락 추세)
+            {% else %}초약세(과매도 국면)
+            {% endif %}
+            </strong> 단계에 위치해 있습니다. 특히 보조지표인 RSI(상대강도지수)는 약 <strong>{{ '%d' | format(ai_score.rsi|default(50)) }}</strong> 부근에 머물고 있어, 
+            {% if ai_score.rsi >= 70 %}단기 과열 우려가 있으므로 추격 매수에 신중해야 할 구간
+            {% elif ai_score.rsi <= 30 %}단기 낙폭 과대에 따른 기술적 반등이 나올 수 있는 구간
+            {% else %}비교적 안정적인 파동 흐름을 유지하고 있는 구간
+            {% endif %}으로 데이터 분석됩니다.
+        </p>
+        <p>
+            알파파인더의 시스템 트레이딩 데이터베이스 통계에 따르면, 이러한 국면에서는 감정에 휩쓸리지 않고 철저히 기계적인 대응을 하는 것이 중요합니다. 외국인과 기관의 실시간 수급 동향(Money Flow Tracker)과 향후 재무 실적(Fundamentals) 전망치를 하단에 표출된 상세 데이터 테이블에서 반드시 교차 검증하신 후 실제 투자 비중을 조절하시길 권장합니다.
         </p>
     </div>
 </div>

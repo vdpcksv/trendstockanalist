@@ -15,6 +15,10 @@ router = APIRouter(tags=["System & SEO"])
 async def read_policies(request: Request):
     return templates.TemplateResponse(request=request, name="policies.html", context={})
 
+@router.get("/about", response_class=HTMLResponse)
+async def read_about(request: Request):
+    return templates.TemplateResponse(request=request, name="about.html", context={})
+
 @router.get("/ads.txt", response_class=PlainTextResponse)
 async def get_ads_txt():
     return "google.com, pub-9065075656013134, DIRECT, f08c47fec0942fa0"
